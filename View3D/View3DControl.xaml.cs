@@ -48,9 +48,7 @@ public partial class View3DControl : UserControl, IDisposable
         MouseMove += glControl_MouseMove;
         MouseDown += glControl_MouseDown;
         MouseUp += glControl_MouseUp;
-        //currentExample.glControl.Resize += glControl_Resize;
         MouseWheel += glControl_MouseWheel;
-        //currentExample.glControl.SizeChanged += glControl_SizeChanged;
         //KeyDown += glControl_KeyDown;
         //KeyUp += glControl_KeyUp;
     }
@@ -65,10 +63,13 @@ public partial class View3DControl : UserControl, IDisposable
 
     private void OpenTKControl_OnRender(TimeSpan delta)
     {
-        //Render();
+        Render();
     }
 
-    /*private void glControl_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    /*
+     TODO: Update key controls
+
+     private void glControl_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
         if (Container != null)
         {
@@ -92,6 +93,7 @@ public partial class View3DControl : UserControl, IDisposable
             Container.OnKeyDown(key, e.Key, (KeyModifiers)e);
         }
     }
+
     private void glControl_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
     {
         if (Container != null)
@@ -115,31 +117,6 @@ public partial class View3DControl : UserControl, IDisposable
             }
             Container.OnKeyUp(key, e.KeyValue, (KeyModifiers)e.Modifiers);
         }
-    }
-
-    // Code copied from THREE WPF example
-
-    private void glControl_SizeChanged(object sender, EventArgs e)
-    {
-        var control = sender as GLControl;
-        this.currentExample?.OnResize(new ResizeEventArgs(control.Width, control.Height));
-    }
-
-
-
-    private void glControl_Resize(object sender, EventArgs e)
-    {
-
-        var control = sender as GLControl;
-
-        if (control.ClientSize.Height == 0)
-            control.ClientSize = new System.Drawing.Size(control.ClientSize.Width, 1);
-
-        GL.Viewport(0, 0, control.ClientSize.Width, control.ClientSize.Height);
-
-        if (currentExample != null)
-            currentExample.OnResize(new ResizeEventArgs(control.ClientSize.Width, control.ClientSize.Height));
-
     }
     */
 
@@ -198,12 +175,6 @@ public partial class View3DControl : UserControl, IDisposable
             Container.Render();
             Container.Renderer.Context.SwapBuffers();
         }
-    }
-
-    protected override void OnRender(DrawingContext drawingContext)
-    {
-        base.OnRender(drawingContext);
-        Render();
     }
 
 
