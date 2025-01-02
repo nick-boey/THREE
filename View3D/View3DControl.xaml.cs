@@ -44,8 +44,6 @@ public partial class View3DControl : UserControl, IDisposable
             Profile = ContextProfile.Compatability
         };
         OpenTKControl.Start(settings);
-        Container = new BasicScene();
-        Container.Load(OpenTKControl);
 
         MouseMove += glControl_MouseMove;
         MouseDown += glControl_MouseDown;
@@ -57,10 +55,17 @@ public partial class View3DControl : UserControl, IDisposable
         //KeyUp += glControl_KeyUp;
     }
 
+    public void Load(View3DContainer container)
+    {
+        Container = container;
+        Container.Load(OpenTKControl);
+        Render();
+    }
+
 
     private void OpenTKControl_OnRender(TimeSpan delta)
     {
-        Render();
+        //Render();
     }
 
     /*private void glControl_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)

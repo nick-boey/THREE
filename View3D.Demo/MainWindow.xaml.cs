@@ -19,5 +19,8 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+
+        var container = new Example3DContainer();
+        MainViewControl.Load(container);
     }
 }

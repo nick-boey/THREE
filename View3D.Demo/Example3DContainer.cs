@@ -8,9 +8,9 @@ using OpenTK.Wpf;
 
 namespace View3D
 {
-    public class BasicScene : View3DContainer
+    public class Example3DContainer : View3DContainer
     {
-        public BasicScene() : base()
+        public Example3DContainer() : base()
         {
         }
 #if WSL
