@@ -10,17 +10,9 @@ namespace View3D
 {
     public class Example : PerspectiveView
     {
-        public Example() : base()
-        {
-        }
-#if WSL
-        public override void Load(IThreeWindow glControl)
-#else
         public override void Load(GLWpfControl glControl)
-#endif
         {
             base.Load(glControl);
-
 
             Scene.Background = Color.Hex(0x000000);
 
@@ -49,27 +41,25 @@ namespace View3D
 
             Scene.Add(cube);
 
-            //      // create a sphere
+            // create a sphere
             var sphereGeometry = new SphereGeometry(4, 20, 20);
             var sphereMaterial = new MeshBasicMaterial() { Color = Color.Hex(0x7777ff), Wireframe = true };
             var sphere = new Mesh(sphereGeometry, sphereMaterial);
 
-            //      // position the sphere
+            // position the sphere
             sphere.Position.Set(20, 4, 2);
 
-            //      // add the sphere to the scene
+            // add the sphere to the scene
             Scene.Add(sphere);
-        }
-
-        public override void Render()
-        {
-            base.Render();
         }
 
         public override void OnResize(ResizeEventArgs clientSize)
         {
+            // TODO: Work out why this is required for rendering, as it appears to do nothing
+            if (GLControl == null) return;
+
             base.OnResize(clientSize);
-            Camera.Aspect = (float)(this.GLControl.RenderSize.Width / this.GLControl.RenderSize.Height);
+            Camera.Aspect = (float)(GLControl.RenderSize.Width / GLControl.RenderSize.Height);
             Camera.UpdateProjectionMatrix();
         }
     }

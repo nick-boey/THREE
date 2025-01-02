@@ -24,21 +24,14 @@ namespace View3D
 
         protected readonly Stopwatch Stopwatch = new();
 
-#if WSL
-        public IThreeWindow glControl;
-#else
         public GLWpfControl? GLControl;
-#endif
 
         ~PerspectiveView()
         {
             this.Dispose(false);
         }
-#if WSL
-        public virtual void Load(IThreeWindow control)
-#else
+
         public virtual void Load(GLWpfControl control)
-#endif
         {
             GLControl = control;
 
