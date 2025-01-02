@@ -1,5 +1,4 @@
-﻿
-namespace THREE
+﻿namespace THREE
 {
     [Serializable]
     public class LineCurve3 : Curve
@@ -8,26 +7,28 @@ namespace THREE
 
         public Vector3 V2;
 
-        public LineCurve3(Vector3 v1 = null, Vector3 v2 = null) : base()
+        public LineCurve3(Vector3? v1 = null, Vector3? v2 = null) : base()
         {
-            V1 = v1 != null ? v1 : new Vector3();
-            V2 = v2 != null ? v2 : new Vector3();
+            V1 = v1 ?? new Vector3();
+            V2 = v2 ?? new Vector3();
         }
+
         protected LineCurve3(LineCurve3 other)
         {
-            this.V1.Copy(other.V1);
-            this.V2.Copy(other.V2);
-
+            V1?.Copy(other.V1);
+            V2?.Copy(other.V2);
         }
+
         public new object Clone()
         {
             return new LineCurve3(this);
         }
-        public override Vector3 GetPoint(float t, Vector3 optionalTarget = null)
-        {
-            var point = optionalTarget != null ? optionalTarget : new Vector3();
 
-            if (t == 1)
+        public override Vector3 GetPoint(float t, Vector3? optionalTarget = null)
+        {
+            var point = optionalTarget ?? new Vector3();
+
+            if (Math.Abs(t - 1) < 1e-14)
             {
                 point.Copy(this.V2);
             }

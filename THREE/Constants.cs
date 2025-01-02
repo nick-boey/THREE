@@ -196,7 +196,7 @@ namespace THREE
         public static int DynamicCopyUsage = 35050;
         public static int StreamCopyUsage = 35042;
 
-        public enum GLComtibility
+        public enum GLCompatibility
         {
             ES2,
             ES3,
