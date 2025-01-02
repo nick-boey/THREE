@@ -163,7 +163,7 @@ public partial class View3DControl : UserControl, IDisposable
         Container.OnMouseWheel((int)position.X, (int)position.Y, e.Delta);
     }
 
-    public void Render()
+    private void Render()
     {
         if (!IsInDesignerMode)
         {
@@ -182,7 +182,7 @@ public partial class View3DControl : UserControl, IDisposable
 
     public virtual void Dispose()
     {
-        Container.glControl.Dispose();
+        Container?.glControl.Dispose();
         Container?.Dispose();
 
         Dispose(true);
