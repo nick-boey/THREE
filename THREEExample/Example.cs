@@ -80,7 +80,7 @@ namespace THREEExample
         {
             this.renderer.SetClearColor(new THREE.Color().SetHex(0xEEEEEE), 1);
             this.renderer.ShadowMap.Enabled = true;
-            this.renderer.ShadowMap.type = Constants.PCFSoftShadowMap;
+            this.renderer.ShadowMap.Type = Constants.PCFSoftShadowMap;
         }
         public virtual void InitCameraController()
         {

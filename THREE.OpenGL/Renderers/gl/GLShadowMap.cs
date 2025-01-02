@@ -37,7 +37,7 @@ namespace THREE
 
         private ShaderMaterial shadowMaterialHorizontal;
 
-        public int type = Constants.PCFShadowMap;
+        public int Type = Constants.PCFShadowMap;
 
         private GLRenderer _renderer;
 
@@ -112,7 +112,7 @@ namespace THREE
             shadowMaterialVertical.FragmentShader = vsm_vert;
             shadowMaterialHorizontal = (ShaderMaterial)shadowMaterialVertical.Clone();
             shadowMaterialHorizontal.Defines.Add("HORIZONAL_PASS", 1);
-            this.type = Constants.PCFShadowMap;
+            this.Type = Constants.PCFShadowMap;
 
             var fullScreenTri = new BufferGeometry();
             var attribute = new BufferAttribute<float>(new float[] { -1, -1, 0.5f, 3, -1, 0.5f, -1, 3, 0.5f }, 3);
@@ -185,7 +185,7 @@ namespace THREE
                         shadow.MapSize.Y = _viewportSize.Y;
                     }
                 }
-                if (shadow.Map == null && !(shadow is PointLightShadow) && this.type == Constants.VSMShadowMap)
+                if (shadow.Map == null && !(shadow is PointLightShadow) && this.Type == Constants.VSMShadowMap)
                 {
 
                     Hashtable pars = new Hashtable { { "minFilter", Constants.LinearFilter }, { "magFilter", Constants.LinearFilter }, { "format", Constants.RGBAFormat } };
@@ -236,12 +236,12 @@ namespace THREE
 
                     _frustum = shadow.GetFrustum();
 
-                    RenderObject(scene, camera, shadow.Camera, light, this.type);
+                    RenderObject(scene, camera, shadow.Camera, light, this.Type);
 
                 }
                 // do blur pass for VSM
 
-                if (!(shadow is PointLightShadow) && this.type == Constants.VSMShadowMap)
+                if (!(shadow is PointLightShadow) && this.Type == Constants.VSMShadowMap)
                 {
                     VSMPass(shadow, camera);
                 }

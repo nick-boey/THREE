@@ -21,7 +21,7 @@ namespace THREEExample.Three.Lights
         {
             base.InitRenderer();
             this.renderer.ShadowMap.Enabled = true;
-            this.renderer.ShadowMap.type = Constants.PCFSoftShadowMap;
+            this.renderer.ShadowMap.Type = Constants.PCFSoftShadowMap;
             this.renderer.outputEncoding = Constants.sRGBEncoding;
 
            

@@ -334,7 +334,7 @@ namespace THREE
             parameters.Add("dithering", material.Dithering);
 
             parameters.Add("shadowMapEnabled", renderer.ShadowMap.Enabled && shadows.Count > 0);
-            parameters.Add("shadowMapType", renderer.ShadowMap.type);
+            parameters.Add("shadowMapType", renderer.ShadowMap.Type);
 
             parameters.Add("toneMapping", material.ToneMapped ? renderer.ToneMapping : Constants.NoToneMapping);
             parameters.Add("physicallyCorrectLights", renderer.PhysicallyCorrectLights);

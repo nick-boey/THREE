@@ -5,6 +5,7 @@ using THREE;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using Keys = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using OpenTK.Windowing.Common;
 using Rectangle = THREE.Rectangle;
 using System.Windows.Controls;
@@ -13,30 +14,23 @@ using OpenTK.Wpf;
 namespace View3D
 {
     [Serializable]
-    abstract public class View3DContainer : ControlsContainer
+    public abstract class PerspectiveView : ControlsContainer
     {
-        public GLRenderer Renderer;
-        public Camera Camera;
-        public Scene Scene;
-        public OrbitControls Controls;
-        protected readonly Random Random = new Random();
+        public GLRenderer? Renderer;
+        public Camera Camera = new PerspectiveCamera();
+        public Scene Scene = new();
 
-        protected readonly Stopwatch Stopwatch = new Stopwatch();
+        public OrbitControls Controls;
+
+        protected readonly Stopwatch Stopwatch = new();
+
 #if WSL
         public IThreeWindow glControl;
 #else
-        public GLWpfControl glControl;
+        public GLWpfControl? GLControl;
 #endif
 
-        public Action AddGuiControlsAction;
-
-        public View3DContainer()
-        {
-            Camera = new PerspectiveCamera();
-            Scene = new Scene();
-        }
-
-        ~View3DContainer()
+        ~PerspectiveView()
         {
             this.Dispose(false);
         }
@@ -46,54 +40,54 @@ namespace View3D
         public virtual void Load(GLWpfControl control)
 #endif
         {
-            Debug.Assert(null != control);
+            GLControl = control;
 
-            glControl = control;
-            this.Renderer = new THREE.GLRenderer(control.Context, (int)control.RenderSize.Width,
+            Renderer = new GLRenderer(control.Context, (int)control.RenderSize.Width,
                 (int)control.RenderSize.Height);
 
-            Init();
+            Initialize();
 
             Stopwatch.Start();
         }
 
         public override Rectangle GetClientRectangle()
         {
+            if (Renderer == null) return new Rectangle(0, 0, 0, 0);
             return new Rectangle(0, 0, Renderer.Width, Renderer.Height);
         }
 
-        public virtual void Init()
+        public virtual void Initialize()
         {
-            InitRenderer();
-
-            InitCamera();
-
-            InitCameraController();
-
-            InitLighting();
+            InitializeRenderer();
+            InitializeCamera();
+            InitializeControls();
+            InitializeLighting();
         }
 
-
-        public virtual void InitCamera()
+        public virtual void InitializeRenderer()
         {
+            if (Renderer == null) return;
+
+            Renderer.ShadowMap.Enabled = true;
+            Renderer.ShadowMap.Type = Constants.PCFSoftShadowMap;
+            Renderer?.SetClearColor(new Color().SetHex(0xEEEEEE), 1);
+        }
+
+        public virtual void InitializeCamera()
+        {
+            if (GLControl == null) return;
+
+            Camera.Aspect = (float)(GLControl.RenderSize.Width / GLControl.RenderSize.Height);
             Camera.Fov = 45.0f;
-            Camera.Aspect = (float)(glControl.RenderSize.Width / glControl.RenderSize.Height);
             Camera.Near = 0.1f;
             Camera.Far = 1000.0f;
             Camera.Position.X = -30;
             Camera.Position.Y = 40;
             Camera.Position.Z = 30;
-            Camera.LookAt(THREE.Vector3.Zero());
+            Camera.LookAt(Vector3.Zero());
         }
 
-        public virtual void InitRenderer()
-        {
-            this.Renderer.SetClearColor(new THREE.Color().SetHex(0xEEEEEE), 1);
-            this.Renderer.ShadowMap.Enabled = true;
-            this.Renderer.ShadowMap.type = Constants.PCFSoftShadowMap;
-        }
-
-        public virtual void InitCameraController()
+        public virtual void InitializeControls()
         {
             Controls = new OrbitControls(this, Camera);
             Controls.RotateSpeed = 1.5f;
@@ -102,7 +96,7 @@ namespace View3D
             Controls.Update();
         }
 
-        public virtual void InitLighting()
+        public virtual void InitializeLighting()
         {
         }
 
@@ -111,14 +105,14 @@ namespace View3D
             return Stopwatch.ElapsedMilliseconds / 1000.0f;
         }
 
-        public virtual void OnResize(ResizeEventArgs clientSize)
+        public override void OnResize(ResizeEventArgs clientSize)
         {
-            if (Renderer != null)
-            {
-                Renderer.Resize(clientSize.Width, clientSize.Height);
-                Camera.Aspect = (float)(glControl.Width / glControl.Height);
-                Camera.UpdateProjectionMatrix();
-            }
+            if (Renderer == null || GLControl == null) return;
+
+            Renderer.Resize(clientSize.Width, clientSize.Height);
+            Camera.Aspect = (float)(GLControl.Width / GLControl.Height);
+            Camera.UpdateProjectionMatrix();
+
 
             base.OnResize(clientSize);
         }
@@ -131,7 +125,7 @@ namespace View3D
 
         public virtual void Unload()
         {
-            this.Renderer.Dispose();
+            Renderer?.Dispose();
         }
 
         public override void Dispose()

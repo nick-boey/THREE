@@ -31,7 +31,7 @@ public partial class View3DControl : UserControl, IDisposable
         }
     }
 
-    public View3DContainer? Container;
+    public PerspectiveView? Container;
 
     public View3DControl()
     {
@@ -53,7 +53,7 @@ public partial class View3DControl : UserControl, IDisposable
         //KeyUp += glControl_KeyUp;
     }
 
-    public void Load(View3DContainer container)
+    public void Load(PerspectiveView container)
     {
         Container = container;
         Container.Load(OpenTKControl);
@@ -169,9 +169,9 @@ public partial class View3DControl : UserControl, IDisposable
         {
             if (Container == null) return;
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            GL.Viewport(0, 0, (int)Container.glControl.ActualWidth, (int)Container.glControl.ActualHeight);
-            Container.OnResize(new ResizeEventArgs((int)Container.glControl.ActualWidth,
-                (int)Container.glControl.ActualHeight));
+            GL.Viewport(0, 0, (int)Container.GLControl.ActualWidth, (int)Container.GLControl.ActualHeight);
+            Container.OnResize(new ResizeEventArgs((int)Container.GLControl.ActualWidth,
+                (int)Container.GLControl.ActualHeight));
             Container.Render();
             Container.Renderer.Context.SwapBuffers();
         }
@@ -182,7 +182,7 @@ public partial class View3DControl : UserControl, IDisposable
 
     public virtual void Dispose()
     {
-        Container?.glControl.Dispose();
+        Container?.GLControl.Dispose();
         Container?.Dispose();
 
         Dispose(true);

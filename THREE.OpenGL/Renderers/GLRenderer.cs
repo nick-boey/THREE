@@ -146,11 +146,11 @@ namespace THREE
         {
             get
             {
-                return ShadowMap.type;
+                return ShadowMap.Type;
             }
             set
             {
-                ShadowMap.type = value;
+                ShadowMap.Type = value;
             }
         }
         #region internal properties

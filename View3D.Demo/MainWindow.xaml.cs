@@ -20,7 +20,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        var container = new Example3DContainer();
+        var container = new Example();
         MainViewControl.Load(container);
     }
 }

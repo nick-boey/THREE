@@ -36,7 +36,7 @@ namespace THREEExample.Three.Modifier
             base.InitRenderer();
             this.renderer.SetClearColor(Color.Hex(0x000000));
             this.renderer.ShadowMap.Enabled = true;
-            this.renderer.ShadowMap.type = Constants.PCFSoftShadowMap;
+            this.renderer.ShadowMap.Type = Constants.PCFSoftShadowMap;
         }
 
         public override void Init()

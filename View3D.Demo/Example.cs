@@ -8,9 +8,9 @@ using OpenTK.Wpf;
 
 namespace View3D
 {
-    public class Example3DContainer : View3DContainer
+    public class Example : PerspectiveView
     {
-        public Example3DContainer() : base()
+        public Example() : base()
         {
         }
 #if WSL
@@ -69,7 +69,7 @@ namespace View3D
         public override void OnResize(ResizeEventArgs clientSize)
         {
             base.OnResize(clientSize);
-            Camera.Aspect = (float)(this.glControl.RenderSize.Width / this.glControl.RenderSize.Height);
+            Camera.Aspect = (float)(this.GLControl.RenderSize.Width / this.GLControl.RenderSize.Height);
             Camera.UpdateProjectionMatrix();
         }
     }
