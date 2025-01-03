@@ -1,43 +1,41 @@
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class GLUniform : Dictionary<string, object>, ICloneable
 {
-    [Serializable]
-    public class GLUniform : Dictionary<string, object>,ICloneable
+    public List<object> Cache = new();
+
+    public GLUniform()
     {
-        public string Id { get; set; }
+        UniformKind = "GLUniform";
+    }
 
-        public int Addr { get; set; }
+    public GLUniform(string id) : this()
+    {
+        Id = id;
+    }
 
-        public string UniformKind { get; set; }
+    public GLUniform(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
+    }
 
-        public int UniformType { get; set; }
+    public string Id { get; set; }
 
-        public List<object> Cache = new List<object>();
+    public int Addr { get; set; }
 
-        public GLUniform() : base() 
-        {
-            UniformKind = "GLUniform";
-        }
+    public string UniformKind { get; set; }
 
-        public GLUniform(string id) : this()
-        {
-            Id = id;
-        }
+    public int UniformType { get; set; }
 
-        public GLUniform(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public object Clone()
+    {
+        return this.DeepCopy();
+    }
 
-        public object Clone()
-        {
-            return this.DeepCopy();
-        }
-
-        public GLUniform Copy(GLUniform original)
-        {
-            return original.DeepCopy();
-        }
-       
+    public GLUniform Copy(GLUniform original)
+    {
+        return original.DeepCopy();
     }
 }

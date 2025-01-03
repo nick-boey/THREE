@@ -1,58 +1,55 @@
-﻿using System;
-using THREE.Renderers.Shaders;
+﻿namespace THREE;
 
-namespace THREE
+[Serializable]
+public class TexturePass : Pass
 {
-    [Serializable]
-    public class TexturePass : Pass
+    private Texture map;
+    private ShaderMaterial material;
+    private float opacity;
+    private GLUniforms uniforms;
+
+    public TexturePass(Texture map, float? opacity = null)
     {
-        private Texture map;
-        private float opacity;
-        private GLUniforms uniforms;
-        private ShaderMaterial material;
+        var shader = new CopyShader();
 
-        public TexturePass(Texture map, float? opacity = null) : base()
+        this.map = map;
+        this.opacity = opacity != null ? opacity.Value : 1.0f;
+        uniforms = UniformsUtils.CloneUniforms(shader.Uniforms);
+
+        material = new ShaderMaterial
         {
-            var shader = new CopyShader();
+            Uniforms = uniforms,
+            VertexShader = shader.VertexShader,
+            FragmentShader = shader.FragmentShader,
+            DepthTest = false,
+            DepthWrite = false
+        };
 
-            this.map = map;
-            this.opacity = opacity != null ? opacity.Value : 1.0f;
-            this.uniforms = UniformsUtils.CloneUniforms(shader.Uniforms);
+        NeedsSwap = false;
 
-            this.material = new ShaderMaterial
-            {
-                Uniforms = this.uniforms,
-                VertexShader = shader.VertexShader,
-                FragmentShader = shader.FragmentShader,
-                DepthTest = false,
-                DepthWrite = false
-            };
+        fullScreenQuad = new FullScreenQuad();
+    }
 
-            this.NeedsSwap = false;
+    public override void Render(GLRenderer renderer, GLRenderTarget writeBuffer, GLRenderTarget readBuffer,
+        float? deltaTime = null, bool? maskActive = null)
+    {
+        var oldAutoClear = renderer.AutoClear;
+        renderer.AutoClear = false;
 
-            this.fullScreenQuad = new FullScreenQuad();
-        }
-        public override void Render(GLRenderer renderer, GLRenderTarget writeBuffer, GLRenderTarget readBuffer, float? deltaTime = null, bool? maskActive = null)
-        {
-            var oldAutoClear = renderer.AutoClear;
-            renderer.AutoClear = false;
+        fullScreenQuad.material = material;
 
-            this.fullScreenQuad.material = this.material;
+        (uniforms["opacity"] as GLUniform)["value"] = opacity;
+        (uniforms["tDiffuse"] as GLUniform)["value"] = map;
+        material.Transparent = opacity < 1.0;
 
-            (this.uniforms["opacity"] as GLUniform)["value"] = this.opacity;
-            (this.uniforms["tDiffuse"] as GLUniform)["value"] = this.map;
-            this.material.Transparent = (this.opacity < 1.0);
+        renderer.SetRenderTarget(RenderToScreen ? null : readBuffer);
+        if (Clear) renderer.Clear();
+        fullScreenQuad.Render(renderer);
 
-            renderer.SetRenderTarget(this.RenderToScreen ? null : readBuffer);
-            if (this.Clear) renderer.Clear();
-            this.fullScreenQuad.Render(renderer);
+        renderer.AutoClear = oldAutoClear;
+    }
 
-            renderer.AutoClear = oldAutoClear;
-        }
-
-        public override void SetSize(float width, float height)
-        {
-
-        }
+    public override void SetSize(float width, float height)
+    {
     }
 }

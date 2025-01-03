@@ -1,22 +1,19 @@
-﻿using System;
+﻿namespace THREE;
 
-namespace THREE
+[Serializable]
+public class ImmediateRenderObject : Object3D
 {
-    [Serializable]
-    public class ImmediateRenderObject : Object3D
+    public ImmediateRenderObject(Material material)
     {
-        public ImmediateRenderObject(Material material) : base()
-        {
-            this.Material = material;
-        }
+        Material = material;
+    }
 
-        protected ImmediateRenderObject(ImmediateRenderObject other) : base(other)
-        {
-            this.Material = (Material)other.Material.Clone();
-        }
+    protected ImmediateRenderObject(ImmediateRenderObject other) : base(other)
+    {
+        Material = (Material)other.Material.Clone();
+    }
 
-        public void Render(Action renderCAllback)
-        {
-        }
+    public void Render(Action renderCAllback)
+    {
     }
 }

@@ -1,27 +1,25 @@
-﻿namespace THREE
+﻿namespace THREE;
+
+[Serializable]
+public class DataTexture3D : Texture
 {
-    [Serializable]
-    public class DataTexture3D : Texture
+    public byte[] Data;
+    public int Depth;
+    public int Height;
+    public int Width;
+
+    public DataTexture3D(byte[] array, int width, int height, int depth)
     {
-        public int Width;
-        public int Height;
-        public int Depth;
+        Data = array;
+        Width = width;
+        Height = height;
 
-        public byte[] Data;
+        WrapR = Constants.ClampToEdgeWrapping;
 
-        public DataTexture3D(byte[] array, int width, int height, int depth) : base()
-        {
-            this.Data = array;
-            this.Width = width;
-            this.Height = height;
+        GenerateMipmaps = false;
 
-            this.WrapR = Constants.ClampToEdgeWrapping;
+        flipY = false;
 
-            this.GenerateMipmaps = false;
-
-            this.flipY = false;
-
-            this.NeedsUpdate = true;
-        }
+        NeedsUpdate = true;
     }
 }

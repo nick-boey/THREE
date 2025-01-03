@@ -1,16 +1,16 @@
 ﻿using System.Runtime.Serialization;
 
-namespace THREE
-{
-	[Serializable]
-    public class FreiChenShader : ShaderMaterial
-    {
-        public FreiChenShader() : base()
-        {
-            Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
-            Uniforms.Add("aspect", new GLUniform { { "value", new Vector2(512, 512) } });
+namespace THREE;
 
-            VertexShader = @"
+[Serializable]
+public class FreiChenShader : ShaderMaterial
+{
+    public FreiChenShader()
+    {
+        Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
+        Uniforms.Add("aspect", new GLUniform { { "value", new Vector2(512, 512) } });
+
+        VertexShader = @"
                 varying vec2 vUv; 
 
 
@@ -23,9 +23,9 @@ namespace THREE
 
 
                 "
-             ;
+            ;
 
-            FragmentShader = @"
+        FragmentShader = @"
 				uniform sampler2D tDiffuse; 
 				varying vec2 vUv;
 
@@ -89,8 +89,9 @@ namespace THREE
 
 
 			";
-        }
+    }
 
-        public FreiChenShader(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public FreiChenShader(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

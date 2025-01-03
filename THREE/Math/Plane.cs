@@ -1,165 +1,164 @@
-﻿using System;
+﻿namespace THREE;
 
-namespace THREE
+[Serializable]
+public class Plane : ICloneable
 {
-    [Serializable]
-    public class Plane : ICloneable
+    private Vector3 _vector1 = new();
+    private Vector3 _vector2 = new();
+    public float Constant;
+    public Vector3 Normal = new(1, 0, 0);
+
+    public Plane()
     {
-        public Vector3 Normal = new Vector3(1, 0, 0);
-        public float Constant = 0;
+    }
 
-        private Vector3 _vector1 = new Vector3();
+    protected Plane(Plane other)
+    {
+        Normal = other.Normal;
+        Constant = other.Constant;
+    }
 
-        public Plane()
-        {
-        }
-        protected Plane(Plane other)
-        {
-            this.Normal = other.Normal;
-            this.Constant = other.Constant;
-        }
+    public Plane(Vector3 normal, float constant)
+    {
+        Normal = normal;
+        Constant = constant;
+    }
 
-        public object Clone()
-        {
-            return new Plane(this);
-        }
-        public Plane Copy(Plane source)
-        {
-            this.Normal.Copy(source.Normal);
-            this.Constant = source.Constant;
-            return this;
-        }
-        public Plane(Vector3 normal, float constant)
-        {
-            this.Normal = normal;
-            this.Constant = constant;
-        }
+    public object Clone()
+    {
+        return new Plane(this);
+    }
 
-        public Plane Set(Vector3 normal, float constant)
-        {
-            this.Normal = normal;
-            this.Constant = constant;
+    public Plane Copy(Plane source)
+    {
+        Normal.Copy(source.Normal);
+        Constant = source.Constant;
+        return this;
+    }
 
-            return this;
-        }
+    public Plane Set(Vector3 normal, float constant)
+    {
+        Normal = normal;
+        Constant = constant;
 
-        public Plane SetComponents(float x, float y, float z, float w)
-        {
-            this.Normal = new Vector3(x, y, z);
-            this.Constant = w;
+        return this;
+    }
 
-            return this;
-        }
+    public Plane SetComponents(float x, float y, float z, float w)
+    {
+        Normal = new Vector3(x, y, z);
+        Constant = w;
 
-        public Plane SetFromNormalAndCoplanarPoint(Vector3 normal, Vector3 point)
-        {
-            this.Normal = normal;
-            this.Constant = -Vector3.Dot(point, this.Normal);
+        return this;
+    }
 
-            return this;
-        }
-        private Vector3 _vector2 = new Vector3();
+    public Plane SetFromNormalAndCoplanarPoint(Vector3 normal, Vector3 point)
+    {
+        Normal = normal;
+        Constant = -Vector3.Dot(point, Normal);
 
-        public Plane SetFromCoplanarPoints(Vector3 a, Vector3 b, Vector3 c)
-        {
-            Vector3 normal = _vector1.SubVectors(c, b).Cross(_vector2.SubVectors(a, b)).Normalize();
+        return this;
+    }
 
-            this.SetFromNormalAndCoplanarPoint(normal, a);
+    public Plane SetFromCoplanarPoints(Vector3 a, Vector3 b, Vector3 c)
+    {
+        var normal = _vector1.SubVectors(c, b).Cross(_vector2.SubVectors(a, b)).Normalize();
 
-            return this;
-        }
+        SetFromNormalAndCoplanarPoint(normal, a);
 
-        public Plane Normalize()
-        {
-            var inverseNormalLength = 1.0f / this.Normal.Length();
-            this.Normal.MultiplyScalar(inverseNormalLength);
-            this.Constant *= inverseNormalLength;
+        return this;
+    }
 
-            return this;
-        }
+    public Plane Normalize()
+    {
+        var inverseNormalLength = 1.0f / Normal.Length();
+        Normal.MultiplyScalar(inverseNormalLength);
+        Constant *= inverseNormalLength;
 
-        public Plane Negate()
-        {
-            this.Constant *= -1;
-            this.Normal = this.Normal.Negate();
+        return this;
+    }
 
-            return this;
-        }
+    public Plane Negate()
+    {
+        Constant *= -1;
+        Normal = Normal.Negate();
 
-        public float DistanceToPoint(Vector3 point)
-        {
-            return Vector3.Dot(this.Normal, point) + this.Constant;
-        }
+        return this;
+    }
 
-        public float DistanceToSphere(Sphere sphere)
-        {
-            return this.DistanceToPoint(sphere.Center) - sphere.Radius;
-        }
+    public float DistanceToPoint(Vector3 point)
+    {
+        return Vector3.Dot(Normal, point) + Constant;
+    }
 
-        public Vector3 ProjectPoint(Vector3 point)
-        {
-            return this.Normal * (-this.DistanceToPoint(point)) + point;
-        }
+    public float DistanceToSphere(Sphere sphere)
+    {
+        return DistanceToPoint(sphere.Center) - sphere.Radius;
+    }
 
-        public bool IntersectLine(Line line)
-        {
-            throw new NotImplementedException();
-        }
+    public Vector3 ProjectPoint(Vector3 point)
+    {
+        return Normal * -DistanceToPoint(point) + point;
+    }
 
-        public bool IntersectsLine(Line line)
-        {
-            throw new NotImplementedException();
-        }
+    public bool IntersectLine(Line line)
+    {
+        throw new NotImplementedException();
+    }
 
-        public bool IntersectsBox(Box3 box)
-        {
-            return box.IntersectPlane(this);
-        }
+    public bool IntersectsLine(Line line)
+    {
+        throw new NotImplementedException();
+    }
 
-        public bool IntersectsSphere(Sphere sphere)
-        {
-            return sphere.IntersectsPlane(this);
-        }
+    public bool IntersectsBox(Box3 box)
+    {
+        return box.IntersectPlane(this);
+    }
 
-        public Vector3 CoplanarPoint()
-        {
-            return this.Normal * (-this.Constant);
-        }
+    public bool IntersectsSphere(Sphere sphere)
+    {
+        return sphere.IntersectsPlane(this);
+    }
 
-        public Plane ApplyMatrix4(Matrix4 matrix, Matrix3 optionalNormalMatrix = null)
-        {
-            Matrix3 normalMatrix = new Matrix3();
+    public Vector3 CoplanarPoint()
+    {
+        return Normal * -Constant;
+    }
 
-            if (optionalNormalMatrix != null)
-                normalMatrix = (Matrix3)optionalNormalMatrix;
-            else
-                normalMatrix = normalMatrix.GetNormalMatrix(matrix);
+    public Plane ApplyMatrix4(Matrix4 matrix, Matrix3 optionalNormalMatrix = null)
+    {
+        var normalMatrix = new Matrix3();
 
-            Vector3 referencePoint = this.CoplanarPoint().ApplyMatrix4(matrix);
+        if (optionalNormalMatrix != null)
+            normalMatrix = (Matrix3)optionalNormalMatrix;
+        else
+            normalMatrix = normalMatrix.GetNormalMatrix(matrix);
 
-            Vector3 normal = this.Normal.ApplyMatrix3(normalMatrix).Normalize();
+        var referencePoint = CoplanarPoint().ApplyMatrix4(matrix);
 
-            this.Constant = -Vector3.Dot(referencePoint, normal);
+        var normal = Normal.ApplyMatrix3(normalMatrix).Normalize();
 
-            return this;
-        }
+        Constant = -Vector3.Dot(referencePoint, normal);
 
-        public Plane translate(Vector3 offset)
-        {
-            this.Constant -= Vector3.Dot(offset, Normal);
+        return this;
+    }
 
-            return this;
-        }
+    public Plane translate(Vector3 offset)
+    {
+        Constant -= Vector3.Dot(offset, Normal);
 
-        public override bool Equals(object obj)
-        {
-            Plane plane = obj as Plane;
-            return plane.Normal.Equals(this.Normal) && (plane.Constant == this.Constant);
-        }
+        return this;
+    }
 
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
+    public override bool Equals(object obj)
+    {
+        var plane = obj as Plane;
+        return plane.Normal.Equals(Normal) && plane.Constant == Constant;
+    }
+
+    public override int GetHashCode()
+    {
+        return base.GetHashCode();
     }
 }

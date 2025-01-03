@@ -1,73 +1,71 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace THREE;
 
-namespace THREE
+[Serializable]
+public class Face3 : ICloneable
 {
-    [Serializable]
-    public class Face3 : ICloneable
+    public int a;
+
+    public int b;
+
+    public int c;
+
+    public Color Color;
+
+    public int MaterialIndex;
+
+    public Vector3 Normal = new();
+
+    public List<Color> VertexColors = new();
+
+    public List<Vector3> VertexNormals = new();
+
+    public List<Vector4> VertexTangents = new();
+
+    public Face3(int a, int b, int c)
     {
-        public int a;
+        this.a = a;
+        this.b = b;
+        this.c = c;
+        Normal = new Vector3(1, 1, 1);
+        Color = Color.ColorName(ColorKeywords.white);
+        MaterialIndex = 0;
+    }
 
-        public int b;
+    public Face3(int a, int b, int c, Vector3 normal)
+    {
+        this.a = a;
+        this.b = b;
+        this.c = c;
+        Normal = normal;
+    }
 
-        public int c;
+    public Face3(int a, int b, int c, Vector3 normal, Color color, int materialIndex = 0)
+    {
+        this.a = a;
+        this.b = b;
+        this.c = c;
+        Normal = normal;
+        Color = color;
+        MaterialIndex = materialIndex;
+    }
 
-        public Vector3 Normal = new Vector3();
+    public Face3(int a, int b, int c, List<Vector3> vertexNormals, List<Color> vertexColors, int materialIndex = 0)
+    {
+        this.a = a;
+        this.b = b;
+        this.c = c;
+        VertexNormals = vertexNormals;
+        VertexColors = vertexColors;
+        MaterialIndex = materialIndex;
+    }
 
-        public List<Vector3> VertexNormals = new List<Vector3>();
+    protected Face3(Face3 other)
+    {
+        throw new NotImplementedException();
+    }
 
-        public Color Color;
-
-        public List<Color> VertexColors = new List<Color>();
-
-        public List<Vector4> VertexTangents = new List<Vector4>();
-
-        public int MaterialIndex = 0;
-
-        public Face3(int a, int b, int c)
-        {
-            this.a = a;
-            this.b = b;
-            this.c = c;
-            this.Normal = new Vector3(1, 1, 1);
-            this.Color = Color.ColorName(ColorKeywords.white);
-            this.MaterialIndex = 0;
-        }
-        public Face3(int a, int b, int c, Vector3 normal)
-        {
-            this.a = a;
-            this.b = b;
-            this.c = c;
-            this.Normal = normal;
-        }
-
-        public Face3(int a, int b, int c, Vector3 normal, Color color, int materialIndex = 0)
-        {
-            this.a = a;
-            this.b = b;
-            this.c = c;
-            this.Normal = normal;
-            this.Color = color;
-            this.MaterialIndex = materialIndex;
-        }
-
-        public Face3(int a, int b, int c, List<Vector3> vertexNormals, List<Color> vertexColors, int materialIndex = 0)
-        {
-            this.a = a;
-            this.b = b;
-            this.c = c;
-            this.VertexNormals = vertexNormals;
-            this.VertexColors = vertexColors;
-            this.MaterialIndex = materialIndex;
-        }
-        protected Face3(Face3 other)
-        {
-            throw new NotImplementedException();
-        }
-
-        public object Clone()
-        {
-            return new Face3(this);
-        }
+    public object Clone()
+    {
+        return new Face3(this);
     }
 }

@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace THREE;
 
-namespace THREE
+public class WireframeGeometry2 : LineSegmentsGeometry
 {
-    public class WireframeGeometry2 : LineSegmentsGeometry
+    public WireframeGeometry2(BufferGeometry geometry)
     {
-        public WireframeGeometry2(BufferGeometry geometry) : base()
-        {
-            type = "WireframeGeometry2";
-            this.FromWireframeGeometry(new WireframeGeometry(geometry));
-        }
+        type = "WireframeGeometry2";
+        FromWireframeGeometry(new WireframeGeometry(geometry));
     }
 }

@@ -1,59 +1,53 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class Shape : Path
 {
-    [Serializable]
-    public class Shape : Path
+    public List<Path> Holes;
+    public Guid Uuid = Guid.NewGuid();
+
+    public Shape(List<Vector3> points = null) : base(points)
     {
-        public Guid Uuid = Guid.NewGuid();
+        Holes = new List<Path>();
+    }
 
-        public List<Path> Holes;
-
-        public Shape(List<Vector3> points = null) : base(points)
+    protected Shape(Shape source)
+    {
+        Holes = new List<Path>();
+        for (var i = 0; i < source.Holes.Count; i++)
         {
-            Holes = new List<Path>();
+            var hole = source.Holes[i];
+
+            Holes.Add(hole.Clone() as Path);
+        }
+    }
+
+    public new object Clone()
+    {
+        return new Shape(this);
+    }
+
+    public List<List<Vector3>> GetPointsHoles(float divisions)
+    {
+        var holePts = new List<List<Vector3>>();
+
+        for (var i = 0; i < Holes.Count; i++)
+        {
+            if (Holes[i] == null) continue;
+            holePts.Add(Holes[i].GetPoints(divisions));
         }
 
-        protected Shape(Shape source)
+        return holePts;
+    }
+
+    public Hashtable ExtractPoints(float divisions)
+    {
+        return new Hashtable
         {
-            Holes = new List<Path>();
-            for (int i = 0; i < source.Holes.Count; i++)
-            {
-
-                var hole = source.Holes[i];
-
-                this.Holes.Add(hole.Clone() as Path);
-
-            }
-
-        }
-
-        public new object Clone()
-        {
-            return new Shape(this);
-        }
-        public List<List<Vector3>> GetPointsHoles(float divisions)
-        {
-            var holePts = new List<List<Vector3>>();
-
-            for (int i = 0; i < this.Holes.Count; i++)
-            {
-                if (this.Holes[i] == null) continue;
-                holePts.Add(this.Holes[i].GetPoints(divisions));
-            }
-
-            return holePts;
-        }
-
-        public Hashtable ExtractPoints(float divisions)
-        {
-            return new Hashtable()
-            {
-                {"shape",this.GetPoints(divisions) },
-                {"holes",this.GetPointsHoles(divisions) }
-            };
-        }
+            { "shape", GetPoints(divisions) },
+            { "holes", GetPointsHoles(divisions) }
+        };
     }
 }

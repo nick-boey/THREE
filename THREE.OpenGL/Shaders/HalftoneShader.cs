@@ -1,29 +1,28 @@
-﻿
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class HalftoneShader : ShaderMaterial
 {
-	[Serializable]
-    public class HalftoneShader : ShaderMaterial
+    public HalftoneShader()
     {
-        public HalftoneShader()
-        {
-            Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
-            Uniforms.Add("shape", new GLUniform { { "value", 1 } });
-            Uniforms.Add("radius", new GLUniform { { "value", 4.0f } });
-            Uniforms.Add("rotateR", new GLUniform { { "value", (float)System.Math.PI / 12 * 1 } });
-            Uniforms.Add("rotateG", new GLUniform { { "value", (float)System.Math.PI / 12 * 2 } });
-            Uniforms.Add("rotateB", new GLUniform { { "value", (float)System.Math.PI / 12 * 3 } });
-            Uniforms.Add("scatter", new GLUniform { { "value", 0.0f } });
-            Uniforms.Add("width", new GLUniform { { "value", 1.0f } });
-            Uniforms.Add("height", new GLUniform { { "value", 1.0f } });
-            Uniforms.Add("blending", new GLUniform { { "value", 1.0f } });
-            Uniforms.Add("blendingMode", new GLUniform { { "value", 1 } });
-            Uniforms.Add("greyscale", new GLUniform { { "value", false } });
-            Uniforms.Add("disable", new GLUniform { { "value", false } });
+        Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
+        Uniforms.Add("shape", new GLUniform { { "value", 1 } });
+        Uniforms.Add("radius", new GLUniform { { "value", 4.0f } });
+        Uniforms.Add("rotateR", new GLUniform { { "value", (float)Math.PI / 12 * 1 } });
+        Uniforms.Add("rotateG", new GLUniform { { "value", (float)Math.PI / 12 * 2 } });
+        Uniforms.Add("rotateB", new GLUniform { { "value", (float)Math.PI / 12 * 3 } });
+        Uniforms.Add("scatter", new GLUniform { { "value", 0.0f } });
+        Uniforms.Add("width", new GLUniform { { "value", 1.0f } });
+        Uniforms.Add("height", new GLUniform { { "value", 1.0f } });
+        Uniforms.Add("blending", new GLUniform { { "value", 1.0f } });
+        Uniforms.Add("blendingMode", new GLUniform { { "value", 1 } });
+        Uniforms.Add("greyscale", new GLUniform { { "value", false } });
+        Uniforms.Add("disable", new GLUniform { { "value", false } });
 
-            VertexShader =
-@"
+        VertexShader =
+            @"
 varying vec2 vUV;
 
 
@@ -35,8 +34,8 @@ void main() {
 
 }
 ";
-            FragmentShader =
-@"
+        FragmentShader =
+            @"
 
 		#define SQRT2_MINUS_ONE 0.41421356
 		#define SQRT2_HALF_MINUS_ONE 0.20710678
@@ -307,8 +306,9 @@ void main() {
 
 		}
 ";
-        }
+    }
 
-        public HalftoneShader(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public HalftoneShader(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

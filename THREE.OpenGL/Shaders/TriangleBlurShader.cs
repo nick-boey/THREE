@@ -1,19 +1,17 @@
-﻿
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class TriangleBlurShader : ShaderMaterial
 {
-	[Serializable]
-    public class TriangleBlurShader : ShaderMaterial
+    public TriangleBlurShader()
     {
-        public TriangleBlurShader() : base()
-        {
-            Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
-            Uniforms.Add("delta", new GLUniform { { "value", new Vector2(1, 1) } });
+        Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
+        Uniforms.Add("delta", new GLUniform { { "value", new Vector2(1, 1) } });
 
 
-
-            VertexShader = @"
+        VertexShader = @"
                 varying vec2 vUv; 
 
 
@@ -28,7 +26,7 @@ namespace THREE
             "
             ;
 
-            FragmentShader = @"
+        FragmentShader = @"
 				#include <common>
 
 				#define ITERATIONS 10.0
@@ -64,8 +62,9 @@ namespace THREE
 
 
 			";
-        }
+    }
 
-        public TriangleBlurShader(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public TriangleBlurShader(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

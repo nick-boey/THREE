@@ -1,28 +1,30 @@
 ﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class PointsMaterial : Material
 {
-    [Serializable]
-    public class PointsMaterial : Material
+    public float Size = 1;
+
+    public PointsMaterial()
     {
-        public float Size = 1;
+        type = "PointsMaterial";
 
-        public PointsMaterial() : base()
-        {
-            this.type = "PointsMaterial";
+        Color = new Color().SetHex(0xffffff);
 
-            this.Color = new Color().SetHex(0xffffff);
+        Map = null;
 
-            this.Map = null;
+        AlphaMap = null;
 
-            this.AlphaMap = null;
+        Size = 1;
 
-            this.Size = 1;
+        SizeAttenuation = true;
 
-            this.SizeAttenuation = true;
+        MorphTargets = false;
+    }
 
-            this.MorphTargets = false;
-        }
-        public PointsMaterial(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public PointsMaterial(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

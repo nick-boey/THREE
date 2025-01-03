@@ -1,7 +1,6 @@
-﻿namespace THREE
+﻿namespace THREE;
+
+[Serializable]
+public class LineCurve : Curve
 {
-    [Serializable]
-    public class LineCurve : Curve
-    {
-    }
 }

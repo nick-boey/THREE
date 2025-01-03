@@ -1,70 +1,58 @@
-﻿using System;
-using System.Collections;
-using THREE.Renderers.Shaders;
+﻿using System.Collections;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class HalftonePass : Pass
 {
-    [Serializable]
-    public class HalftonePass : Pass
+    public ShaderMaterial material;
+    public GLUniforms uniforms;
+
+    public HalftonePass(float? width = null, float? height = null, Hashtable parameter = null)
     {
-        public GLUniforms uniforms;
-        public ShaderMaterial material;
-        public HalftonePass(float? width = null, float? height = null, Hashtable parameter = null) : base()
+        var halftoneShader = new HalftoneShader();
+        uniforms = UniformsUtils.CloneUniforms(halftoneShader.Uniforms);
+        material = new ShaderMaterial
         {
-            var halftoneShader = new HalftoneShader();
-            uniforms = UniformsUtils.CloneUniforms(halftoneShader.Uniforms);
-            this.material = new ShaderMaterial
-            {
-                Uniforms = this.uniforms,
-                FragmentShader = halftoneShader.FragmentShader,
-                VertexShader = halftoneShader.VertexShader
-            };
+            Uniforms = uniforms,
+            FragmentShader = halftoneShader.FragmentShader,
+            VertexShader = halftoneShader.VertexShader
+        };
 
-            // set params
+        // set params
 
-            (this.uniforms["width"] as GLUniform)["value"] = width;
-            (this.uniforms["height"] as GLUniform)["value"] = height;
+        (uniforms["width"] as GLUniform)["value"] = width;
+        (uniforms["height"] as GLUniform)["value"] = height;
 
-            if (parameter != null)
-            {
+        if (parameter != null)
+            foreach (DictionaryEntry key in parameter)
+                if (key.Value != null && uniforms.ContainsKey((string)key.Key))
+                    (uniforms[(string)key.Key] as GLUniform)["value"] = key.Value;
 
+        fullScreenQuad = new FullScreenQuad(material);
+    }
 
-                foreach (DictionaryEntry key in parameter)
-                {
+    public override void Render(GLRenderer renderer, GLRenderTarget writeBuffer, GLRenderTarget readBuffer,
+        float? deltaTime = null, bool? maskActive = null)
+    {
+        (material.Uniforms["tDiffuse"] as GLUniform)["value"] = readBuffer.Texture;
 
-                    if (key.Value != null && this.uniforms.ContainsKey((string)key.Key))
-                    {
-                        (this.uniforms[(string)key.Key] as GLUniform)["value"] = key.Value;
-                    }
-                }
-            }
-            this.fullScreenQuad = new FullScreenQuad(this.material);
-        }
-        public override void Render(GLRenderer renderer, GLRenderTarget writeBuffer, GLRenderTarget readBuffer, float? deltaTime = null, bool? maskActive = null)
+        if (RenderToScreen)
         {
-            (this.material.Uniforms["tDiffuse"] as GLUniform)["value"] = readBuffer.Texture;
-
-            if (this.RenderToScreen)
-            {
-
-                renderer.SetRenderTarget(null);
-                this.fullScreenQuad.Render(renderer);
-
-            }
-            else
-            {
-
-                renderer.SetRenderTarget(writeBuffer);
-                if (this.Clear) renderer.Clear();
-                this.fullScreenQuad.Render(renderer);
-
-            }
+            renderer.SetRenderTarget(null);
+            fullScreenQuad.Render(renderer);
         }
-
-        public override void SetSize(float width, float height)
+        else
         {
-            (this.uniforms["width"] as GLUniform)["value"] = width;
-            (this.uniforms["height"] as GLUniform)["value"] = height;
+            renderer.SetRenderTarget(writeBuffer);
+            if (Clear) renderer.Clear();
+            fullScreenQuad.Render(renderer);
         }
+    }
+
+    public override void SetSize(float width, float height)
+    {
+        (uniforms["width"] as GLUniform)["value"] = width;
+        (uniforms["height"] as GLUniform)["value"] = height;
     }
 }

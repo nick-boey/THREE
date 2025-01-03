@@ -1,98 +1,79 @@
-﻿using System;
+﻿namespace THREE;
 
-namespace THREE
+[Serializable]
+public class RenderPass : Pass
 {
-    [Serializable]
-    public class RenderPass : Pass
+    public Camera camera;
+
+    public float ClearAlpha;
+
+    public Color? ClearColor;
+
+    public bool ClearDepth;
+
+    public Material OverrideMaterial;
+    public Scene scene;
+
+    public RenderPass(Scene scene, Camera camera, Material overrideMaterial = null, Color? clearColor = null,
+        float? clearAlpha = null)
     {
-        public Scene scene;
-        public Camera camera;
+        this.scene = scene;
+        this.camera = camera;
 
-        public Material OverrideMaterial;
+        OverrideMaterial = overrideMaterial;
 
-        public Color? ClearColor;
+        ClearColor = clearColor;
+        if (clearAlpha == null)
+            ClearAlpha = 1.0f;
+        else
+            ClearAlpha = clearAlpha.Value;
 
-        public float ClearAlpha;
+        Clear = true;
+        ClearDepth = false;
+        NeedsSwap = false;
+    }
 
-        public bool ClearDepth;
+    public override void Render(GLRenderer renderer, GLRenderTarget writeBuffer, GLRenderTarget readBuffer,
+        float? deltaTime = null, bool? maskActive = null)
+    {
+        var oldAutoClear = renderer.AutoClear;
+        renderer.AutoClear = false;
 
-        public RenderPass(Scene scene, Camera camera, Material overrideMaterial = null, Color? clearColor = null, float? clearAlpha = null)
+        Color? oldClearColor = null;
+        ;
+        float oldClearAlpha = 1;
+        Material oldOverrideMaterial;
+
+
+        oldOverrideMaterial = scene.OverrideMaterial;
+
+        scene.OverrideMaterial = OverrideMaterial;
+
+
+        if (ClearColor != null)
         {
-            this.scene = scene;
-            this.camera = camera;
+            oldClearColor = renderer.GetClearColor();
+            oldClearAlpha = renderer.GetClearAlpha();
 
-            this.OverrideMaterial = overrideMaterial;
-
-            this.ClearColor = clearColor;
-            if (clearAlpha == null)
-                this.ClearAlpha = 1.0f;
-            else
-                this.ClearAlpha = clearAlpha.Value;
-
-            this.Clear = true;
-            this.ClearDepth = false;
-            this.NeedsSwap = false;
-        }
-        public override void Render(GLRenderer renderer, GLRenderTarget writeBuffer, GLRenderTarget readBuffer, float? deltaTime = null, bool? maskActive = null)
-        {
-            var oldAutoClear = renderer.AutoClear;
-            renderer.AutoClear = false;
-
-            Color? oldClearColor = null; ;
-            float oldClearAlpha = 1;
-            Material oldOverrideMaterial;
-
-
-
-            oldOverrideMaterial = this.scene.OverrideMaterial;
-
-            this.scene.OverrideMaterial = this.OverrideMaterial;
-
-
-
-            if (this.ClearColor != null)
-            {
-
-                oldClearColor = renderer.GetClearColor();
-                oldClearAlpha = renderer.GetClearAlpha();
-
-                renderer.SetClearColor(this.ClearColor.Value, this.ClearAlpha);
-
-            }
-
-            if (this.ClearDepth)
-            {
-
-                renderer.ClearDepth();
-
-            }
-
-            renderer.SetRenderTarget(this.RenderToScreen ? null : readBuffer);
-
-            // TODO: Avoid using autoClear properties, see https://github.com/mrdoob/three.js/pull/15571#issuecomment-465669600
-            if (this.Clear) renderer.Clear(renderer.AutoClearColor, renderer.AutoClearDepth, renderer.AutoClearStencil);
-            renderer.Render(this.scene, this.camera);
-
-            if (this.ClearColor != null)
-            {
-
-                renderer.SetClearColor(oldClearColor.Value, oldClearAlpha);
-
-            }
-
-            if (this.OverrideMaterial != null)
-            {
-
-                this.scene.OverrideMaterial = oldOverrideMaterial;
-
-            }
-
-            renderer.AutoClear = oldAutoClear;
+            renderer.SetClearColor(ClearColor.Value, ClearAlpha);
         }
 
-        public override void SetSize(float width, float height)
-        {
+        if (ClearDepth) renderer.ClearDepth();
 
-        }
+        renderer.SetRenderTarget(RenderToScreen ? null : readBuffer);
+
+        // TODO: Avoid using autoClear properties, see https://github.com/mrdoob/three.js/pull/15571#issuecomment-465669600
+        if (Clear) renderer.Clear(renderer.AutoClearColor, renderer.AutoClearDepth, renderer.AutoClearStencil);
+        renderer.Render(scene, camera);
+
+        if (ClearColor != null) renderer.SetClearColor(oldClearColor.Value, oldClearAlpha);
+
+        if (OverrideMaterial != null) scene.OverrideMaterial = oldOverrideMaterial;
+
+        renderer.AutoClear = oldAutoClear;
+    }
+
+    public override void SetSize(float width, float height)
+    {
     }
 }

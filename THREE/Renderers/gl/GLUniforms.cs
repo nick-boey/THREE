@@ -1,35 +1,38 @@
-﻿using System.Collections.Generic;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class GLUniforms : StructuredUniform
 {
-    [Serializable]
-    public class GLUniforms : StructuredUniform
+    public GLUniforms()
     {
-        public int Program { get; set; } = 0;
-        public GLUniforms() :base() 
-        {
-            UniformKind = "GLUniforms";
-        }
-        public GLUniforms(string id) : base(id) 
-        {
-            UniformKind = "GLUniforms";
-        }
-        public GLUniforms(string id, string kind) : base(id)
-        {
-            UniformKind = kind;
-        }
-        public GLUniforms(SerializationInfo info, StreamingContext context) : base(info, context) { }
+        UniformKind = "GLUniforms";
+    }
 
-        public new object Clone()
-        {
-            return this.DeepCopy();
-        }
+    public GLUniforms(string id) : base(id)
+    {
+        UniformKind = "GLUniforms";
+    }
 
-        public GLUniforms Copy(GLUniforms original)
-        {           
-            return original.DeepCopy();
-        }
+    public GLUniforms(string id, string kind) : base(id)
+    {
+        UniformKind = kind;
+    }
 
+    public GLUniforms(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
+    }
+
+    public int Program { get; set; } = 0;
+
+    public new object Clone()
+    {
+        return this.DeepCopy();
+    }
+
+    public GLUniforms Copy(GLUniforms original)
+    {
+        return original.DeepCopy();
     }
 }

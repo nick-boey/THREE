@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace THREE;
 
-namespace THREE
+[Serializable]
+public static class Global
 {
-    [Serializable]
-    public static class Global
-    {
-        public static ShaderLib ShaderLib = new ShaderLib();
-    }
+    public static ShaderLib ShaderLib = new();
 }

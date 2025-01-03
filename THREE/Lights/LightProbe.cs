@@ -1,35 +1,36 @@
-﻿using System;
-using System.Linq;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class LightProbe : Light, ICloneable
 {
-    [Serializable]
-    public class LightProbe : Light, ICloneable
+    public LightProbe() : base(Color.ColorName(ColorKeywords.white))
     {
+        sh = new SphericalHarmonics3();
+    }
 
-        public LightProbe() : base(Color.ColorName(ColorKeywords.white), null)
-        {
-            sh = new SphericalHarmonics3();
-        }
-        public LightProbe(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public LightProbe(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
+    }
 
-        public LightProbe(SphericalHarmonics3 sh, int? intensity) : base(Color.ColorName(ColorKeywords.white), intensity)
-        {
-            if (sh != null) this.sh = sh;
-            else sh = new SphericalHarmonics3();
-        }
+    public LightProbe(SphericalHarmonics3 sh, int? intensity) : base(Color.ColorName(ColorKeywords.white), intensity)
+    {
+        if (sh != null) this.sh = sh;
+        else sh = new SphericalHarmonics3();
+    }
 
-        protected LightProbe(LightProbe other)
-        {
-            this.sh = (SphericalHarmonics3)other.sh.Clone();
-            this.Intensity = other.Intensity;
-        }
-        public LightProbe Copy(LightProbe source)
-        {
-            if (source.sh != null && source.sh.Coefficients.Count > 0) this.sh.Coefficients = source.sh.Coefficients.ToList(); ;
-            Intensity = source.Intensity;
-            return this;
-        }
+    protected LightProbe(LightProbe other)
+    {
+        sh = (SphericalHarmonics3)other.sh.Clone();
+        Intensity = other.Intensity;
+    }
+
+    public LightProbe Copy(LightProbe source)
+    {
+        if (source.sh != null && source.sh.Coefficients.Count > 0) sh.Coefficients = source.sh.Coefficients.ToList();
+        ;
+        Intensity = source.Intensity;
+        return this;
     }
 }

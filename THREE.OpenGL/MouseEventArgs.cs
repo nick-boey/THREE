@@ -1,21 +1,19 @@
-﻿
-using OpenTK.Windowing.GraphicsLibraryFramework;
+﻿using OpenTK.Windowing.GraphicsLibraryFramework;
 
-namespace THREE
+namespace THREE;
+
+public struct MouseEventArgs
 {
-    public struct MouseEventArgs
+    public int X { get; set; }
+    public int Y { get; set; }
+    public MouseButton Button { get; }
+    public int Delta { get; }
+
+    public MouseEventArgs(MouseButton button, int x, int y, int delta)
     {
-        public int X { get; set; }
-        public int Y { get; set; }
-        public MouseButton Button { get; }
-        public int Delta { get; }
-        public MouseEventArgs(MouseButton button, int x,int y, int delta)
-        {
-            Button = button;           
-            X = x;
-            Y = y;
-            Delta = delta;
-        }
-        
+        Button = button;
+        X = x;
+        Y = y;
+        Delta = delta;
     }
 }

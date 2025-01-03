@@ -1,87 +1,81 @@
-﻿using OpenTK.Graphics.ES30;
-using System.Collections;
+﻿using System.Collections;
+using OpenTK.Graphics.ES30;
 
+namespace THREE;
 
-namespace THREE
+[Serializable]
+public class GLObjects
 {
-    [Serializable]
-    public class GLObjects
+    public GLAttributes Attributes;
+
+    public GLGeometries Geometries;
+
+    private GLInfo info;
+    public Hashtable UpdateList = new();
+
+    public GLObjects(GLGeometries geometries, GLAttributes attributes, GLInfo info)
     {
-        public Hashtable UpdateList = new Hashtable();
+        Geometries = geometries;
+        Attributes = attributes;
+        this.info = info;
+    }
 
-        private GLInfo info;
+    public BufferGeometry Update(Object3D object3D)
+    {
+        var frame = info.render.Frame;
 
-        public GLAttributes Attributes;
+        var geometry = object3D.Geometry;
 
-        public GLGeometries Geometries;
+        var bufferGeometry = Geometries.Get(object3D, geometry);
 
-        public GLObjects(GLGeometries geometries, GLAttributes attributes, GLInfo info)
+        // Update once per frame
+
+        if (!UpdateList.ContainsKey(bufferGeometry.Id) || (int)UpdateList[bufferGeometry.Id] != frame)
         {
-            this.Geometries = geometries;
-            this.Attributes = attributes;
-            this.info = info;
+            if (!(geometry is BufferGeometry)) (bufferGeometry as BufferGeometry).UpdateFromObject(object3D);
+
+            Geometries.Update(bufferGeometry);
+
+            if (!UpdateList.ContainsKey(bufferGeometry.Id))
+                UpdateList.Add(bufferGeometry.Id, frame);
+            else
+                UpdateList[bufferGeometry.Id] = frame;
         }
 
-        public BufferGeometry Update(Object3D object3D)
+        //bool objectExists = UpdateList.ContainsKey(bufferGeometry.Id) ? true : false;
+
+        //if (!objectExists)
+        //{
+        //    if (geometry is BufferGeometry)
+        //    {
+        //        (bufferGeometry as BufferGeometry).UpdateFromObject(object3D);
+        //    }
+
+        //    Geometries.Update(bufferGeometry);
+
+        //    UpdateList.Add(bufferGeometry.Id, frame);
+        //}
+
+        //if ((int)UpdateList[bufferGeometry.Id] != frame)
+        //{
+        //    if (geometry is BufferGeometry)
+        //    {
+        //        (bufferGeometry as BufferGeometry).UpdateFromObject(object3D);
+        //    }
+
+        //    Geometries.Update(bufferGeometry);
+
+        //    UpdateList[bufferGeometry.Id] = frame;
+        //}
+
+        if (object3D is InstancedMesh)
         {
-            var frame = this.info.render.Frame;
+            Attributes.Update<float>((object3D as InstancedMesh).InstanceMatrix, BufferTarget.ArrayBuffer);
 
-            var geometry = object3D.Geometry;
-
-            var bufferGeometry = Geometries.Get(object3D, geometry);
-
-            // Update once per frame
-
-            if (!UpdateList.ContainsKey(bufferGeometry.Id) || (int)UpdateList[bufferGeometry.Id] != frame)
-            {
-                if (!(geometry is BufferGeometry))
-                {
-                    (bufferGeometry as BufferGeometry).UpdateFromObject(object3D);
-                }
-
-                Geometries.Update(bufferGeometry);
-
-                if (!UpdateList.ContainsKey(bufferGeometry.Id))
-                    UpdateList.Add(bufferGeometry.Id, frame);
-                else
-                    UpdateList[bufferGeometry.Id] = frame;
-            }
-
-            //bool objectExists = UpdateList.ContainsKey(bufferGeometry.Id) ? true : false;
-
-            //if (!objectExists)
-            //{
-            //    if (geometry is BufferGeometry)
-            //    {
-            //        (bufferGeometry as BufferGeometry).UpdateFromObject(object3D);
-            //    }
-
-            //    Geometries.Update(bufferGeometry);
-
-            //    UpdateList.Add(bufferGeometry.Id, frame);
-            //}
-
-            //if ((int)UpdateList[bufferGeometry.Id] != frame)
-            //{
-            //    if (geometry is BufferGeometry)
-            //    {
-            //        (bufferGeometry as BufferGeometry).UpdateFromObject(object3D);
-            //    }
-
-            //    Geometries.Update(bufferGeometry);
-
-            //    UpdateList[bufferGeometry.Id] = frame;
-            //}
-
-            if (object3D is InstancedMesh)
-            {
-                Attributes.Update<float>((object3D as InstancedMesh).InstanceMatrix, BufferTarget.ArrayBuffer);
-
-                if ((object3D as InstancedMesh).InstanceColor != null)
-                    Attributes.Update<float>((object3D as InstancedMesh).InstanceColor,BufferTarget.ArrayBuffer);
-            }
-
-            return bufferGeometry as BufferGeometry;
+            if ((object3D as InstancedMesh).InstanceColor != null)
+                Attributes.Update<float>((object3D as InstancedMesh).InstanceColor, BufferTarget.ArrayBuffer);
         }
+
+        return bufferGeometry as BufferGeometry;
     }
 }

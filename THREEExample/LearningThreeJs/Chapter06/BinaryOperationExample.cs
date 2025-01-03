@@ -1,201 +1,192 @@
 ﻿using ImGuiNET;
-using OpenTK;
 using THREE;
 using THREEExample.Learning.Utils;
 
-namespace THREEExample.Learning.Chapter06
+namespace THREEExample.Learning.Chapter06;
+
+[Example("08-Binary-Operation", ExampleCategory.LearnThreeJS, "Chapter06")]
+public class BinaryOperationExample : Example
 {
-    [Example("08-Binary-Operation", ExampleCategory.LearnThreeJS, "Chapter06")]
-    public class BinaryOperationExample : Example
+    private readonly int cubeAction = 0;
+    private Mesh cube;
+
+    private Mesh groundPlane;
+    private bool hideWireframes;
+    private Mesh result;
+
+    private bool rotateResult;
+
+    private Mesh sphere1;
+    private Mesh sphere2;
+    private int sphereAction;
+
+    private Mesh CreateMesh(Geometry geometry)
     {
-        Mesh result;
+        var wireframeMaterial = new MeshBasicMaterial
+            { Transparent = true, Opacity = 0.5f, WireframeLineWidth = 0.5f, Wireframe = true };
 
-        Mesh groundPlane;
+        return new Mesh(geometry, wireframeMaterial);
+    }
 
-        Mesh sphere1;
-        Mesh sphere2;
-        Mesh cube;
-        int sphereAction = 0;
-        int cubeAction = 0;
+    private void BuildGeometry()
+    {
+        groundPlane = DemoUtils.AddLargeGroundPlane(scene);
 
-        bool rotateResult = false;
-        bool hideWireframes = false;
-        public BinaryOperationExample() : base()
+        groundPlane.Position.Y = -30;
+
+        DemoUtils.InitDefaultLighting(scene);
+
+
+        sphere1 = CreateMesh(new SphereGeometry(5, 20, 30));
+
+        sphere1.Position.X = -2;
+
+        sphere2 = CreateMesh(new SphereGeometry(5, 20, 30));
+
+        sphere2.Position.Set(3, 0, 0);
+
+        cube = CreateMesh(new BoxGeometry(5, 5, 5));
+
+        cube.Position.X = -7;
+
+        scene.Add(sphere1);
+        scene.Add(sphere2);
+        scene.Add(cube);
+    }
+
+    public override void InitCamera()
+    {
+        base.InitCamera();
+        camera.Position.Set(0, 20, 20);
+    }
+
+    public override void Init()
+    {
+        base.Init();
+        BuildGeometry();
+
+        AddGuiControlsAction = ShowControls;
+    }
+
+    public override void Render()
+    {
+        if (rotateResult && result != null)
         {
-
+            result.Rotation.Y += 0.4f;
+            result.Rotation.Z -= 0.005f;
         }
 
-        private Mesh CreateMesh(Geometry geometry)
+        if (!imGuiManager.ImWantMouse)
+            controls.Enabled = true;
+        else
+            controls.Enabled = false;
+
+        controls.Update();
+        renderer.Render(scene, camera);
+    }
+
+    private void ShowControls()
+    {
+        if (ImGui.TreeNode("Sphere1"))
         {
-            var wireframeMaterial = new MeshBasicMaterial() { Transparent = true, Opacity = 0.5f, WireframeLineWidth = 0.5f, Wireframe = true };
+            ImGui.SliderFloat("sphere1PosX", ref sphere1.Position.X, -15, 15);
+            ImGui.SliderFloat("sphere1PosY", ref sphere1.Position.Y, -15, 15);
+            ImGui.SliderFloat("sphere1PosZ", ref sphere1.Position.Z, -15, 15);
+            if (ImGui.SliderFloat("sphere1Scale", ref sphere1.Scale.X, 0, 10))
+                sphere1.Scale.Y = sphere1.Scale.Z = sphere1.Scale.X;
 
-            return new Mesh(geometry, wireframeMaterial);
-        }
-        private void BuildGeometry()
-        {
-            groundPlane = DemoUtils.AddLargeGroundPlane(this.scene);
-
-            groundPlane.Position.Y = -30;
-
-            DemoUtils.InitDefaultLighting(this.scene);
-
-
-            sphere1 = CreateMesh(new SphereGeometry(5, 20, 30));
-
-            sphere1.Position.X = -2;
-
-            sphere2 = CreateMesh(new SphereGeometry(5, 20, 30));
-
-            sphere2.Position.Set(3, 0, 0);
-
-            cube = CreateMesh(new BoxGeometry(5, 5, 5));
-
-            cube.Position.X = -7;
-
-            scene.Add(sphere1);
-            scene.Add(sphere2);
-            scene.Add(cube);
-
-        }
-        public override void InitCamera()
-        {
-            base.InitCamera();
-            camera.Position.Set(0, 20, 20);
+            ImGui.TreePop();
         }
 
-        public override void Init()
+        if (ImGui.TreeNode("Sphere2"))
         {
-            base.Init();
-            BuildGeometry();
+            ImGui.SliderFloat("sphere2PosX", ref sphere2.Position.X, -15, 15);
+            ImGui.SliderFloat("sphere2PosY", ref sphere2.Position.Y, -15, 15);
+            ImGui.SliderFloat("sphere2PosZ", ref sphere2.Position.Z, -15, 15);
+            if (ImGui.SliderFloat("sphere2Scale", ref sphere2.Scale.X, 0, 10))
+                sphere2.Scale.Y = sphere2.Scale.Z = sphere2.Scale.X;
 
-            AddGuiControlsAction = ShowControls;
+            ImGui.Combo("actionSphere", ref sphereAction, "subtract\0intersect\0union\0none\0");
+            ImGui.TreePop();
         }
 
-        public override void Render()
+        if (ImGui.TreeNode("cube"))
         {
-            if (rotateResult && result != null)
+            ImGui.SliderFloat("cubePosX", ref cube.Position.X, -15, 15);
+            ImGui.SliderFloat("cubePosY", ref cube.Position.Y, -15, 15);
+            ImGui.SliderFloat("cubePosZ", ref cube.Position.Z, -15, 15);
+            ImGui.SliderFloat("ScaleX", ref cube.Scale.X, 0, 10);
+            ImGui.SliderFloat("ScaleY", ref cube.Scale.Y, 0, 10);
+            ImGui.SliderFloat("ScaleZ", ref cube.Scale.Z, 0, 10);
+            ImGui.Combo("actionCube", ref sphereAction, "subtract\0intersect\0union\0none\0");
+            ImGui.TreePop();
+        }
+
+        if (ImGui.Button("showResult")) showResult();
+        ImGui.Checkbox("rotateResult", ref rotateResult);
+        if (ImGui.Checkbox("hideWireframes", ref hideWireframes))
+        {
+            if (hideWireframes)
             {
-                result.Rotation.Y += 0.4f;
-                result.Rotation.Z -= 0.005f;
+                sphere1.Material.Visible = false;
+                sphere2.Material.Visible = false;
+                cube.Material.Visible = false;
             }
-
-            if (!imGuiManager.ImWantMouse)
-                controls.Enabled = true;
             else
-                controls.Enabled = false;
-
-            controls.Update();
-            renderer.Render(scene, camera);
-        }
-        private void ShowControls()
-        {
-            if (ImGui.TreeNode("Sphere1"))
             {
-                ImGui.SliderFloat("sphere1PosX", ref sphere1.Position.X, -15, 15);
-                ImGui.SliderFloat("sphere1PosY", ref sphere1.Position.Y, -15, 15);
-                ImGui.SliderFloat("sphere1PosZ", ref sphere1.Position.Z, -15, 15);
-                if (ImGui.SliderFloat("sphere1Scale", ref sphere1.Scale.X, 0, 10))
-                {
-                    sphere1.Scale.Y = sphere1.Scale.Z = sphere1.Scale.X;
-                }
-
-                ImGui.TreePop();
-            }
-            if (ImGui.TreeNode("Sphere2"))
-            {
-                ImGui.SliderFloat("sphere2PosX", ref sphere2.Position.X, -15, 15);
-                ImGui.SliderFloat("sphere2PosY", ref sphere2.Position.Y, -15, 15);
-                ImGui.SliderFloat("sphere2PosZ", ref sphere2.Position.Z, -15, 15);
-                if (ImGui.SliderFloat("sphere2Scale", ref sphere2.Scale.X, 0, 10))
-                {
-                    sphere2.Scale.Y = sphere2.Scale.Z = sphere2.Scale.X;
-                }
-
-                ImGui.Combo("actionSphere", ref sphereAction, "subtract\0intersect\0union\0none\0");
-                ImGui.TreePop();
-            }
-            if (ImGui.TreeNode("cube"))
-            {
-                ImGui.SliderFloat("cubePosX", ref cube.Position.X, -15, 15);
-                ImGui.SliderFloat("cubePosY", ref cube.Position.Y, -15, 15);
-                ImGui.SliderFloat("cubePosZ", ref cube.Position.Z, -15, 15);
-                ImGui.SliderFloat("ScaleX", ref cube.Scale.X, 0, 10);
-                ImGui.SliderFloat("ScaleY", ref cube.Scale.Y, 0, 10);
-                ImGui.SliderFloat("ScaleZ", ref cube.Scale.Z, 0, 10);
-                ImGui.Combo("actionCube", ref sphereAction, "subtract\0intersect\0union\0none\0");
-                ImGui.TreePop();
-            }
-            if (ImGui.Button("showResult"))
-            {
-                showResult();
-            }
-            ImGui.Checkbox("rotateResult", ref rotateResult);
-            if (ImGui.Checkbox("hideWireframes", ref hideWireframes))
-            {
-                if (hideWireframes)
-                {
-                    sphere1.Material.Visible = false;
-                    sphere2.Material.Visible = false;
-                    cube.Material.Visible = false;
-                }
-                else
-                {
-                    sphere1.Material.Visible = true;
-                    sphere2.Material.Visible = true;
-                    cube.Material.Visible = true;
-                }
+                sphere1.Material.Visible = true;
+                sphere2.Material.Visible = true;
+                cube.Material.Visible = true;
             }
         }
+    }
 
-        private void showResult()
+    private void showResult()
+    {
+        if (result != null) scene.Remove(result);
+        var sphere1BSP = new ThreeBSP(sphere1);
+        var sphere2BSP = new ThreeBSP(sphere2);
+        var cube2BSP = new ThreeBSP(cube);
+
+        ThreeBSP resultBSP = null;
+        switch (sphereAction)
         {
-            if (result != null)
-            {
-                scene.Remove(result);
-            }
-            var sphere1BSP = new ThreeBSP(sphere1);
-            var sphere2BSP = new ThreeBSP(sphere2);
-            var cube2BSP = new ThreeBSP(cube);
+            case 0:
+                resultBSP = sphere1BSP.Subtract(sphere2BSP);
+                break;
+            case 1:
+                resultBSP = sphere1BSP.Intersect(sphere2BSP);
+                break;
+            case 2:
+                resultBSP = sphere1BSP.Union(sphere2BSP);
+                break;
+            case 3:
+                break;
+        }
 
-            ThreeBSP resultBSP = null;
-            switch (sphereAction)
-            {
-                case 0:
-                    resultBSP = sphere1BSP.Subtract(sphere2BSP);
-                    break;
-                case 1:
-                    resultBSP = sphere1BSP.Intersect(sphere2BSP);
-                    break;
-                case 2:
-                    resultBSP = sphere1BSP.Union(sphere2BSP);
-                    break;
-                case 3:
-                    break;
-            }
-            if (resultBSP == null) resultBSP = sphere1BSP;
+        if (resultBSP == null) resultBSP = sphere1BSP;
 
-            switch (cubeAction)
-            {
-                case 0:
-                    resultBSP = resultBSP.Subtract(cube2BSP);
-                    break;
-                case 1:
-                    resultBSP = resultBSP.Intersect(cube2BSP);
-                    break;
-                case 2:
-                    resultBSP = resultBSP.Union(cube2BSP);
-                    break;
-                case 3:
-                    break;
-            }
+        switch (cubeAction)
+        {
+            case 0:
+                resultBSP = resultBSP.Subtract(cube2BSP);
+                break;
+            case 1:
+                resultBSP = resultBSP.Intersect(cube2BSP);
+                break;
+            case 2:
+                resultBSP = resultBSP.Union(cube2BSP);
+                break;
+            case 3:
+                break;
+        }
 
-            if (sphereAction != 3 && cubeAction != 3)
-            {
-                result = resultBSP.ToMesh();
-                result.Geometry.ComputeFaceNormals();
-                result.Geometry.ComputeVertexNormals();
-                scene.Add(result);
-            }
+        if (sphereAction != 3 && cubeAction != 3)
+        {
+            result = resultBSP.ToMesh();
+            result.Geometry.ComputeFaceNormals();
+            result.Geometry.ComputeVertexNormals();
+            scene.Add(result);
         }
     }
 }

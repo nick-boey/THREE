@@ -1,5 +1,5 @@
 ﻿//Apache2, 2016-present, WinterDev
-using System;
+
 using System.IO;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -60,269 +60,276 @@ using System.IO;
 ///////////////////////////////////////////////////////////////////////////////
 
 
-namespace Typography.OpenFont.Tables
+namespace Typography.OpenFont.Tables;
+
+internal class GDEF : TableEntry
 {
+    public const string _N = "GDEF";
 
-    class GDEF : TableEntry
+    //
+    private long _tableStartAt;
+    public override string Name => _N;
+    public int MajorVersion { get; private set; }
+    public int MinorVersion { get; private set; }
+    public ClassDefTable GlyphClassDef { get; private set; }
+    public AttachmentListTable AttachmentListTable { get; private set; }
+    public LigCaretList LigCaretList { get; private set; }
+    public ClassDefTable MarkAttachmentClassDef { get; private set; }
+    public MarkGlyphSetsTable MarkGlyphSetsTable { get; private set; }
+
+    protected override void ReadContentFrom(BinaryReader reader)
     {
-        public const string _N = "GDEF";
-        public override string Name => _N;
+        _tableStartAt = reader.BaseStream.Position;
+        //-----------------------------------------
+        //GDEF Header, Version 1.0
+        //Type 	    Name 	            Description
+        //uint16 	MajorVersion 	    Major version of the GDEF table, = 1
+        //uint16 	MinorVersion 	    Minor version of the GDEF table, = 0
+        //Offset16 	GlyphClassDef 	    Offset to class definition table for glyph type, from beginning of GDEF header (may be NULL)
+        //Offset16 	AttachList  	    Offset to list of glyphs with attachment points, from beginning of GDEF header (may be NULL)
+        //Offset16 	LigCaretList 	    Offset to list of positioning points for ligature carets, from beginning of GDEF header (may be NULL)
+        //Offset16 	MarkAttachClassDef 	Offset to class definition table for mark attachment type, from beginning of GDEF header (may be NULL)
         //
-        long _tableStartAt;
-        protected override void ReadContentFrom(BinaryReader reader)
+        //GDEF Header, Version 1.2
+        //Type 	Name 	Description
+        //uint16 	MajorVersion 	    Major version of the GDEF table, = 1
+        //uint16 	MinorVersion 	    Minor version of the GDEF table, = 2
+        //Offset16 	GlyphClassDef 	    Offset to class definition table for glyph type, from beginning of GDEF header (may be NULL)
+        //Offset16 	AttachList 	        Offset to list of glyphs with attachment points, from beginning of GDEF header (may be NULL)
+        //Offset16 	LigCaretList 	    Offset to list of positioning points for ligature carets, from beginning of GDEF header (may be NULL)
+        //Offset16 	MarkAttachClassDef 	Offset to class definition table for mark attachment type, from beginning of GDEF header (may be NULL)
+        //Offset16 	MarkGlyphSetsDef 	Offset to the table of mark set definitions, from beginning of GDEF header (may be NULL)
+        //
+        //GDEF Header, Version 1.3
+        //Type 	Name 	Description
+        //uint16 	MajorVersion 	    Major version of the GDEF table, = 1
+        //uint16 	MinorVersion 	    Minor version of the GDEF table, = 3
+        //Offset16 	GlyphClassDef 	    Offset to class definition table for glyph type, from beginning of GDEF header (may be NULL)
+        //Offset16 	AttachList  	    Offset to list of glyphs with attachment points, from beginning of GDEF header (may be NULL)
+        //Offset16 	LigCaretList 	    Offset to list of positioning points for ligature carets, from beginning of GDEF header (may be NULL)
+        //Offset16 	MarkAttachClassDef 	Offset to class definition table for mark attachment type, from beginning of GDEF header (may be NULL)
+        //Offset16 	MarkGlyphSetsDef 	Offset to the table of mark set definitions, from beginning of GDEF header (may be NULL)
+        //Offset32 	ItemVarStore 	    Offset to the Item Variation Store table, from beginning of GDEF header (may be NULL)
+
+        //common to 1.0, 1.2, 1.3...
+        MajorVersion = reader.ReadUInt16();
+        MinorVersion = reader.ReadUInt16();
+        //
+        var glyphClassDefOffset = reader.ReadUInt16();
+        var attachListOffset = reader.ReadUInt16();
+        var ligCaretListOffset = reader.ReadUInt16();
+        var markAttachClassDefOffset = reader.ReadUInt16();
+        ushort markGlyphSetsDefOffset = 0;
+        uint itemVarStoreOffset = 0;
+        //
+        switch (MinorVersion)
         {
-            _tableStartAt = reader.BaseStream.Position;
-            //-----------------------------------------
-            //GDEF Header, Version 1.0
-            //Type 	    Name 	            Description
-            //uint16 	MajorVersion 	    Major version of the GDEF table, = 1
-            //uint16 	MinorVersion 	    Minor version of the GDEF table, = 0
-            //Offset16 	GlyphClassDef 	    Offset to class definition table for glyph type, from beginning of GDEF header (may be NULL)
-            //Offset16 	AttachList  	    Offset to list of glyphs with attachment points, from beginning of GDEF header (may be NULL)
-            //Offset16 	LigCaretList 	    Offset to list of positioning points for ligature carets, from beginning of GDEF header (may be NULL)
-            //Offset16 	MarkAttachClassDef 	Offset to class definition table for mark attachment type, from beginning of GDEF header (may be NULL)
-            //
-            //GDEF Header, Version 1.2
-            //Type 	Name 	Description
-            //uint16 	MajorVersion 	    Major version of the GDEF table, = 1
-            //uint16 	MinorVersion 	    Minor version of the GDEF table, = 2
-            //Offset16 	GlyphClassDef 	    Offset to class definition table for glyph type, from beginning of GDEF header (may be NULL)
-            //Offset16 	AttachList 	        Offset to list of glyphs with attachment points, from beginning of GDEF header (may be NULL)
-            //Offset16 	LigCaretList 	    Offset to list of positioning points for ligature carets, from beginning of GDEF header (may be NULL)
-            //Offset16 	MarkAttachClassDef 	Offset to class definition table for mark attachment type, from beginning of GDEF header (may be NULL)
-            //Offset16 	MarkGlyphSetsDef 	Offset to the table of mark set definitions, from beginning of GDEF header (may be NULL)
-            //
-            //GDEF Header, Version 1.3
-            //Type 	Name 	Description
-            //uint16 	MajorVersion 	    Major version of the GDEF table, = 1
-            //uint16 	MinorVersion 	    Minor version of the GDEF table, = 3
-            //Offset16 	GlyphClassDef 	    Offset to class definition table for glyph type, from beginning of GDEF header (may be NULL)
-            //Offset16 	AttachList  	    Offset to list of glyphs with attachment points, from beginning of GDEF header (may be NULL)
-            //Offset16 	LigCaretList 	    Offset to list of positioning points for ligature carets, from beginning of GDEF header (may be NULL)
-            //Offset16 	MarkAttachClassDef 	Offset to class definition table for mark attachment type, from beginning of GDEF header (may be NULL)
-            //Offset16 	MarkGlyphSetsDef 	Offset to the table of mark set definitions, from beginning of GDEF header (may be NULL)
-            //Offset32 	ItemVarStore 	    Offset to the Item Variation Store table, from beginning of GDEF header (may be NULL)
-
-            //common to 1.0, 1.2, 1.3...
-            this.MajorVersion = reader.ReadUInt16();
-            this.MinorVersion = reader.ReadUInt16();
-            //
-            ushort glyphClassDefOffset = reader.ReadUInt16();
-            ushort attachListOffset = reader.ReadUInt16();
-            ushort ligCaretListOffset = reader.ReadUInt16();
-            ushort markAttachClassDefOffset = reader.ReadUInt16();
-            ushort markGlyphSetsDefOffset = 0;
-            uint itemVarStoreOffset = 0;
-            //
-            switch (MinorVersion)
-            {
-                default:
-                    Utils.WarnUnimplemented("GDEF Minor Version {0}", MinorVersion);
-                    return;
-                case 0:
-                    break;
-                case 2:
-                    markGlyphSetsDefOffset = reader.ReadUInt16();
-                    break;
-                case 3:
-                    markGlyphSetsDefOffset = reader.ReadUInt16();
-                    itemVarStoreOffset = reader.ReadUInt32();
-                    break;
-            }
-            //---------------
+            default:
+                Utils.WarnUnimplemented("GDEF Minor Version {0}", MinorVersion);
+                return;
+            case 0:
+                break;
+            case 2:
+                markGlyphSetsDefOffset = reader.ReadUInt16();
+                break;
+            case 3:
+                markGlyphSetsDefOffset = reader.ReadUInt16();
+                itemVarStoreOffset = reader.ReadUInt32();
+                break;
+        }
+        //---------------
 
 
-            this.GlyphClassDef = (glyphClassDefOffset == 0) ? null : ClassDefTable.CreateFrom(reader, _tableStartAt + glyphClassDefOffset);
-            this.AttachmentListTable = (attachListOffset == 0) ? null : AttachmentListTable.CreateFrom(reader, _tableStartAt + attachListOffset);
-            this.LigCaretList = (ligCaretListOffset == 0) ? null : LigCaretList.CreateFrom(reader, _tableStartAt + ligCaretListOffset);
+        GlyphClassDef = glyphClassDefOffset == 0
+            ? null
+            : ClassDefTable.CreateFrom(reader, _tableStartAt + glyphClassDefOffset);
+        AttachmentListTable = attachListOffset == 0
+            ? null
+            : AttachmentListTable.CreateFrom(reader, _tableStartAt + attachListOffset);
+        LigCaretList = ligCaretListOffset == 0
+            ? null
+            : LigCaretList.CreateFrom(reader, _tableStartAt + ligCaretListOffset);
 
-            //A Mark Attachment Class Definition Table defines the class to which a mark glyph may belong.
-            //This table uses the same format as the Class Definition table (for details, see the chapter, Common Table Formats ).
+        //A Mark Attachment Class Definition Table defines the class to which a mark glyph may belong.
+        //This table uses the same format as the Class Definition table (for details, see the chapter, Common Table Formats ).
 
 
 #if DEBUG
-            if (markAttachClassDefOffset == 2)
-            {
-                //temp debug invalid font                
-                this.MarkAttachmentClassDef = (markAttachClassDefOffset == 0) ? null : ClassDefTable.CreateFrom(reader, reader.BaseStream.Position);
-            }
-            else
-            {
-                this.MarkAttachmentClassDef = (markAttachClassDefOffset == 0) ? null : ClassDefTable.CreateFrom(reader, _tableStartAt + markAttachClassDefOffset);
-            }
+        if (markAttachClassDefOffset == 2)
+            //temp debug invalid font                
+            MarkAttachmentClassDef = markAttachClassDefOffset == 0
+                ? null
+                : ClassDefTable.CreateFrom(reader, reader.BaseStream.Position);
+        else
+            MarkAttachmentClassDef = markAttachClassDefOffset == 0
+                ? null
+                : ClassDefTable.CreateFrom(reader, _tableStartAt + markAttachClassDefOffset);
 #else
-            this.MarkAttachmentClassDef = (markAttachClassDefOffset == 0) ? null : ClassDefTable.CreateFrom(reader, _tableStartAt + markAttachClassDefOffset);
+            this.MarkAttachmentClassDef =
+ (markAttachClassDefOffset == 0) ? null : ClassDefTable.CreateFrom(reader, _tableStartAt + markAttachClassDefOffset);
 #endif
 
-            this.MarkGlyphSetsTable = (markGlyphSetsDefOffset == 0) ? null : MarkGlyphSetsTable.CreateFrom(reader, _tableStartAt + markGlyphSetsDefOffset);
+        MarkGlyphSetsTable = markGlyphSetsDefOffset == 0
+            ? null
+            : MarkGlyphSetsTable.CreateFrom(reader, _tableStartAt + markGlyphSetsDefOffset);
 
-            if (itemVarStoreOffset != 0)
+        if (itemVarStoreOffset != 0)
+        {
+            //not supported
+            Utils.WarnUnimplemented("GDEF ItemVarStore");
+            reader.BaseStream.Seek(Header.Offset + itemVarStoreOffset, SeekOrigin.Begin);
+        }
+    }
+
+    //------------------------
+    /// <summary>
+    ///     fill gdef to each glyphs
+    /// </summary>
+    /// <param name="inputGlyphs"></param>
+    public void FillGlyphData(Glyph[] inputGlyphs)
+    {
+        //1. 
+        FillClassDefs(inputGlyphs);
+        //2. 
+        FillAttachPoints(inputGlyphs);
+        //3.
+        FillLigatureCarets(inputGlyphs);
+        //4.
+        FillMarkAttachmentClassDefs(inputGlyphs);
+        //5.
+        FillMarkGlyphSets(inputGlyphs);
+    }
+
+    private void FillClassDefs(Glyph[] inputGlyphs)
+    {
+        //1. glyph def 
+        var classDef = GlyphClassDef;
+        if (classDef == null) return;
+        //-----------------------------------------
+
+        switch (classDef.Format)
+        {
+            default:
+                Utils.WarnUnimplemented("GDEF GlyphClassDef Format {0}", classDef.Format);
+                break;
+            case 1:
             {
-                //not supported
-                Utils.WarnUnimplemented("GDEF ItemVarStore");
-                reader.BaseStream.Seek(this.Header.Offset + itemVarStoreOffset, SeekOrigin.Begin);
+                var startGlyph = classDef.startGlyph;
+                var classValues = classDef.classValueArray;
+                int gIndex = startGlyph;
+                for (var i = 0; i < classValues.Length; ++i)
+                {
+#if DEBUG
+                    var classV = classValues[i];
+                    if (classV > (ushort)GlyphClassKind.Component)
+                    {
+                    }
+#endif
+
+                    inputGlyphs[gIndex].GlyphClass = (GlyphClassKind)classValues[i];
+                    gIndex++;
+                }
             }
-        }
-        public int MajorVersion { get; private set; }
-        public int MinorVersion { get; private set; }
-        public ClassDefTable GlyphClassDef { get; private set; }
-        public AttachmentListTable AttachmentListTable { get; private set; }
-        public LigCaretList LigCaretList { get; private set; }
-        public ClassDefTable MarkAttachmentClassDef { get; private set; }
-        public MarkGlyphSetsTable MarkGlyphSetsTable { get; private set; }
-
-        //------------------------
-        /// <summary>
-        /// fill gdef to each glyphs
-        /// </summary>
-        /// <param name="inputGlyphs"></param>
-        public void FillGlyphData(Glyph[] inputGlyphs)
-        {
-            //1. 
-            FillClassDefs(inputGlyphs);
-            //2. 
-            FillAttachPoints(inputGlyphs);
-            //3.
-            FillLigatureCarets(inputGlyphs);
-            //4.
-            FillMarkAttachmentClassDefs(inputGlyphs);
-            //5.
-            FillMarkGlyphSets(inputGlyphs);
-        }
-        void FillClassDefs(Glyph[] inputGlyphs)
-        {
-            //1. glyph def 
-            ClassDefTable classDef = GlyphClassDef;
-            if (classDef == null) return;
-            //-----------------------------------------
-
-            switch (classDef.Format)
+                break;
+            case 2:
             {
-                default:
-                    Utils.WarnUnimplemented("GDEF GlyphClassDef Format {0}", classDef.Format);
-                    break;
-                case 1:
-                    {
-                        ushort startGlyph = classDef.startGlyph;
-                        ushort[] classValues = classDef.classValueArray;
-                        int gIndex = startGlyph;
-                        for (int i = 0; i < classValues.Length; ++i)
-                        {
-#if DEBUG
-                            ushort classV = classValues[i];
-                            if (classV > (ushort)GlyphClassKind.Component)
-                            {
-
-                            }
-#endif
-
-                            inputGlyphs[gIndex].GlyphClass = (GlyphClassKind)classValues[i];
-                            gIndex++;
-                        }
-
-                    }
-                    break;
-                case 2:
-                    {
-                        ClassDefTable.ClassRangeRecord[] records = classDef.records;
-                        for (int n = 0; n < records.Length; ++n)
-                        {
-                            ClassDefTable.ClassRangeRecord rec = records[n];
+                var records = classDef.records;
+                for (var n = 0; n < records.Length; ++n)
+                {
+                    var rec = records[n];
 
 #if DEBUG
 
-                            if (rec.classNo > (ushort)GlyphClassKind.Component)
-                            {
-
-                            }
+                    if (rec.classNo > (ushort)GlyphClassKind.Component)
+                    {
+                    }
 #endif
 
-                            GlyphClassKind glyphKind = (GlyphClassKind)rec.classNo;
-                            for (int i = rec.startGlyphId; i <= rec.endGlyphId; ++i)
-                            {
-                                inputGlyphs[i].GlyphClass = glyphKind;
-                            }
-                        }
-                    }
-                    break;
+                    var glyphKind = (GlyphClassKind)rec.classNo;
+                    for (int i = rec.startGlyphId; i <= rec.endGlyphId; ++i) inputGlyphs[i].GlyphClass = glyphKind;
+                }
             }
+                break;
         }
-        void FillAttachPoints(Glyph[] inputGlyphs)
-        {
-            AttachmentListTable attachmentListTable = this.AttachmentListTable;
-            if (attachmentListTable == null) { return; }
-            //-----------------------------------------
+    }
 
-            Utils.WarnUnimplemented("please implement GDEF.FillAttachPoints()");
-        }
-        void FillLigatureCarets(Glyph[] inputGlyphs)
-        {
-            //Console.WriteLine("please implement FillLigatureCarets()");
-        }
-        void FillMarkAttachmentClassDefs(Glyph[] inputGlyphs)
-        {
-            //Mark Attachment Class Definition Table
-            //A Mark Class Definition Table is used to assign mark glyphs into different classes 
-            //that can be used in lookup tables within the GSUB or GPOS table to control how mark glyphs within a glyph sequence are treated by lookups.
-            //For more information on the use of mark attachment classes, 
-            //see the description of lookup flags in the “Lookup Table” section of the chapter, OpenType Layout Common Table Formats.
-            ClassDefTable markAttachmentClassDef = this.MarkAttachmentClassDef;
-            if (markAttachmentClassDef == null) return;
-            //-----------------------------------------
+    private void FillAttachPoints(Glyph[] inputGlyphs)
+    {
+        var attachmentListTable = AttachmentListTable;
+        if (attachmentListTable == null) return;
+        //-----------------------------------------
 
-            switch (markAttachmentClassDef.Format)
+        Utils.WarnUnimplemented("please implement GDEF.FillAttachPoints()");
+    }
+
+    private void FillLigatureCarets(Glyph[] inputGlyphs)
+    {
+        //Console.WriteLine("please implement FillLigatureCarets()");
+    }
+
+    private void FillMarkAttachmentClassDefs(Glyph[] inputGlyphs)
+    {
+        //Mark Attachment Class Definition Table
+        //A Mark Class Definition Table is used to assign mark glyphs into different classes 
+        //that can be used in lookup tables within the GSUB or GPOS table to control how mark glyphs within a glyph sequence are treated by lookups.
+        //For more information on the use of mark attachment classes, 
+        //see the description of lookup flags in the “Lookup Table” section of the chapter, OpenType Layout Common Table Formats.
+        var markAttachmentClassDef = MarkAttachmentClassDef;
+        if (markAttachmentClassDef == null) return;
+        //-----------------------------------------
+
+        switch (markAttachmentClassDef.Format)
+        {
+            default:
+                Utils.WarnUnimplemented("GDEF MarkAttachmentClassDef Table Format {0}", markAttachmentClassDef.Format);
+                break;
+            case 1:
             {
-                default:
-                    Utils.WarnUnimplemented("GDEF MarkAttachmentClassDef Table Format {0}", markAttachmentClassDef.Format);
-                    break;
-                case 1:
-                    {
-                        ushort startGlyph = markAttachmentClassDef.startGlyph;
-                        ushort[] classValues = markAttachmentClassDef.classValueArray;
+                var startGlyph = markAttachmentClassDef.startGlyph;
+                var classValues = markAttachmentClassDef.classValueArray;
 
-                        int len = classValues.Length;
-                        int gIndex = startGlyph;
-                        for (int i = 0; i < len; ++i)
-                        {
+                var len = classValues.Length;
+                int gIndex = startGlyph;
+                for (var i = 0; i < len; ++i)
+                {
 #if DEBUG
-                            Glyph dbugTestGlyph = inputGlyphs[gIndex];
+                    var dbugTestGlyph = inputGlyphs[gIndex];
 #endif
-                            inputGlyphs[gIndex].MarkClassDef = classValues[i];
-                            gIndex++;
-                        }
-
-                    }
-                    break;
-                case 2:
-                    {
-                        ClassDefTable.ClassRangeRecord[] records = markAttachmentClassDef.records;
-                        int len = records.Length;
-                        for (int n = 0; n < len; ++n)
-                        {
-                            ClassDefTable.ClassRangeRecord rec = records[n];
-                            for (int i = rec.startGlyphId; i <= rec.endGlyphId; ++i)
-                            {
-#if DEBUG
-                                Glyph dbugTestGlyph = inputGlyphs[i];
-#endif
-                                inputGlyphs[i].MarkClassDef = rec.classNo;
-                            }
-                        }
-                    }
-                    break;
+                    inputGlyphs[gIndex].MarkClassDef = classValues[i];
+                    gIndex++;
+                }
             }
+                break;
+            case 2:
+            {
+                var records = markAttachmentClassDef.records;
+                var len = records.Length;
+                for (var n = 0; n < len; ++n)
+                {
+                    var rec = records[n];
+                    for (int i = rec.startGlyphId; i <= rec.endGlyphId; ++i)
+                    {
+#if DEBUG
+                        var dbugTestGlyph = inputGlyphs[i];
+#endif
+                        inputGlyphs[i].MarkClassDef = rec.classNo;
+                    }
+                }
+            }
+                break;
         }
-        void FillMarkGlyphSets(Glyph[] inputGlyphs)
-        {
-            //Mark Glyph Sets Table
-            //A Mark Glyph Sets table is used to define sets of mark glyphs that can be used in lookup tables within the GSUB or GPOS table to control 
-            //how mark glyphs within a glyph sequence are treated by lookups. For more information on the use of mark glyph sets,
-            //see the description of lookup flags in the “Lookup Table” section of the chapter, OpenType Layout Common Table Formats.
-            MarkGlyphSetsTable markGlyphSets = this.MarkGlyphSetsTable;
-            if (markGlyphSets == null) return;
-            //-----------------------------------------
+    }
 
-            Utils.WarnUnimplemented("please implement GDEF.FillMarkGlyphSets()");
-        }
+    private void FillMarkGlyphSets(Glyph[] inputGlyphs)
+    {
+        //Mark Glyph Sets Table
+        //A Mark Glyph Sets table is used to define sets of mark glyphs that can be used in lookup tables within the GSUB or GPOS table to control 
+        //how mark glyphs within a glyph sequence are treated by lookups. For more information on the use of mark glyph sets,
+        //see the description of lookup flags in the “Lookup Table” section of the chapter, OpenType Layout Common Table Formats.
+        var markGlyphSets = MarkGlyphSetsTable;
+        if (markGlyphSets == null) return;
+        //-----------------------------------------
+
+        Utils.WarnUnimplemented("please implement GDEF.FillMarkGlyphSets()");
     }
 }

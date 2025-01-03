@@ -1,66 +1,64 @@
 ﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class MeshToonMaterial : Material
 {
-    [Serializable]
-    public class MeshToonMaterial : Material
+    public MeshToonMaterial()
     {
+        type = "MeshToonMaterial";
 
-        public MeshToonMaterial()
-        {
+        Defines.Add("TOON", "");
 
-            this.type = "MeshToonMaterial";
+        Color = new Color().SetHex(0xffffff);
+        Specular = new Color().SetHex(0x111111);
+        Shininess = 30;
 
-            Defines.Add("TOON", "");
+        Map = null;
+        GradientMap = null;
 
-            Color = new Color().SetHex(0xffffff);
-            Specular = new Color().SetHex(0x111111);
-            Shininess = 30;
+        LightMap = null;
+        LightMapIntensity = 1.0f;
 
-            Map = null;
-            GradientMap = null;
+        AoMap = null;
+        AoMapIntensity = 1.0f;
 
-            LightMap = null;
-            LightMapIntensity = 1.0f;
+        Emissive = THREE.Color.Hex(0x000000);
+        EmissiveIntensity = 1.0f;
+        EmissiveMap = null;
 
-            AoMap = null;
-            AoMapIntensity = 1.0f;
+        BumpMap = null;
+        BumpScale = 1;
 
-            Emissive = THREE.Color.Hex(0x000000);
-            EmissiveIntensity = 1.0f;
-            EmissiveMap = null;
+        NormalMap = null;
+        NormalMapType = Constants.TangentSpaceNormalMap;
+        NormalScale = new Vector2(1, 1);
 
-            BumpMap = null;
-            BumpScale = 1;
+        DisplacementMap = null;
+        DisplacementScale = 1;
+        DisplacementBias = 0;
 
-            NormalMap = null;
-            NormalMapType = Constants.TangentSpaceNormalMap;
-            NormalScale = new Vector2(1, 1);
+        SpecularMap = null;
 
-            DisplacementMap = null;
-            DisplacementScale = 1;
-            DisplacementBias = 0;
+        AlphaMap = null;
 
-            SpecularMap = null;
+        Wireframe = false;
 
-            AlphaMap = null;
+        WireframeLineWidth = 1;
 
-            Wireframe = false;
+        WireframeLineCap = "round";
 
-            WireframeLineWidth = 1;
+        WireframeLineJoin = "round";
 
-            WireframeLineCap = "round";
+        Skinning = false;
 
-            WireframeLineJoin = "round";
+        MorphTargets = false;
 
-            Skinning = false;
+        MorphNormals = false;
+    }
 
-            MorphTargets = false;
-
-            MorphNormals = false;
-
-
-        }
-        public MeshToonMaterial(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public MeshToonMaterial(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

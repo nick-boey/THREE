@@ -1,46 +1,49 @@
 ﻿using System.Collections;
 using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class LineBasicMaterial : Material
 {
-    [Serializable]
-    public class LineBasicMaterial : Material
+    //public Color Color;
+
+    public string LineCap = "round";
+
+    public string LineJoin = "round";
+
+
+    public LineBasicMaterial(Hashtable parameters = null)
     {
-        //public Color Color;
+        Color = new Color().SetHex(0xffffff);
 
-        public string LineCap = "round";
+        type = "LineBasicMaterial";
 
-        public string LineJoin = "round";
+        LineWidth = 1.0f;
+        LineCap = "round";
+        LineJoin = "round";
 
+        if (parameters != null)
+            SetValues(parameters);
+    }
 
-        public LineBasicMaterial(Hashtable parameters = null)
-        {
-            this.Color = new Color().SetHex(0xffffff);
+    protected LineBasicMaterial(LineBasicMaterial source) : base(source)
+    {
+        Color = source.Color;
 
-            this.type = "LineBasicMaterial";
+        LineWidth = source.LineWidth;
 
-            this.LineWidth = 1.0f;
-            this.LineCap = "round";
-            this.LineJoin = "round";
+        LineCap = source.LineCap;
 
-            if (parameters != null)
-                this.SetValues(parameters);
-        }
-        protected LineBasicMaterial(LineBasicMaterial source) : base(source)
-        {
-            this.Color = source.Color;
+        LineJoin = source.LineJoin;
+    }
 
-            this.LineWidth = source.LineWidth;
+    public LineBasicMaterial(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
+    }
 
-            this.LineCap = source.LineCap;
-
-            this.LineJoin = source.LineJoin;
-        }
-        public LineBasicMaterial(SerializationInfo info, StreamingContext context) : base(info, context) { }
-
-        public new LineBasicMaterial Clone()
-        {
-            return new LineBasicMaterial(this);
-        }
+    public new LineBasicMaterial Clone()
+    {
+        return new LineBasicMaterial(this);
     }
 }

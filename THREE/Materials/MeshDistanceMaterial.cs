@@ -1,35 +1,34 @@
-﻿
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class MeshDistanceMaterial : Material
 {
-    [Serializable]
-    public class MeshDistanceMaterial : Material
+    public float FarDistance = 1000;
+
+    public float NearDistance = 1;
+    public Vector3 ReferencePosition = Vector3.Zero();
+
+
+    public MeshDistanceMaterial()
     {
-        public Vector3 ReferencePosition = Vector3.Zero();
+        type = "MeshDistanceMaterial";
 
-        public float NearDistance = 1;
+        Skinning = false;
 
-        public float FarDistance = 1000;
+        MorphTargets = false;
 
+        DisplacementMap = null;
 
-        public MeshDistanceMaterial() : base()
-        {
-            this.type = "MeshDistanceMaterial";
+        DisplacementScale = 1;
 
-            this.Skinning = false;
+        DisplacementBias = 0;
 
-            this.MorphTargets = false;
+        Fog = false;
+    }
 
-            this.DisplacementMap = null;
-
-            this.DisplacementScale = 1;
-
-            this.DisplacementBias = 0;
-
-            this.Fog = false;
-        }
-        public MeshDistanceMaterial(SerializationInfo info, StreamingContext context) : base(info, context) { }
-
+    public MeshDistanceMaterial(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

@@ -1,41 +1,38 @@
-﻿using SkiaSharp;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
+using SkiaSharp;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class LensflareElement : GLShader
 {
-    [Serializable]
-    public class LensflareElement : GLShader
+    public Color Color;
+
+    public float Distance;
+
+    public float Size;
+    public Texture Texture;
+
+    public LensflareElement(Texture texture = null, float? size = null, float? distance = null, Color? color = null)
     {
-        public Texture Texture;
+        Texture = texture;
 
-        public float Size;
+        Size = size != null ? (float)size : 1;
 
-        public float Distance;
+        Distance = distance != null ? (float)distance : 0;
 
-        public Color Color;
+        Color = color != null ? (Color)color : Color.Hex(0xffffff);
 
-        public LensflareElement(Texture texture = null, float? size = null, float? distance = null, Color? color = null) : base()
+        Uniforms = new GLUniforms
         {
-            this.Texture = texture;
+            { "map", new GLUniform { { "value", null } } },
+            { "occlusionMap", new GLUniform { { "value", null } } },
+            { "color", new GLUniform { { "value", null } } },
+            { "scale", new GLUniform { { "value", null } } },
+            { "screenPosition", new GLUniform { { "value", null } } }
+        };
 
-            this.Size = size != null ? (float)size : 1;
-
-            this.Distance = distance != null ? (float)distance : 0;
-
-            this.Color = color != null ? (Color)color : Color.Hex(0xffffff);
-
-            this.Uniforms = new GLUniforms()
-            {
-                {"map",new GLUniform(){{"value",null}}},
-                {"occlusionMap",new GLUniform(){{"value",null}}},
-                {"color",new GLUniform(){{"value",null}}},
-                {"scale",new GLUniform(){{"value",null}}},
-                {"screenPosition",new GLUniform(){{"value",null}}}
-            };
-
-            this.VertexShader = @"                     
+        VertexShader = @"                     
                      precision highp float;
 		            uniform vec3 screenPosition;
 		            uniform vec2 scale;
@@ -64,8 +61,7 @@ namespace THREE
             ";
 
 
-
-            this.FragmentShader = @"                      
+        FragmentShader = @"                      
                       precision highp float;                    
 		             uniform sampler2D map;
 		             uniform vec3 color;
@@ -82,79 +78,80 @@ namespace THREE
 
             
             ";
-        }
     }
+}
 
-    [Serializable]
-    public class Lensflare : Mesh
+[Serializable]
+public class Lensflare : Mesh
+{
+    //public bool FrustumCulled = false;
+
+
+    private List<LensflareElement> Elements = new();
+
+    private RawShaderMaterial material1a, material1b, material2;
+
+    private Mesh mesh1, mesh2;
+
+    private Vector3 positionScreen = new();
+
+    private Vector3 positionView = new();
+
+    private Vector2 scale = new();
+
+    private Vector2 screenPositionPixels = new();
+
+    private DataTexture tempMap, occlusionMap;
+
+    private Box2 validArea = new();
+
+    private Vector4 viewport = new();
+
+    public Lensflare()
     {
-        //public bool FrustumCulled = false;
+        FrustumCulled = false;
 
+        RenderOrder = int.MaxValue;
 
-        private List<LensflareElement> Elements = new List<LensflareElement>();
+        var geometry = LensflareGeometry();
 
-        private Vector3 positionScreen = new Vector3();
+        //var material = new MeshBasicMaterial() { Opacity = 0, Transparent = true };
 
-        private Vector3 positionView = new Vector3();
+        InitGeometry(geometry, new MeshBasicMaterial { Opacity = 0, Transparent = true });
 
-        private Vector2 scale = new Vector2();
+        type = "Lensflare";
 
-        private Vector2 screenPositionPixels = new Vector2();
+        OnBeforeRender = BeforeRender;
 
-        private Box2 validArea = new Box2();
+        var positionScreen = new Vector3();
 
-        private Vector4 viewport = new Vector4();
+        var positionView = new Vector3();
 
-        RawShaderMaterial material1a, material1b, material2;
+        // textures
+        tempMap = new DataTexture(new SKBitmap(16, 16), 16, 16, Constants.RGBAFormat, Constants.UnsignedByteType);
+        tempMap.ImageSize.Width = 16;
+        tempMap.ImageSize.Height = 16;
+        tempMap.MinFilter = Constants.NearestFilter;
+        tempMap.MagFilter = Constants.NearestFilter;
+        tempMap.WrapS = Constants.ClampToEdgeWrapping;
+        tempMap.WrapT = Constants.ClampToEdgeWrapping;
 
-        DataTexture tempMap, occlusionMap;
+        occlusionMap = new DataTexture(new SKBitmap(16, 16), 16, 16, Constants.RGBAFormat, Constants.UnsignedByteType);
+        occlusionMap.ImageSize.Width = 16;
+        occlusionMap.ImageSize.Height = 16;
+        occlusionMap.MinFilter = Constants.NearestFilter;
+        occlusionMap.MagFilter = Constants.NearestFilter;
+        occlusionMap.WrapS = Constants.ClampToEdgeWrapping;
+        occlusionMap.WrapT = Constants.ClampToEdgeWrapping;
 
-        Mesh mesh1, mesh2;
-
-        public Lensflare() : base()
+        material1a = new RawShaderMaterial
         {
-            this.FrustumCulled = false;
-
-            this.RenderOrder = int.MaxValue;
-
-            var geometry = LensflareGeometry();
-
-            //var material = new MeshBasicMaterial() { Opacity = 0, Transparent = true };
-
-            this.InitGeometry(geometry, new MeshBasicMaterial() { Opacity = 0, Transparent = true });
-
-            this.type = "Lensflare";
-
-            this.OnBeforeRender = BeforeRender;
-
-            var positionScreen = new Vector3();
-
-            var positionView = new Vector3();
-
-            // textures
-            tempMap = new DataTexture(new SKBitmap(16, 16), 16, 16, Constants.RGBAFormat, Constants.UnsignedByteType);
-            tempMap.ImageSize.Width = 16;
-            tempMap.ImageSize.Height = 16;
-            tempMap.MinFilter = Constants.NearestFilter;
-            tempMap.MagFilter = Constants.NearestFilter;
-            tempMap.WrapS = Constants.ClampToEdgeWrapping;
-            tempMap.WrapT = Constants.ClampToEdgeWrapping;
-
-            occlusionMap = new DataTexture(new SKBitmap(16, 16), 16, 16, Constants.RGBAFormat, Constants.UnsignedByteType);
-            occlusionMap.ImageSize.Width = 16;
-            occlusionMap.ImageSize.Height = 16;
-            occlusionMap.MinFilter = Constants.NearestFilter;
-            occlusionMap.MagFilter = Constants.NearestFilter;
-            occlusionMap.WrapS = Constants.ClampToEdgeWrapping;
-            occlusionMap.WrapT = Constants.ClampToEdgeWrapping;
-
-            material1a = new RawShaderMaterial()
+            Uniforms = new GLUniforms
             {
-                Uniforms = new GLUniforms(){
-                    {"scale",new GLUniform(){{"value",null}}},
-                    {"screenPosition",new GLUniform(){{"value",null}}},
-                },
-                VertexShader = @"
+                { "scale", new GLUniform { { "value", null } } },
+                { "screenPosition", new GLUniform { { "value", null } } }
+            },
+            VertexShader = @"
                     precision highp float;
                     uniform vec3 screenPosition;
                     uniform vec2 scale;
@@ -169,7 +166,7 @@ namespace THREE
 
              
                     ",
-                FragmentShader = @"
+            FragmentShader = @"
                     precision highp float;
                     void main() {
                         gl_FragColor = vec4( 1.0, 0.0, 1.0, 1.0 );
@@ -181,20 +178,20 @@ namespace THREE
 
 
                     ",
-                DepthTest = true,
-                DepthWrite = false,
-                Transparent = false
+            DepthTest = true,
+            DepthWrite = false,
+            Transparent = false
+        };
 
-            };
-
-            material1b = new RawShaderMaterial()
+        material1b = new RawShaderMaterial
+        {
+            Uniforms = new GLUniforms
             {
-                Uniforms = new GLUniforms(){
-                     {"map",new GLUniform(){{"value",tempMap}}},
-                    {"scale",new GLUniform(){{"value",null}}},
-                    {"screenPosition",new GLUniform(){{"value",null}}},
-                },
-                VertexShader = @"
+                { "map", new GLUniform { { "value", tempMap } } },
+                { "scale", new GLUniform { { "value", null } } },
+                { "screenPosition", new GLUniform { { "value", null } } }
+            },
+            VertexShader = @"
                     precision highp float;
                     uniform vec3 screenPosition;
                     uniform vec2 scale;
@@ -213,7 +210,7 @@ namespace THREE
 
                 
                     ",
-                FragmentShader = @"
+            FragmentShader = @"
                     precision highp float;
                     uniform sampler2D map;
                     varying vec2 vUV;
@@ -228,172 +225,165 @@ namespace THREE
 
 
                     ",
-                DepthTest = false,
-                DepthWrite = false,
-                Transparent = false
+            DepthTest = false,
+            DepthWrite = false,
+            Transparent = false
+        };
 
-            };
+        mesh1 = new Mesh(geometry, material1a);
 
-            mesh1 = new Mesh(geometry, material1a);
+        var shader = new LensflareElement();
 
-            var shader = new LensflareElement();
-
-            material2 = new RawShaderMaterial()
-            {
-                Uniforms = new GLUniforms()
-                {
-                    {"map", new GLUniform(){{"value",null}}},
-                    {"occlusionMap",new GLUniform(){{"value",occlusionMap}}},
-                    {"color",new GLUniform(){{"value",Color.Hex(0xffffff)}}},
-                    {"scale",new GLUniform(){{"value",new Vector2()}}},
-                    {"screenPosition",new GLUniform(){{"value",new Vector3()}}}
-                },
-                VertexShader = shader.VertexShader,
-                FragmentShader = shader.FragmentShader,
-                Blending = Constants.AdditiveBlending,
-                Transparent = true,
-                DepthWrite = false
-            };
-
-            mesh2 = new Mesh(geometry, material2);
-
-
-        }
-
-        public Lensflare(SerializationInfo info, StreamingContext context) : base(info, context) { }
-
-        private void BeforeRender(IGLRenderer renderer, Object3D scene, Camera camera, Geometry geometry, Material material, DrawRange? group = null, GLRenderTarget renderTarget = null)
+        material2 = new RawShaderMaterial
         {
-            renderer.GetCurrentViewport(viewport);
-
-            var invAspect = viewport.W / viewport.Z;
-            var halfViewportWidth = viewport.Z / 2.0f;
-            var halfViewportHeight = viewport.W / 2.0f;
-
-            var size = 16 / viewport.W;
-            scale.Set(size * invAspect, size);
-
-            validArea.Min.Set(viewport.X, viewport.Y);
-            validArea.Max.Set(viewport.X + (viewport.Z - 16), viewport.Y + (viewport.W - 16));
-
-            // calculate position in screen space
-
-            positionView.SetFromMatrixPosition(this.MatrixWorld);
-            positionView.ApplyMatrix4(camera.MatrixWorldInverse);
-
-            if (positionView.Z > 0) return; // lensflare is behind the camera
-
-            positionScreen.Copy(positionView).ApplyMatrix4(camera.ProjectionMatrix);
-
-            // horizontal and vertical coordinate of the lower left corner of the pixels to copy
-
-            screenPositionPixels.X = viewport.X + (positionScreen.X * halfViewportWidth) + halfViewportWidth - 8;
-            screenPositionPixels.Y = viewport.Y + (positionScreen.Y * halfViewportHeight) + halfViewportHeight - 8;
-
-            // screen cull
-
-            if (validArea.ContainsPoint(screenPositionPixels))
+            Uniforms = new GLUniforms
             {
+                { "map", new GLUniform { { "value", null } } },
+                { "occlusionMap", new GLUniform { { "value", occlusionMap } } },
+                { "color", new GLUniform { { "value", Color.Hex(0xffffff) } } },
+                { "scale", new GLUniform { { "value", new Vector2() } } },
+                { "screenPosition", new GLUniform { { "value", new Vector3() } } }
+            },
+            VertexShader = shader.VertexShader,
+            FragmentShader = shader.FragmentShader,
+            Blending = Constants.AdditiveBlending,
+            Transparent = true,
+            DepthWrite = false
+        };
 
-                // save current RGB to temp texture
+        mesh2 = new Mesh(geometry, material2);
+    }
 
-                renderer.CopyFramebufferToTexture(screenPositionPixels, tempMap);
+    public Lensflare(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
+    }
 
-                // render pink quad
+    private void BeforeRender(IGLRenderer renderer, Object3D scene, Camera camera, Geometry geometry, Material material,
+        DrawRange? group = null, GLRenderTarget renderTarget = null)
+    {
+        renderer.GetCurrentViewport(viewport);
 
-                var uniforms = material1a.Uniforms;
-                (uniforms["scale"] as GLUniform)["value"] = scale;
-                (uniforms["screenPosition"] as GLUniform)["value"] = positionScreen;
+        var invAspect = viewport.W / viewport.Z;
+        var halfViewportWidth = viewport.Z / 2.0f;
+        var halfViewportHeight = viewport.W / 2.0f;
 
-                renderer.RenderBufferDirect(camera, null, geometry, material1a, mesh1, null);
+        var size = 16 / viewport.W;
+        scale.Set(size * invAspect, size);
 
-                // copy result to occlusionMap
+        validArea.Min.Set(viewport.X, viewport.Y);
+        validArea.Max.Set(viewport.X + (viewport.Z - 16), viewport.Y + (viewport.W - 16));
 
-                renderer.CopyFramebufferToTexture(screenPositionPixels, occlusionMap);
+        // calculate position in screen space
 
-                // restore graphics
+        positionView.SetFromMatrixPosition(MatrixWorld);
+        positionView.ApplyMatrix4(camera.MatrixWorldInverse);
 
-                uniforms = material1b.Uniforms;
-                (uniforms["scale"] as GLUniform)["value"] = scale;
-                (uniforms["screenPosition"] as GLUniform)["value"] = positionScreen;
+        if (positionView.Z > 0) return; // lensflare is behind the camera
 
-                renderer.RenderBufferDirect(camera, null, geometry, material1b, mesh1, null);
+        positionScreen.Copy(positionView).ApplyMatrix4(camera.ProjectionMatrix);
 
-                // render elements
+        // horizontal and vertical coordinate of the lower left corner of the pixels to copy
 
-                var vecX = -positionScreen.X * 2;
-                var vecY = -positionScreen.Y * 2;
+        screenPositionPixels.X = viewport.X + positionScreen.X * halfViewportWidth + halfViewportWidth - 8;
+        screenPositionPixels.Y = viewport.Y + positionScreen.Y * halfViewportHeight + halfViewportHeight - 8;
 
-                for (int i = 0; i < Elements.Count; i++)
-                {
+        // screen cull
 
-                    var element = Elements[i];
+        if (validArea.ContainsPoint(screenPositionPixels))
+        {
+            // save current RGB to temp texture
 
-                    uniforms = material2.Uniforms;
+            renderer.CopyFramebufferToTexture(screenPositionPixels, tempMap);
 
-                    (uniforms["color"] as GLUniform)["value"] = element.Color;
-                    (uniforms["map"] as GLUniform)["value"] = element.Texture;
-                    Vector3 position = (Vector3)(uniforms["screenPosition"] as GLUniform)["value"];
-                    position.X = positionScreen.X + vecX * element.Distance;
-                    position.Y = positionScreen.Y + vecY * element.Distance;
+            // render pink quad
 
-                    size = element.Size / viewport.W;
-                    invAspect = viewport.W / viewport.Z;
+            var uniforms = material1a.Uniforms;
+            (uniforms["scale"] as GLUniform)["value"] = scale;
+            (uniforms["screenPosition"] as GLUniform)["value"] = positionScreen;
 
-                    Vector2 elementScale = (Vector2)(uniforms["scale"] as GLUniform)["value"];
-                    elementScale.Set(size * invAspect, size);
+            renderer.RenderBufferDirect(camera, null, geometry, material1a, mesh1, null);
 
-                    material2.UniformsNeedUpdate = true;
+            // copy result to occlusionMap
 
-                    renderer.RenderBufferDirect(camera, null, geometry, material2, mesh2, null);
+            renderer.CopyFramebufferToTexture(screenPositionPixels, occlusionMap);
 
-                }
+            // restore graphics
 
+            uniforms = material1b.Uniforms;
+            (uniforms["scale"] as GLUniform)["value"] = scale;
+            (uniforms["screenPosition"] as GLUniform)["value"] = positionScreen;
+
+            renderer.RenderBufferDirect(camera, null, geometry, material1b, mesh1, null);
+
+            // render elements
+
+            var vecX = -positionScreen.X * 2;
+            var vecY = -positionScreen.Y * 2;
+
+            for (var i = 0; i < Elements.Count; i++)
+            {
+                var element = Elements[i];
+
+                uniforms = material2.Uniforms;
+
+                (uniforms["color"] as GLUniform)["value"] = element.Color;
+                (uniforms["map"] as GLUniform)["value"] = element.Texture;
+                var position = (Vector3)(uniforms["screenPosition"] as GLUniform)["value"];
+                position.X = positionScreen.X + vecX * element.Distance;
+                position.Y = positionScreen.Y + vecY * element.Distance;
+
+                size = element.Size / viewport.W;
+                invAspect = viewport.W / viewport.Z;
+
+                var elementScale = (Vector2)(uniforms["scale"] as GLUniform)["value"];
+                elementScale.Set(size * invAspect, size);
+
+                material2.UniformsNeedUpdate = true;
+
+                renderer.RenderBufferDirect(camera, null, geometry, material2, mesh2, null);
             }
         }
+    }
 
-        public void AddElement(LensflareElement element)
+    public void AddElement(LensflareElement element)
+    {
+        Elements.Add(element);
+    }
+
+    private BufferGeometry LensflareGeometry()
+    {
+        var geometry = new BufferGeometry();
+
+        var floatArray = new float[]
         {
-            Elements.Add(element);
-        }
+            -1, -1, 0, 0, 0,
+            1, -1, 0, 1, 0,
+            1, 1, 0, 1, 1,
+            -1, 1, 0, 0, 1
+        };
 
-        private BufferGeometry LensflareGeometry()
-        {
-            var geometry = new BufferGeometry();
+        var interleavedBuffer = new InterleavedBuffer<float>(floatArray, 5);
 
-            float[] floatArray = new float[]{
-                -1, -1, 0, 0, 0,
-                1, -1, 0, 1, 0,
-                1, 1, 0, 1, 1,
-                -1, 1, 0, 0, 1
-            };
+        var index = new List<int> { 0, 1, 2, 0, 2, 3 };
 
-            var interleavedBuffer = new InterleavedBuffer<float>(floatArray, 5);
-
-            var index = new List<int>() { 0, 1, 2, 0, 2, 3 };
-
-            geometry.SetIndex(index);
-            geometry.SetAttribute("position", new InterleavedBufferAttribute<float>(interleavedBuffer, 3, 0, false));
-            geometry.SetAttribute("uv", new InterleavedBufferAttribute<float>(interleavedBuffer, 2, 3, false));
+        geometry.SetIndex(index);
+        geometry.SetAttribute("position", new InterleavedBufferAttribute<float>(interleavedBuffer, 3, 0));
+        geometry.SetAttribute("uv", new InterleavedBufferAttribute<float>(interleavedBuffer, 2, 3));
 
 
-            return geometry;
-        }
+        return geometry;
+    }
 
-        public override void Dispose()
-        {
-            material1a.Dispose();
-            material1b.Dispose();
-            material2.Dispose();
+    public override void Dispose()
+    {
+        material1a.Dispose();
+        material1b.Dispose();
+        material2.Dispose();
 
-            tempMap.Dispose();
-            occlusionMap.Dispose();
+        tempMap.Dispose();
+        occlusionMap.Dispose();
 
-            for (int i = 0; i < Elements.Count; i++)
-            {
-                Elements[i].Texture.Dispose();
-            }
-            base.Dispose();
-        }
+        for (var i = 0; i < Elements.Count; i++) Elements[i].Texture.Dispose();
+        base.Dispose();
     }
 }

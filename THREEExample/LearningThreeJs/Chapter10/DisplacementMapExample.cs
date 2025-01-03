@@ -1,70 +1,63 @@
 ﻿using ImGuiNET;
-using OpenTK;
-using OpenTK.Windowing.Common;
 using THREE;
 using THREEExample.Learning.Utils;
-using THREEExample.ThreeImGui;
 using Color = THREE.Color;
-namespace THREEExample.Learning.Chapter10
+
+namespace THREEExample.Learning.Chapter10;
+
+[Example("10-displacement-map", ExampleCategory.LearnThreeJS, "Chapter10")]
+public class DisplacementMapExample : TemplateExample
 {
-    [Example("10-displacement-map", ExampleCategory.LearnThreeJS, "Chapter10")]
-    public class DisplacementMapExample : TemplateExample
-    {       
+    private MeshStandardMaterial sphereMaterial;
 
-        MeshStandardMaterial sphereMaterial;
+    public override void SetGeometryWithTexture()
+    {
+        var groundPlane = DemoUtils.AddLargeGroundPlane(scene);
+        groundPlane.Position.Y = -10;
 
-        public DisplacementMapExample() : base()
-        {          
-        }
-        public override void SetGeometryWithTexture()
+
+        scene.Add(new AmbientLight(new Color(0x444444)));
+
+        var sphere = new SphereBufferGeometry(8, 180, 180);
+        sphereMaterial = new MeshStandardMaterial
         {
-            var groundPlane = DemoUtils.AddLargeGroundPlane(scene);
-            groundPlane.Position.Y = -10;
+            Map = TextureLoader.Load("../../../../assets/textures/w_c.jpg"),
+            DisplacementMap = TextureLoader.Load("../../../../assets/textures/w_d.png"),
+            Metalness = 0.02f,
+            Roughness = 0.07f,
+            Color = new Color(0xffffff)
+        };
 
+        groundPlane.ReceiveShadow = true;
 
-            scene.Add(new AmbientLight(new Color(0x444444)));
+        sphereMesh = new Mesh(sphere, sphereMaterial);
 
-            var sphere = new SphereBufferGeometry(8, 180, 180);
-            sphereMaterial = new MeshStandardMaterial()
-            {
-                Map = TextureLoader.Load("../../../../assets/textures/w_c.jpg"),
-                DisplacementMap = TextureLoader.Load("../../../../assets/textures/w_d.png"),
-                Metalness = 0.02f,
-                Roughness = 0.07f,
-                Color = new THREE.Color(0xffffff)
-            };
+        scene.Add(sphereMesh);
+    }
 
-            groundPlane.ReceiveShadow = true;
+    public override void Init()
+    {
+        base.Init();
 
-            sphereMesh = new Mesh(sphere, sphereMaterial);
-
-            scene.Add(sphereMesh);
-        }
-
-        public override void Init()
+        AddGuiControlsAction = () =>
         {
-            base.Init();
+            ImGui.SliderFloat("displacementScale", ref sphereMaterial.DisplacementScale, -5.0f, 5.0f);
+            ImGui.SliderFloat("displacementBias", ref sphereMaterial.DisplacementBias, -5.0f, 5.0f);
+        };
+    }
 
-            AddGuiControlsAction = () =>
-            {
-                ImGui.SliderFloat("displacementScale", ref sphereMaterial.DisplacementScale, -5.0f, 5.0f);
-                ImGui.SliderFloat("displacementBias", ref sphereMaterial.DisplacementBias, -5.0f, 5.0f);
-            };
-        }
+    public override void Render()
+    {
+        if (!imGuiManager.ImWantMouse)
+            controls.Enabled = true;
+        else
+            controls.Enabled = false;
 
-        public override void Render()
-        {
-            if (!imGuiManager.ImWantMouse)
-                controls.Enabled = true;
-            else
-                controls.Enabled = false;
+        controls.Update();
+        renderer.Render(scene, camera);
 
-            controls.Update();
-            this.renderer.Render(scene, camera);
+        ShowGUIControls();
 
-            ShowGUIControls();
-
-            sphereMesh.Rotation.Y += 0.01f;
-        }
+        sphereMesh.Rotation.Y += 0.01f;
     }
 }

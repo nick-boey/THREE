@@ -1,97 +1,68 @@
-﻿using System.Collections.Generic;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class GLBufferAttribute : Dictionary<object, object>
 {
-    [Serializable]
-    public class GLBufferAttribute : Dictionary<object, object>
+    private bool isGLBufferAttribute = true;
+    public int Version;
+
+
+    public GLBufferAttribute(int buffer, int type, int itemSize, int elementSize, int count)
     {
-        public int Version = 0;
-        public int Buffer
+        Buffer = buffer;
+        Type = type;
+        ItemSize = itemSize;
+        ElementSize = elementSize;
+        this.count = count;
+    }
+
+    public GLBufferAttribute()
+    {
+    }
+
+    public GLBufferAttribute(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
+    }
+
+    public int Buffer
+    {
+        get => (int)this["buffer"];
+        set => this["buffer"] = value;
+    }
+
+    public int Type
+    {
+        get => (int)this["type"];
+        set => this["type"] = value;
+    }
+
+    public int ItemSize
+    {
+        get => (int)this["itemSize"];
+        set => this["itemSize"] = value;
+    }
+
+    public bool NeedsUpdate
+    {
+        get => (bool)this["needsUpdate"];
+        set
         {
-            get
-            {
-                return (int)this["buffer"];
-            }
-            set
-            {
-                this["buffer"] = value;
-            }
+            Version++;
+            this["needsUpdate"] = value;
         }
+    }
 
-        public int Type
-        {
-            get
-            {
-                return (int)this["type"];
-            }
-            set
-            {
-                this["type"] = value;
-            }
-        }
+    public int ElementSize
+    {
+        get => (int)this["elementSize"];
+        set => this["elementSize"] = value;
+    }
 
-        public int ItemSize
-        {
-            get
-            {
-                return (int)this["itemSize"];
-            }
-            set
-            {
-                this["itemSize"] = value;
-            }
-        }
-        public bool NeedsUpdate
-        {
-            get
-            {
-                return (bool)this["needsUpdate"];
-            }
-            set
-            {
-                this.Version++;
-                this["needsUpdate"] = value;
-            }
-        }
-
-        public int ElementSize
-        {
-            get
-            {
-                return (int)this["elementSize"];
-            }
-            set
-            {
-                this["elementSize"] = value;
-            }
-        }
-
-        public int count
-        {
-            get
-            {
-                return (int)this["count"];
-            }
-            set
-            {
-                this["count"] = value;
-            }
-        }
-
-        bool isGLBufferAttribute = true;
-
-
-        public GLBufferAttribute(int buffer, int type, int itemSize, int elementSize, int count)
-        {
-            this.Buffer = buffer;
-            this.Type = type;
-            this.ItemSize = itemSize;
-            this.ElementSize = elementSize;
-            this.count = count;
-
-        }
-        public GLBufferAttribute() :base() { }
-        public GLBufferAttribute(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public int count
+    {
+        get => (int)this["count"];
+        set => this["count"] = value;
     }
 }

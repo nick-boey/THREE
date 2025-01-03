@@ -1,131 +1,121 @@
 ﻿using System.Collections.Generic;
 using THREE;
 using Color = THREE.Color;
-namespace THREEExample.Three.Buffergeometry
+
+namespace THREEExample.Three.Buffergeometry;
+
+[Example("BuffergeometryUint", ExampleCategory.ThreeJs, "Buffergeometry")]
+public class BuffergeometryUintExample : BuffergeometryExample
 {
-    [Example("BuffergeometryUint", ExampleCategory.ThreeJs, "Buffergeometry")]
-    public class BuffergeometryUintExample : BuffergeometryExample
+    public override void CreateObject()
     {
+        var triangles = 500000;
 
-        public BuffergeometryUintExample() : base() { }	      
+        var geometry = new BufferGeometry();
 
-       
-		public override void CreateObject()
-		{
+        var positions = new List<float>();
+        var normals = new List<uint>();
+        var colors = new List<byte>();
 
-			var triangles = 500000;
+        var color = new Color();
 
-			var geometry = new BufferGeometry();
+        var n = 800;
+        var n2 = n / 2; // triangles spread in the cube
+        var d = 12;
+        var d2 = d / 2; // individual triangle size
 
-			var positions = new List<float>();
-			var normals = new List<uint>();
-			var colors = new List<byte>();
+        var pA = new Vector3();
+        var pB = new Vector3();
+        var pC = new Vector3();
 
-			var color = new Color();
+        var cb = new Vector3();
+        var ab = new Vector3();
 
-			var n = 800;
-			var n2 = n / 2;    // triangles spread in the cube
-			var d = 12;
-			var d2 = d / 2; // individual triangle size
+        for (var i = 0; i < triangles; i++)
+        {
+            // positions
 
-			var pA = new Vector3();
-			var pB = new Vector3();
-			var pC = new Vector3();
+            var x = (float)MathUtils.random.NextDouble() * n - n2;
+            var y = (float)MathUtils.random.NextDouble() * n - n2;
+            var z = (float)MathUtils.random.NextDouble() * n - n2;
 
-			var cb = new Vector3();
-			var ab = new Vector3();
+            var ax = x + (float)MathUtils.random.NextDouble() * d - d2;
+            var ay = y + (float)MathUtils.random.NextDouble() * d - d2;
+            var az = z + (float)MathUtils.random.NextDouble() * d - d2;
 
-			for (var i = 0; i < triangles; i++)
-			{
+            var bx = x + (float)MathUtils.random.NextDouble() * d - d2;
+            var by = y + (float)MathUtils.random.NextDouble() * d - d2;
+            var bz = z + (float)MathUtils.random.NextDouble() * d - d2;
 
-				// positions
+            var cx = x + (float)MathUtils.random.NextDouble() * d - d2;
+            var cy = y + (float)MathUtils.random.NextDouble() * d - d2;
+            var cz = z + (float)MathUtils.random.NextDouble() * d - d2;
 
-				var x = (float)MathUtils.random.NextDouble() * n - n2;
-				var y = (float)MathUtils.random.NextDouble() * n - n2;
-				var z = (float)MathUtils.random.NextDouble() * n - n2;
+            positions.Add(ax, ay, az);
+            positions.Add(bx, by, bz);
+            positions.Add(cx, cy, cz);
 
-				var ax = x + (float)MathUtils.random.NextDouble() * d - d2;
-				var ay = y + (float)MathUtils.random.NextDouble() * d - d2;
-				var az = z + (float)MathUtils.random.NextDouble() * d - d2;
+            // flat face normals
 
-				var bx = x + (float)MathUtils.random.NextDouble() * d - d2;
-				var by = y + (float)MathUtils.random.NextDouble() * d - d2;
-				var bz = z + (float)MathUtils.random.NextDouble() * d - d2;
+            pA.Set(ax, ay, az);
+            pB.Set(bx, by, bz);
+            pC.Set(cx, cy, cz);
 
-				var cx = x + (float)MathUtils.random.NextDouble() * d - d2;
-				var cy = y + (float)MathUtils.random.NextDouble() * d - d2;
-				var cz = z + (float)MathUtils.random.NextDouble() * d - d2;
+            cb.SubVectors(pC, pB);
+            ab.SubVectors(pA, pB);
+            cb.Cross(ab);
 
-				positions.Add(ax, ay, az);
-				positions.Add(bx, by, bz);
-				positions.Add(cx, cy, cz);
+            cb.Normalize();
 
-				// flat face normals
+            //var nx = cb.X;
+            //var ny = cb.Y;
+            //var nz = cb.Z;
 
-				pA.Set(ax, ay, az);
-				pB.Set(bx, by, bz);
-				pC.Set(cx, cy, cz);
+            //normals.Add(nx, ny, nz);
+            //normals.Add(nx, ny, nz);
+            //normals.Add(nx, ny, nz);
 
-				cb.SubVectors(pC, pB);
-				ab.SubVectors(pA, pB);
-				cb.Cross(ab);
-
-				cb.Normalize();
-
-                //var nx = cb.X;
-                //var ny = cb.Y;
-                //var nz = cb.Z;
-
-                //normals.Add(nx, ny, nz);
-                //normals.Add(nx, ny, nz);
-                //normals.Add(nx, ny, nz);
-
-                var nx = (uint)cb.X;
-                var ny = (uint)cb.Y;
-                var nz = (uint)cb.Z;
+            var nx = (uint)cb.X;
+            var ny = (uint)cb.Y;
+            var nz = (uint)cb.Z;
 
 
+            normals.Add(nx * 32767, ny * 32767, nz * 32767);
+            normals.Add(nx * 32767, ny * 32767, nz * 32767);
+            normals.Add(nx * 32767, ny * 32767, nz * 32767);
 
-                normals.Add(nx * 32767, ny * 32767, nz * 32767);
-                normals.Add(nx * 32767, ny * 32767, nz * 32767);
-                normals.Add(nx * 32767, ny * 32767, nz * 32767);
+            // colors
 
-                // colors
+            var vx = x / n + 0.5f;
+            var vy = y / n + 0.5f;
+            var vz = z / n + 0.5f;
 
-                var vx = (x / n) + 0.5f;
-				var vy = (y / n) + 0.5f;
-				var vz = (z / n) + 0.5f;
+            color.SetRGB(vx, vy, vz);
 
-				color.SetRGB(vx, vy, vz);
-
-				colors.Add((byte)(color.R*255),(byte)(color.G*255),(byte)(color.B*255));
-				colors.Add((byte)(color.R * 255), (byte)(color.G * 255), (byte)(color.B * 255));
-				colors.Add((byte)(color.R * 255), (byte)(color.G * 255), (byte)(color.B * 255));
-				//colors.Add(color.R, color.G, color.B);
-				//colors.Add(color.R, color.G, color.B);
-
-
-			}
+            colors.Add((byte)(color.R * 255), (byte)(color.G * 255), (byte)(color.B * 255));
+            colors.Add((byte)(color.R * 255), (byte)(color.G * 255), (byte)(color.B * 255));
+            colors.Add((byte)(color.R * 255), (byte)(color.G * 255), (byte)(color.B * 255));
+            //colors.Add(color.R, color.G, color.B);
+            //colors.Add(color.R, color.G, color.B);
+        }
 
 
+        geometry.SetAttribute("position", new BufferAttribute<float>(positions.ToArray(), 3));
+        geometry.SetAttribute("normal", new BufferAttribute<uint>(normals.ToArray(), 3));
+        geometry.SetAttribute("color", new BufferAttribute<byte>(colors.ToArray(), 3));
 
-			geometry.SetAttribute("position", new BufferAttribute<float>(positions.ToArray(), 3));
-			geometry.SetAttribute("normal", new BufferAttribute<uint>(normals.ToArray(), 3));
-			geometry.SetAttribute("color", new BufferAttribute<byte>(colors.ToArray(), 3));
+        geometry.ComputeBoundingSphere();
 
-			geometry.ComputeBoundingSphere();
+        var material = new MeshPhongMaterial
+        {
+            Color = Color.Hex(0xaaaaaa),
+            Specular = Color.Hex(0xffffff),
+            Shininess = 250,
+            Side = Constants.DoubleSide,
+            VertexColors = true
+        };
 
-			var material = new MeshPhongMaterial()
-			{
-				Color = Color.Hex(0xaaaaaa),
-				Specular = Color.Hex(0xffffff),
-				Shininess = 250,
-				Side = Constants.DoubleSide,
-				VertexColors = true
-			};
-
-			mesh = new Mesh(geometry, material);
-			scene.Add(mesh);
-		}
+        mesh = new Mesh(geometry, material);
+        scene.Add(mesh);
     }
 }

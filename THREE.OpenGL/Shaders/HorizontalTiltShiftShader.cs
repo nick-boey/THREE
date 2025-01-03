@@ -1,19 +1,17 @@
-﻿
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class HorizontalTiltShiftShader : ShaderMaterial
 {
-	[Serializable]
-
-    public class HorizontalTiltShiftShader : ShaderMaterial
+    public HorizontalTiltShiftShader()
     {
-        public HorizontalTiltShiftShader() : base()
-        {
-            Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
-            Uniforms.Add("h", new GLUniform { { "value", 1.0f / 512.0f } });
-            Uniforms.Add("r", new GLUniform { { "value", 0.35f } });
+        Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
+        Uniforms.Add("h", new GLUniform { { "value", 1.0f / 512.0f } });
+        Uniforms.Add("r", new GLUniform { { "value", 0.35f } });
 
-            VertexShader = @"
+        VertexShader = @"
                 varying vec2 vUv; 
 
 
@@ -28,7 +26,7 @@ namespace THREE
             "
             ;
 
-            FragmentShader = @"
+        FragmentShader = @"
 				uniform sampler2D tDiffuse; 
 				uniform float h;
 				uniform float r;
@@ -55,9 +53,9 @@ namespace THREE
 
 				}
 		";
-        }
+    }
 
-        public HorizontalTiltShiftShader(SerializationInfo info, StreamingContext context) : base(info, context) { }
-
+    public HorizontalTiltShiftShader(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

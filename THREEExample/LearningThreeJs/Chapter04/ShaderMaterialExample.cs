@@ -1,38 +1,14 @@
-﻿using OpenTK;
+﻿using System.Collections.Generic;
 using OpenTK.Windowing.Common;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Drawing;
 using THREE;
 using THREEExample.Learning.Utils;
-namespace THREEExample.Learning.Chapter04
+
+namespace THREEExample.Learning.Chapter04;
+
+[Example("11.ShaderMaterial", ExampleCategory.LearnThreeJS, "Chapter04")]
+public class ShaderMaterialExample : MaterialExampleTemplate
 {
-    [Example("11.ShaderMaterial", ExampleCategory.LearnThreeJS, "Chapter04")]
-    public class ShaderMaterialExample : MaterialExampleTemplate
-    {
-        THREE.Vector2 Resolution = new THREE.Vector2();
-        private string vertexShaderCode = @"
-        uniform float time;
-        varying vec2 vUv;
-  
-  
-        void main()
-        {
-        vec3 posChanged = position;
-        posChanged.x = posChanged.x*(abs(sin(time*1.0)));
-        posChanged.y = posChanged.y*(abs(cos(time*1.0)));
-        posChanged.z = posChanged.z*(abs(sin(time*1.0)));
-        //gl_Position = projectionMatrix * modelViewMatrix * vec4(position*(abs(sin(time)/2.0)+0.5),1.0);
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(posChanged,1.0);
-        }
-
-
-
-
-        ";
-
-        private string fragmentShader1 = @"
+    private readonly string fragmentShader1 = @"
         precision highp float;
         uniform float time;
         uniform float alpha;
@@ -81,7 +57,7 @@ namespace THREEExample.Learning.Chapter04
 
         ";
 
-        string fragmentShader2 = @"
+    private readonly string fragmentShader2 = @"
         uniform float time;
         uniform vec2 resolution;
   
@@ -164,7 +140,7 @@ namespace THREEExample.Learning.Chapter04
 
         ";
 
-        string fragmentShader3 = @"
+    private readonly string fragmentShader3 = @"
         uniform vec2 resolution;
         uniform float time;
   
@@ -210,7 +186,7 @@ namespace THREEExample.Learning.Chapter04
 
         ";
 
-        string fragmentShader4 = @"
+    private readonly string fragmentShader4 = @"
         uniform float time;
         uniform vec2 resolution;
   
@@ -262,7 +238,7 @@ namespace THREEExample.Learning.Chapter04
         
         ";
 
-        string fragmentShader5 = @"
+    private readonly string fragmentShader5 = @"
         uniform float time;
         uniform vec2 resolution;
   
@@ -292,7 +268,7 @@ namespace THREEExample.Learning.Chapter04
 
         ";
 
-        string fragmentShader6 = @"
+    private readonly string fragmentShader6 = @"
         uniform float time;
         uniform vec2 resolution;
   
@@ -327,122 +303,140 @@ namespace THREEExample.Learning.Chapter04
 
         ";
 
+    private readonly Vector2 Resolution = new();
 
-        Mesh cube;
-        float step = 0;
-        public ShaderMaterialExample() : base()
+    private readonly string vertexShaderCode = @"
+        uniform float time;
+        varying vec2 vUv;
+  
+  
+        void main()
         {
-
-        }
-        public override void InitLighting()
-        {
-            var ambientLight = new AmbientLight(THREE.Color.Hex(0x0c0c0c));
-            scene.Add(ambientLight);
-
-            var spotLight = new SpotLight(THREE.Color.Hex(0xffffff));
-            spotLight.Position.Set(-40, 60, -10);
-            spotLight.CastShadow = true;
-            scene.Add(spotLight);
-        }
-        public override void InitCamera()
-        {
-            base.InitCamera();
-            camera.Fov = 45.0f;
-            camera.Aspect = this.glControl.AspectRatio;
-            camera.Near = 0.1f;
-            camera.Far = 1000.0f;
-            camera.Position.Set(0, 20, 40);
-            camera.LookAt(new THREE.Vector3(10, 0, 0));
-        }
-        public override void Init()
-        {
-            base.Init();
-            Resolution.X = glControl.Width;
-            Resolution.Y = glControl.Height;
-
-            var cubeGeometry = new BoxGeometry(20, 20, 20);
-
-            var meshMaterial1 = CreateMaterial(vertexShaderCode, fragmentShader1);
-
-            var meshMaterial2 = CreateMaterial(vertexShaderCode, fragmentShader2);
-
-            var meshMaterial3 = CreateMaterial(vertexShaderCode, fragmentShader3);
-
-            var meshMaterial4 = CreateMaterial(vertexShaderCode, fragmentShader4);
-
-            var meshMaterial5 = CreateMaterial(vertexShaderCode, fragmentShader5);
-
-            var meshMaterial6 = CreateMaterial(vertexShaderCode, fragmentShader6);
-
-            var material = new List<Material>() { meshMaterial1, meshMaterial2, meshMaterial3, meshMaterial4, meshMaterial5, meshMaterial6 };
-
-            Material meshMaterial = new MeshBasicMaterial()
-            {
-                Color = THREE.Color.Hex(0x7777ff),
-                Name = "Basic Material",
-                FlatShading = true,
-                Opacity = 0.01f,
-                ColorWrite = true,
-                Fog = true
-            };
-
-            cube = new Mesh(cubeGeometry, material);
-
-            scene.Add(cube);
-
-          
+        vec3 posChanged = position;
+        posChanged.x = posChanged.x*(abs(sin(time*1.0)));
+        posChanged.y = posChanged.y*(abs(cos(time*1.0)));
+        posChanged.z = posChanged.z*(abs(sin(time*1.0)));
+        //gl_Position = projectionMatrix * modelViewMatrix * vec4(position*(abs(sin(time)/2.0)+0.5),1.0);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(posChanged,1.0);
         }
 
-        public override void OnResize(ResizeEventArgs clientSize)
+
+
+
+        ";
+
+
+    private Mesh cube;
+    private float step;
+
+    public override void InitLighting()
+    {
+        var ambientLight = new AmbientLight(Color.Hex(0x0c0c0c));
+        scene.Add(ambientLight);
+
+        var spotLight = new SpotLight(Color.Hex(0xffffff));
+        spotLight.Position.Set(-40, 60, -10);
+        spotLight.CastShadow = true;
+        scene.Add(spotLight);
+    }
+
+    public override void InitCamera()
+    {
+        base.InitCamera();
+        camera.Fov = 45.0f;
+        camera.Aspect = glControl.AspectRatio;
+        camera.Near = 0.1f;
+        camera.Far = 1000.0f;
+        camera.Position.Set(0, 20, 40);
+        camera.LookAt(new Vector3(10, 0, 0));
+    }
+
+    public override void Init()
+    {
+        base.Init();
+        Resolution.X = glControl.Width;
+        Resolution.Y = glControl.Height;
+
+        var cubeGeometry = new BoxGeometry(20, 20, 20);
+
+        var meshMaterial1 = CreateMaterial(vertexShaderCode, fragmentShader1);
+
+        var meshMaterial2 = CreateMaterial(vertexShaderCode, fragmentShader2);
+
+        var meshMaterial3 = CreateMaterial(vertexShaderCode, fragmentShader3);
+
+        var meshMaterial4 = CreateMaterial(vertexShaderCode, fragmentShader4);
+
+        var meshMaterial5 = CreateMaterial(vertexShaderCode, fragmentShader5);
+
+        var meshMaterial6 = CreateMaterial(vertexShaderCode, fragmentShader6);
+
+        var material = new List<Material>
+            { meshMaterial1, meshMaterial2, meshMaterial3, meshMaterial4, meshMaterial5, meshMaterial6 };
+
+        Material meshMaterial = new MeshBasicMaterial
         {
-            base.OnResize(clientSize);
-            Resolution.X = clientSize.Width;
-            Resolution.X = clientSize.Height;
+            Color = Color.Hex(0x7777ff),
+            Name = "Basic Material",
+            FlatShading = true,
+            Opacity = 0.01f,
+            ColorWrite = true,
+            Fog = true
+        };
 
-        }
-        private ShaderMaterial CreateMaterial(string vertexShader, string fragmentShader)
+        cube = new Mesh(cubeGeometry, material);
+
+        scene.Add(cube);
+    }
+
+    public override void OnResize(ResizeEventArgs clientSize)
+    {
+        base.OnResize(clientSize);
+        Resolution.X = clientSize.Width;
+        Resolution.X = clientSize.Height;
+    }
+
+    private ShaderMaterial CreateMaterial(string vertexShader, string fragmentShader)
+    {
+        var uniforms = new GLUniforms
         {
-            GLUniforms uniforms = new GLUniforms
-                {
-                    { "time",       new GLUniform {{"value", 0.2f}}},
-                    { "scale",      new GLUniform {{"value", 0.2f}}},
+            { "time", new GLUniform { { "value", 0.2f } } },
+            { "scale", new GLUniform { { "value", 0.2f } } },
 
-                    { "alpha",      new GLUniform {{"value", 0.6f}}},
-                    { "resolution", new GLUniform {{"value",Resolution}}}
-                };
+            { "alpha", new GLUniform { { "value", 0.6f } } },
+            { "resolution", new GLUniform { { "value", Resolution } } }
+        };
 
-            var meshMaterial = new ShaderMaterial()
-            {
-                Uniforms = uniforms,
-                VertexShader = vertexShader,
-                FragmentShader = fragmentShader,
-                Transparent = true
-            };
-
-            return meshMaterial;
-        }
-
-        public override void Render()
+        var meshMaterial = new ShaderMaterial
         {
-            if (!imGuiManager.ImWantMouse)
-                controls.Enabled = true;
-            else
-                controls.Enabled = false;
+            Uniforms = uniforms,
+            VertexShader = vertexShader,
+            FragmentShader = fragmentShader,
+            Transparent = true
+        };
 
-            controls?.Update();
-            renderer?.Render(scene, camera);
+        return meshMaterial;
+    }
 
-            cube.Rotation.Y = step += 0.001f;
-            cube.Rotation.X = step;
-            cube.Rotation.Z = step;
+    public override void Render()
+    {
+        if (!imGuiManager.ImWantMouse)
+            controls.Enabled = true;
+        else
+            controls.Enabled = false;
 
-            cube.Materials.ForEach(m =>
-            {
-                var time = (float)((m as ShaderMaterial).Uniforms["time"] as Dictionary<string,object>)["value"];
-                time += 0.01f;
-                ((m as ShaderMaterial).Uniforms["time"] as Dictionary<string,object>)["value"] = time;
+        controls?.Update();
+        renderer?.Render(scene, camera);
 
-            });
-        }
+        cube.Rotation.Y = step += 0.001f;
+        cube.Rotation.X = step;
+        cube.Rotation.Z = step;
+
+        cube.Materials.ForEach(m =>
+        {
+            var time = (float)((m as ShaderMaterial).Uniforms["time"] as Dictionary<string, object>)["value"];
+            time += 0.01f;
+            ((m as ShaderMaterial).Uniforms["time"] as Dictionary<string, object>)["value"] = time;
+        });
     }
 }

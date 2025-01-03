@@ -1,108 +1,109 @@
 ﻿using System.Collections;
 using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class ShaderMaterial : Material
 {
-    [Serializable]
-    public class ShaderMaterial : Material
+    public Dictionary<string, object> Attributes;
+
+    public Hashtable DefaultAttributeValues = new();
+
+    public Extensions extensions;
+
+    public string FragmentShader =
+        "void main() {\n\t" +
+        "   gl_FragColor = vec4(1.0,0.0,0.0,1.0);\n" +
+        "}";
+
+    //public bool Skinning = false;
+
+    //public bool MorphTargets { get; set; }
+
+    //public bool MorphNormals = false;
+
+    public string Index0AttributeName = null;
+
+    public bool Lights;
+
+    public int Shading = Constants.SmoothShading;
+
+    public GLUniforms Uniforms;
+
+    public bool UniformsNeedUpdate = false;
+
+    public string VertexShader =
+        "void main() {\n\t" +
+        "   gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0);\n" +
+        "}";
+
+    public ShaderMaterial(Hashtable parameters = null)
     {
-        [Serializable]
-        public struct Extensions
+        type = "ShaderMaterial";
+
+        Attributes = new Dictionary<string, object>();
+
+        Uniforms = new GLUniforms();
+
+        Wireframe = false;
+
+        WireframeLineWidth = 1;
+
+        extensions = new Extensions
         {
-            public bool derivatives;
-            public bool fragDepth;
-            public bool drawBuffers;
-            public bool shaderTextureLOD;
-        }
+            derivatives = false,
+            fragDepth = false,
+            drawBuffers = false,
+            shaderTextureLOD = false
+        };
 
-        public GLUniforms Uniforms;
-
-        public Extensions extensions;
-
-        public Dictionary<string,object> Attributes;
-
-        public string VertexShader =
-            "void main() {\n\t" +
-            "   gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0);\n" +
-            "}";
-
-        public string FragmentShader =
-            "void main() {\n\t" +
-            "   gl_FragColor = vec4(1.0,0.0,0.0,1.0);\n" +
-            "}";
-
-        public int Shading = (int)Constants.SmoothShading;
-
-        public bool Lights = false;
-
-        //public bool Skinning = false;
-
-        //public bool MorphTargets { get; set; }
-
-        //public bool MorphNormals = false;
-
-        public string Index0AttributeName = null;
-
-        public bool UniformsNeedUpdate = false;
-
-        public Hashtable DefaultAttributeValues = new Hashtable();
-
-        public ShaderMaterial(Hashtable parameters = null) : base()
+        DefaultAttributeValues = new Hashtable
         {
-            this.type = "ShaderMaterial";
+            { "color", new float[] { 1, 1, 1 } },
+            { "uv", new float[] { 0, 0 } },
+            { "uv2", new float[] { 0, 0 } }
+        };
 
-            this.Attributes = new Dictionary<string,object>();
+        if (parameters != null)
+            SetValues(parameters);
+    }
 
-            this.Uniforms = new GLUniforms();
+    public ShaderMaterial(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
+    }
 
-            this.Wireframe = false;
+    protected ShaderMaterial(ShaderMaterial other) : base(other)
+    {
+        FragmentShader = other.FragmentShader;
+        VertexShader = other.VertexShader;
+        Uniforms = UniformsUtils.CloneUniforms(other.Uniforms);
+        Defines = (Hashtable)other.Defines.Clone();
 
-            this.WireframeLineWidth = 1;
+        Wireframe = other.Wireframe;
+        WireframeLineWidth = other.WireframeLineWidth;
 
-            this.extensions = new Extensions()
-            {
-                derivatives = false,
-                fragDepth = false,
-                drawBuffers = false,
-                shaderTextureLOD = false
-            };
+        Lights = other.Lights;
+        Clipping = other.Clipping;
+        Skinning = other.Skinning;
 
-            this.DefaultAttributeValues = new Hashtable()
-            {
-                {"color",new float[]{1,1,1}},
-                {"uv",new float[]{0,0} },
-                {"uv2",new float[]{0,0} }
-            };
+        MorphTargets = other.MorphTargets;
+        MorphNormals = other.MorphNormals;
 
-            if (parameters != null)
-                this.SetValues(parameters);
-        }
+        extensions = other.extensions;
+    }
 
-        public ShaderMaterial(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public new object Clone()
+    {
+        return new ShaderMaterial(this);
+    }
 
-        protected ShaderMaterial(ShaderMaterial other) : base(other)
-        {
-            this.FragmentShader = other.FragmentShader;
-            this.VertexShader = other.VertexShader;
-            this.Uniforms = UniformsUtils.CloneUniforms(other.Uniforms);
-            this.Defines = (Hashtable)other.Defines.Clone();
-
-            this.Wireframe = other.Wireframe;
-            this.WireframeLineWidth = other.WireframeLineWidth;
-
-            this.Lights = other.Lights;
-            this.Clipping = other.Clipping;
-            this.Skinning = other.Skinning;
-
-            this.MorphTargets = other.MorphTargets;
-            this.MorphNormals = other.MorphNormals;
-
-            this.extensions = other.extensions;
-        }
-
-        public new object Clone()
-        {
-            return new ShaderMaterial(this);
-        }
+    [Serializable]
+    public struct Extensions
+    {
+        public bool derivatives;
+        public bool fragDepth;
+        public bool drawBuffers;
+        public bool shaderTextureLOD;
     }
 }

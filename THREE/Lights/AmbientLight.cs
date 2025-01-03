@@ -1,18 +1,21 @@
 ﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class AmbientLight : Light
 {
-    [Serializable]
-    public class AmbientLight : Light
+    public AmbientLight(Color color, float? intensity = null)
+        : base(color, intensity)
     {
-        public AmbientLight(Color color, float? intensity = null)
-            : base(color, intensity)
-        {
-            this.type = "AmbientLight";
-        }
-        public AmbientLight(SerializationInfo info, StreamingContext context) : base(info, context) { }
+        type = "AmbientLight";
+    }
 
-        public AmbientLight(int color, float? intensity = null) : this(Color.Hex(color), intensity) { }
+    public AmbientLight(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
+    }
 
+    public AmbientLight(int color, float? intensity = null) : this(Color.Hex(color), intensity)
+    {
     }
 }

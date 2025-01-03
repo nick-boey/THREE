@@ -1,28 +1,28 @@
 ﻿using System.Collections;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class GLCubeRenderTarget : GLRenderTarget
 {
-    [Serializable]
-    public class GLCubeRenderTarget : GLRenderTarget
+    public GLCubeRenderTarget(int size, Hashtable options = null) : base(size, size, options)
     {
-        public GLCubeRenderTarget(int size, Hashtable options = null) : base(size, size, options)
+    }
+
+    public GLCubeRenderTarget FromEquirectangularTexture(GLRenderer renderer, Texture texture)
+    {
+        Texture.Type = texture.Type;
+        Texture.Format = Constants.RGBAFormat; // see #18859
+        Texture.Encoding = texture.Encoding;
+
+        Texture.GenerateMipmaps = texture.GenerateMipmaps;
+        Texture.MinFilter = texture.MinFilter;
+        Texture.MagFilter = texture.MagFilter;
+
+        var shader = new GLShader
         {
-
-        }
-        public GLCubeRenderTarget FromEquirectangularTexture(GLRenderer renderer, Texture texture)
-        {
-            this.Texture.Type = texture.Type;
-            this.Texture.Format = Constants.RGBAFormat; // see #18859
-            this.Texture.Encoding = texture.Encoding;
-
-            this.Texture.GenerateMipmaps = texture.GenerateMipmaps;
-            this.Texture.MinFilter = texture.MinFilter;
-            this.Texture.MagFilter = texture.MagFilter;
-
-            GLShader shader = new GLShader
-            {
-                Uniforms = new GLUniforms { { "tEquirect", new GLUniform { { "value", null } } } },
-                VertexShader = @"
+            Uniforms = new GLUniforms { { "tEquirect", new GLUniform { { "value", null } } } },
+            VertexShader = @"
                     varying vec3 vWorldDirection;
 
 			        vec3 transformDirection( in vec3 dir, in mat4 matrix ) {
@@ -40,7 +40,7 @@ namespace THREE
 
 			        }
                 ",
-                FragmentShader = @"
+            FragmentShader = @"
                     uniform sampler2D tEquirect;
 
 			        varying vec3 vWorldDirection;
@@ -57,37 +57,34 @@ namespace THREE
 
 			        }
                 "
-            };
+        };
 
-            var geometry = new BoxBufferGeometry(5, 5, 5);
+        var geometry = new BoxBufferGeometry(5, 5, 5);
 
-            var material = new ShaderMaterial
-            {
-                Name = "CubemapFromEquirect",
-                Uniforms = UniformsUtils.CloneUniforms(shader.Uniforms),
-                VertexShader = shader.VertexShader,
-                FragmentShader = shader.FragmentShader,
-                Side = Constants.BackSide,
-                Blending = Constants.NoBlending
-            };
+        var material = new ShaderMaterial
+        {
+            Name = "CubemapFromEquirect",
+            Uniforms = UniformsUtils.CloneUniforms(shader.Uniforms),
+            VertexShader = shader.VertexShader,
+            FragmentShader = shader.FragmentShader,
+            Side = Constants.BackSide,
+            Blending = Constants.NoBlending
+        };
 
-            material.Uniforms["tEquirect"] = new GLUniform { { "value", texture } };
+        material.Uniforms["tEquirect"] = new GLUniform { { "value", texture } };
 
-            var mesh = new Mesh(geometry, material);
-            var scene = new Scene();
-            scene.Add(mesh);
-            var currentMinFilter = texture.MinFilter;
+        var mesh = new Mesh(geometry, material);
+        var scene = new Scene();
+        scene.Add(mesh);
+        var currentMinFilter = texture.MinFilter;
 
-            if (texture.MinFilter == Constants.LinearMipmapLinearFilter) texture.MinFilter = Constants.LinearFilter;
+        if (texture.MinFilter == Constants.LinearMipmapLinearFilter) texture.MinFilter = Constants.LinearFilter;
 
-            var camera = new CubeCamera(1, 10, this);
+        var camera = new CubeCamera(1, 10, this);
 
-            camera.Update(renderer, scene);
+        camera.Update(renderer, scene);
 
-            texture.MinFilter = currentMinFilter;
-            return this;
-        }
+        texture.MinFilter = currentMinFilter;
+        return this;
     }
-
-
 }

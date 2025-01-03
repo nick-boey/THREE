@@ -1,53 +1,50 @@
 ﻿using OpenTK.Graphics.ES30;
 
+namespace THREE;
 
-namespace THREE
+[Serializable]
+public class GLBufferRenderer
 {
-    [Serializable]
-    public class GLBufferRenderer
+    private GLCapabilities capabilities;
+
+    private GLExtensions extensions;
+
+    public GLInfo info;
+
+    public bool IsGL2;
+
+    public PrimitiveType mode;
+    private GLRenderer renderer;
+
+    public GLBufferRenderer(GLRenderer renderer, GLExtensions extensions, GLInfo info, GLCapabilities capabilities)
     {
-        private GLRenderer renderer;
+        this.renderer = renderer;
 
-        private GLExtensions extensions;
+        this.extensions = extensions;
 
-        public GLInfo info;
+        this.info = info;
 
-        private GLCapabilities capabilities;
+        this.capabilities = capabilities;
+    }
 
-        public PrimitiveType mode;
+    public void SetMode(PrimitiveType value)
+    {
+        mode = value;
+    }
 
-        public bool IsGL2;
+    public virtual void Render(int start, int count)
+    {
+        GL.DrawArrays(mode, start, count);
 
-        public GLBufferRenderer(GLRenderer renderer, GLExtensions extensions, GLInfo info, GLCapabilities capabilities)
-        {
-            this.renderer = renderer;
+        info.Update(count, (int)mode);
+    }
 
-            this.extensions = extensions;
+    public virtual void RenderInstances(Geometry geometry, int start, int count, int primcount)
+    {
+        if (primcount == 0) return;
 
-            this.info = info;
+        GL.DrawArraysInstanced(mode, start, count, primcount);
 
-            this.capabilities = capabilities;
-        }
-
-        public void SetMode(PrimitiveType value)
-        {
-            this.mode = value;
-        }
-
-        public virtual void Render(int start, int count)
-        {
-            GL.DrawArrays(this.mode, start, count);
-
-            this.info.Update(count, (int)mode);
-        }
-
-        public virtual void RenderInstances(Geometry geometry, int start, int count, int primcount)
-        {
-            if (primcount == 0) return;
-
-            GL.DrawArraysInstanced(this.mode, start, count, primcount);
-
-            this.info.Update(count, (int)mode, primcount);
-        }
+        info.Update(count, (int)mode, primcount);
     }
 }

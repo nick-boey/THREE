@@ -1,11 +1,8 @@
-﻿using System.Collections.Generic;
+﻿namespace THREE;
 
-namespace THREE
+public interface IGLAttribute
 {
-    public interface IGLAttribute
-    {
-        string Name { get; set; }
-        Type Type { get; set; }
-        int ItemSize { get; set; }
-    }
+    string Name { get; set; }
+    Type Type { get; set; }
+    int ItemSize { get; set; }
 }

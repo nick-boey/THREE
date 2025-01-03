@@ -1,33 +1,32 @@
-﻿
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class SpriteMaterial : Material
 {
-    [Serializable]
-    public class SpriteMaterial : Material
+    //public bool SizeAttenuation = true;
+
+    public SpriteMaterial()
     {
+        type = "SpriteMaterial";
 
-        //public bool SizeAttenuation = true;
+        Color = new Color().SetHex(0x000000);
 
-        public SpriteMaterial()
-        {
-            this.type = "SpriteMaterial";
+        Transparent = true;
 
-            this.Color = new Color().SetHex(0x000000);
+        Map = null;
 
-            this.Transparent = true;
+        AlphaMap = null;
 
-            this.Map = null;
+        Rotation = 0;
 
-            this.AlphaMap = null;
+        SizeAttenuation = true;
 
-            this.Rotation = 0;
+        Transparent = true;
+    }
 
-            this.SizeAttenuation = true;
-
-            this.Transparent = true;
-
-        }
-        public SpriteMaterial(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public SpriteMaterial(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

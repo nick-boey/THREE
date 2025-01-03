@@ -1,17 +1,17 @@
 ﻿using THREE;
 
-namespace THREEExample.Learning.Chapter11
-{
-    public class CustomGrayScaleShader : ShaderMaterial
-    {
-        public CustomGrayScaleShader() : base()
-        {
-            Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
-            Uniforms.Add("rPower", new GLUniform {{ "value", 0.2126f }});
-            Uniforms.Add("gPower", new GLUniform { { "value", 0.7152f } });
-            Uniforms.Add("bPower", new GLUniform { { "value", 0.0722f } });
+namespace THREEExample.Learning.Chapter11;
 
-            VertexShader = @"
+public class CustomGrayScaleShader : ShaderMaterial
+{
+    public CustomGrayScaleShader()
+    {
+        Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
+        Uniforms.Add("rPower", new GLUniform { { "value", 0.2126f } });
+        Uniforms.Add("gPower", new GLUniform { { "value", 0.7152f } });
+        Uniforms.Add("bPower", new GLUniform { { "value", 0.0722f } });
+
+        VertexShader = @"
                 varying vec2 vUv; 
 
 
@@ -26,7 +26,7 @@ namespace THREEExample.Learning.Chapter11
             "
             ;
 
-            FragmentShader = @"
+        FragmentShader = @"
               // pass in our custom uniforms
               uniform float rPower; 
               uniform float gPower;
@@ -52,17 +52,17 @@ namespace THREEExample.Learning.Chapter11
 
               }
             ";
-        }
     }
+}
 
-    public class CustomBitShader : ShaderMaterial
+public class CustomBitShader : ShaderMaterial
+{
+    public CustomBitShader()
     {
-        public CustomBitShader() : base()
-        {
-            Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
-            Uniforms.Add("bitSize", new GLUniform { { "value", 4 } });
+        Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
+        Uniforms.Add("bitSize", new GLUniform { { "value", 4 } });
 
-            VertexShader = @"
+        VertexShader = @"
                 varying vec2 vUv; 
 
 
@@ -75,9 +75,9 @@ namespace THREEExample.Learning.Chapter11
 
 
             "
-           ;
+            ;
 
-            FragmentShader = @"
+        FragmentShader = @"
               uniform int bitSize; 
 
               uniform sampler2D tDiffuse;
@@ -96,7 +96,5 @@ namespace THREEExample.Learning.Chapter11
 
               }
 ";
-        }
     }
-
 }

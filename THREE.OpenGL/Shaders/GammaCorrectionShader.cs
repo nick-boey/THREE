@@ -1,16 +1,15 @@
-﻿
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class GammaCorrectionShader : ShaderMaterial
 {
-    [Serializable]
-    public class GammaCorrectionShader : ShaderMaterial
+    public GammaCorrectionShader()
     {
-        public GammaCorrectionShader() : base()
-        {
-            Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
+        Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
 
-            VertexShader = @"
+        VertexShader = @"
                 varying vec2 vUv; 
 
 
@@ -25,7 +24,7 @@ namespace THREE
                 "
             ;
 
-            FragmentShader = @"
+        FragmentShader = @"
                 uniform sampler2D tDiffuse; 
 
 
@@ -40,8 +39,9 @@ namespace THREE
 		        }
 
             ";
-        }
+    }
 
-        public GammaCorrectionShader(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public GammaCorrectionShader(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

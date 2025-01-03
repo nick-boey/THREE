@@ -1,124 +1,124 @@
 ﻿using System.Collections;
 using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class MeshStandardMaterial : Material
 {
-    [Serializable]
-    public class MeshStandardMaterial : Material
+    public MeshStandardMaterial()
     {
+        type = "MeshStandardMaterial";
 
-        public MeshStandardMaterial() : base()
-        {
-            this.type = "MeshStandardMaterial";
+        Defines.Add("STANDARD", "");
 
-            this.Defines.Add("STANDARD", "");
+        Color = new Color().SetHex(0xffffff);
+        Roughness = 1.0f;
+        Metalness = 0.0f;
 
-            Color = new Color().SetHex(0xffffff);
-            Roughness = 1.0f;
-            Metalness = 0.0f;
+        Map = null;
 
-            this.Map = null;
+        LightMap = null;
+        LightMapIntensity = 1.0f;
 
-            this.LightMap = null;
-            this.LightMapIntensity = 1.0f;
+        AoMap = null;
+        AoMapIntensity = 1.0f;
 
-            this.AoMap = null;
-            this.AoMapIntensity = 1.0f;
+        Emissive = new Color().SetHex(0x000000);
+        EmissiveIntensity = 1.0f;
+        EmissiveMap = null;
 
-            this.Emissive = new Color().SetHex(0x000000);
-            this.EmissiveIntensity = 1.0f;
-            this.EmissiveMap = null;
+        BumpMap = null;
+        BumpScale = 1;
 
-            this.BumpMap = null;
-            this.BumpScale = 1;
+        NormalMap = null;
+        NormalMapType = Constants.TangentSpaceNormalMap;
+        NormalScale = new Vector2(1, 1);
 
-            this.NormalMap = null;
-            this.NormalMapType = Constants.TangentSpaceNormalMap;
-            this.NormalScale = new Vector2(1, 1);
+        DisplacementMap = null;
+        DisplacementScale = 1;
+        DisplacementBias = 0;
 
-            this.DisplacementMap = null;
-            this.DisplacementScale = 1;
-            this.DisplacementBias = 0;
+        RoughnessMap = null;
 
-            this.RoughnessMap = null;
+        MetalnessMap = null;
 
-            this.MetalnessMap = null;
+        AlphaMap = null;
 
-            this.AlphaMap = null;
+        EnvMap = null;
+        EnvMapIntensity = 1.0f;
 
-            this.EnvMap = null;
-            this.EnvMapIntensity = 1.0f;
+        RefractionRatio = 0.98f;
 
-            this.RefractionRatio = 0.98f;
+        Wireframe = false;
+        WireframeLineWidth = 1;
+        WireframeLineCap = "round";
+        WireframeLineJoin = "round";
 
-            this.Wireframe = false;
-            this.WireframeLineWidth = 1;
-            this.WireframeLineCap = "round";
-            this.WireframeLineJoin = "round";
+        Skinning = false;
+        MorphTargets = false;
+        MorphNormals = false;
+    }
 
-            this.Skinning = false;
-            this.MorphTargets = false;
-            this.MorphNormals = false;
+    public MeshStandardMaterial(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
+    }
 
-        }
+    protected MeshStandardMaterial(MeshStandardMaterial source) : base(source)
+    {
+        type = "MeshStandardMaterial";
 
-        public MeshStandardMaterial(SerializationInfo info, StreamingContext context) : base(info, context) { }
+        Defines = (Hashtable)source.Defines.Clone();
 
-        protected MeshStandardMaterial(MeshStandardMaterial source) : base(source)
-        {
-            this.type = "MeshStandardMaterial";
+        Color = source.Color;
 
-            this.Defines = (Hashtable)source.Defines.Clone();
+        Map = source.Map; //!=null ? (Texture)source.Map.Clone() : null;
 
-            Color = source.Color;
+        LightMap = source.LightMap; //!=null?(Texture)source.LightMap.Clone() : null;
+        LightMapIntensity = source.LightMapIntensity;
 
-            this.Map = source.Map;//!=null ? (Texture)source.Map.Clone() : null;
+        AoMap = source.AoMap; // != null ? (Texture)source.AoMap.Clone() : null;
+        AoMapIntensity = source.AoMapIntensity;
 
-            this.LightMap = source.LightMap;//!=null?(Texture)source.LightMap.Clone() : null;
-            this.LightMapIntensity = source.LightMapIntensity;
+        Emissive = source.Emissive;
+        EmissiveIntensity = source.EmissiveIntensity;
+        EmissiveMap = source.EmissiveMap; //!=null ? (Texture)source.EmissiveMap.Clone():null;
 
-            this.AoMap = source.AoMap;// != null ? (Texture)source.AoMap.Clone() : null;
-            this.AoMapIntensity = source.AoMapIntensity;
+        BumpMap = source.BumpMap; // != null ? (Texture)source.BumpMap.Clone() : null;
+        BumpScale = source.BumpScale;
 
-            this.Emissive = source.Emissive;
-            this.EmissiveIntensity = source.EmissiveIntensity;
-            this.EmissiveMap = source.EmissiveMap;//!=null ? (Texture)source.EmissiveMap.Clone():null;
+        NormalMap = source.NormalMap; // != null ? (Texture)source.NormalMap.Clone() : null; 
+        NormalMapType = source.NormalMapType;
+        NormalScale = source.NormalScale;
 
-            this.BumpMap = source.BumpMap;// != null ? (Texture)source.BumpMap.Clone() : null;
-            this.BumpScale = source.BumpScale;
+        DisplacementMap = source.DisplacementMap; // != null ? (Texture)source.DisplacementMap.Clone() : null;
+        DisplacementScale = source.DisplacementScale;
+        DisplacementBias = source.DisplacementBias;
 
-            this.NormalMap = source.NormalMap;// != null ? (Texture)source.NormalMap.Clone() : null; 
-            this.NormalMapType = source.NormalMapType;
-            this.NormalScale = source.NormalScale;
+        RoughnessMap = source.RoughnessMap; // != null ? (Texture)source.RoughnessMap.Clone() : null;
 
-            this.DisplacementMap = source.DisplacementMap;// != null ? (Texture)source.DisplacementMap.Clone() : null;
-            this.DisplacementScale = source.DisplacementScale;
-            this.DisplacementBias = source.DisplacementBias;
+        MetalnessMap = source.MetalnessMap; // != null ? (Texture)source.MetalnessMap.Clone() : null;
 
-            this.RoughnessMap = source.RoughnessMap;// != null ? (Texture)source.RoughnessMap.Clone() : null;
+        AlphaMap = source.AlphaMap; // != null ? (Texture)source.AlphaMap.Clone() : null;
 
-            this.MetalnessMap = source.MetalnessMap;// != null ? (Texture)source.MetalnessMap.Clone() : null;
+        EnvMap = source.EnvMap; // != null ? (Texture)source.EnvMap.Clone() : null;
 
-            this.AlphaMap = source.AlphaMap;// != null ? (Texture)source.AlphaMap.Clone() : null;
+        EnvMapIntensity = source.EnvMapIntensity;
 
-            this.EnvMap = source.EnvMap;// != null ? (Texture)source.EnvMap.Clone() : null;
+        RefractionRatio = source.RefractionRatio;
 
-            this.EnvMapIntensity = source.EnvMapIntensity;
+        Wireframe = source.Wireframe;
+        WireframeLineWidth = source.WireframeLineWidth;
+        WireframeLineCap = source.WireframeLineCap;
+        WireframeLineJoin = source.WireframeLineJoin;
 
-            this.RefractionRatio = source.RefractionRatio;
+        Skinning = source.Skinning;
+        MorphTargets = source.MorphTargets;
+        MorphNormals = source.MorphNormals;
+    }
 
-            this.Wireframe = source.Wireframe;
-            this.WireframeLineWidth = source.WireframeLineWidth;
-            this.WireframeLineCap = source.WireframeLineCap;
-            this.WireframeLineJoin = source.WireframeLineJoin;
-
-            this.Skinning = source.Skinning;
-            this.MorphTargets = source.MorphTargets;
-            this.MorphNormals = source.MorphNormals;
-        }
-        public new object Clone()
-        {
-            return new MeshStandardMaterial(this);
-        }
+    public new object Clone()
+    {
+        return new MeshStandardMaterial(this);
     }
 }

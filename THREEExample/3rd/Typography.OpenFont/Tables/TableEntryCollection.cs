@@ -2,29 +2,38 @@
 //Apache2, 2014-2016, Samuel Carlsson, WinterDev
 
 using System.Collections.Generic;
-namespace Typography.OpenFont.Tables
+
+namespace Typography.OpenFont.Tables;
+
+internal class TableEntryCollection
 {
-    class TableEntryCollection
+    private readonly Dictionary<string, TableEntry> _tables = new();
+
+    public void AddEntry(TableEntry en)
     {
-        readonly Dictionary<string, TableEntry> _tables = new Dictionary<string, TableEntry>();
-        public TableEntryCollection() { }
+        _tables.Add(en.Name, en);
+    }
 
-        public void AddEntry(TableEntry en) => _tables.Add(en.Name, en);
+    public bool TryGetTable(string tableName, out TableEntry entry)
+    {
+        return _tables.TryGetValue(tableName, out entry);
+    }
 
-        public bool TryGetTable(string tableName, out TableEntry entry) => _tables.TryGetValue(tableName, out entry);
+    public void ReplaceTable(TableEntry table)
+    {
+        _tables[table.Name] = table;
+    }
 
-        public void ReplaceTable(TableEntry table) => _tables[table.Name] = table;
-
-        public TableHeader[] CloneTableHeaders()
+    public TableHeader[] CloneTableHeaders()
+    {
+        var clones = new TableHeader[_tables.Count];
+        var i = 0;
+        foreach (var en in _tables.Values)
         {
-            TableHeader[] clones = new TableHeader[_tables.Count];
-            int i = 0;
-            foreach (TableEntry en in _tables.Values)
-            {
-                clones[i] = en.Header.Clone();
-                i++;
-            }
-            return clones;
-        } 
+            clones[i] = en.Header.Clone();
+            i++;
+        }
+
+        return clones;
     }
 }

@@ -1,31 +1,30 @@
-﻿
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class MeshPhysicalMaterial : MeshStandardMaterial
 {
-    [Serializable]
-    public class MeshPhysicalMaterial : MeshStandardMaterial
+    public float Transparency = 0.0f;
+
+    public MeshPhysicalMaterial()
     {
+        type = "MeshPhysicalMaterial";
 
-        public float Transparency = 0.0f;
+        //this.Defines.Add("STANDARD", ""); already inserted from MeshStandardMaterial
+        Defines.Add("PHYSICAL", "");
 
-        public MeshPhysicalMaterial() : base()
-        {
-            this.type = "MeshPhysicalMaterial";
+        Clearcoat = 0.0f;
+        ClearcoatRoughness = 0.0f;
 
-            //this.Defines.Add("STANDARD", ""); already inserted from MeshStandardMaterial
-            this.Defines.Add("PHYSICAL", "");
+        Reflectivity = 0.5f;
 
-            this.Clearcoat = 0.0f;
-            this.ClearcoatRoughness = 0.0f;
+        ClearcoatNormalScale = new Vector2(1, 1);
 
-            this.Reflectivity = 0.5f;
+        ClearcoatNormalMap = null;
+    }
 
-            this.ClearcoatNormalScale = new Vector2(1, 1);
-
-            this.ClearcoatNormalMap = null;
-        }
-
-        public MeshPhysicalMaterial(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public MeshPhysicalMaterial(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

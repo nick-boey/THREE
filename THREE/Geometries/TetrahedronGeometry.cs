@@ -1,41 +1,40 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class TetrahedronGeometry : Geometry
 {
-    [Serializable]
-    public class TetrahedronGeometry : Geometry
+    public Hashtable parameters;
+
+    public TetrahedronGeometry(float? radius = null, float? detail = null)
     {
-        public Hashtable parameters;
-
-        public TetrahedronGeometry(float? radius = null, float? detail = null) : base()
+        parameters = new Hashtable
         {
-            parameters = new Hashtable()
-            {
-                {"radius",radius },
-                { "detail",detail }
-            };
+            { "radius", radius },
+            { "detail", detail }
+        };
 
-            this.FromBufferGeometry(new TetrahedronBufferGeometry(radius, detail));
-            this.MergeVertices();
-        }
+        FromBufferGeometry(new TetrahedronBufferGeometry(radius, detail));
+        MergeVertices();
     }
+}
 
-    [Serializable]
-    public class TetrahedronBufferGeometry : PolyhedronBufferGeometry
+[Serializable]
+public class TetrahedronBufferGeometry : PolyhedronBufferGeometry
+{
+    private static List<float> vertices = new()
     {
-        static List<float> vertices = new List<float>()
-            {
-                1, 1, 1,    - 1, - 1, 1,    - 1, 1, - 1,    1, - 1, - 1
-            };
+        1, 1, 1, -1, -1, 1, -1, 1, -1, 1, -1, -1
+    };
 
-        static List<int> indices = new List<int>()
-            {
-               2, 1, 0,     0, 3, 2,    1, 3, 0,    2, 3, 1
-            };
+    private static List<int> indices = new()
+    {
+        2, 1, 0, 0, 3, 2, 1, 3, 0, 2, 3, 1
+    };
 
-        public TetrahedronBufferGeometry(float? radius = null, float? detail = null) : base(vertices, indices, radius, detail)
-        {
-        }
+    public TetrahedronBufferGeometry(float? radius = null, float? detail = null) : base(vertices, indices, radius,
+        detail)
+    {
     }
 }

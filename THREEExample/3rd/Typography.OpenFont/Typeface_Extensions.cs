@@ -1,6 +1,8 @@
 ﻿//Apache2, 2017-present, WinterDev 
 
 
+using System;
+using Typography.OpenFont.CFF;
 using Typography.OpenFont.Tables;
 
 namespace Typography.OpenFont.Extensions
@@ -11,7 +13,7 @@ namespace Typography.OpenFont.Extensions
         Windows,
         Mac
     }
-   
+
     public readonly struct OS2FsSelection
     {
         //Bit # 	macStyle bit 	C definition 	Description
@@ -25,11 +27,13 @@ namespace Typography.OpenFont.Extensions
         //7                         USE_TYPO_METRICS    If set, it is strongly recommended to use OS / 2.sTypoAscender - OS / 2.sTypoDescender + OS / 2.sTypoLineGap as a value for default line spacing for this font.
         //8                         WWS             The font has ‘name’ table strings consistent with a weight / width / slope family without requiring use of ‘name’ IDs 21 and 22. (Please see more detailed description below.)
         //9                         OBLIQUE         Font contains oblique characters.
-        readonly ushort _fsSelection;
+        private readonly ushort _fsSelection;
+
         public OS2FsSelection(ushort fsSelection)
         {
             _fsSelection = fsSelection;
         }
+
         public bool IsItalic => (_fsSelection & 0x1) != 0;
         public bool IsUnderScore => ((_fsSelection >> 1) & 0x1) != 0;
         public bool IsNegative => ((_fsSelection >> 2) & 0x1) != 0;
@@ -40,15 +44,12 @@ namespace Typography.OpenFont.Extensions
         public bool USE_TYPO_METRICS => ((_fsSelection >> 7) & 0x1) != 0;
         public bool WWS => ((_fsSelection >> 8) & 0x1) != 0;
         public bool IsOblique => ((_fsSelection >> 9) & 0x1) != 0;
-
     }
 
 
-
-    [System.Flags]
+    [Flags]
     public enum TranslatedOS2FontStyle : ushort
     {
-
         //@prepare's note, please note:=> this is not real value, this is 'translated' value from OS2.fsSelection 
 
         UNSET = 0,
@@ -56,10 +57,10 @@ namespace Typography.OpenFont.Extensions
         ITALIC = 1,
         BOLD = 1 << 1,
         REGULAR = 1 << 2,
-        OBLIQUE = 1 << 3,
+        OBLIQUE = 1 << 3
     }
 
-   
+
     public enum OS2WidthClass : byte
     {
         //from https://docs.microsoft.com/en-us/typography/opentype/spec/os2#uswidthclass 
@@ -76,7 +77,7 @@ namespace Typography.OpenFont.Extensions
         //8 	Extra-expanded 	    FWIDTH_EXTRA_EXPANDED 	150
         //9 	Ultra-expanded      FWIDTH_ULTRA_EXPANDED 	200
 
-        Unknown,//@prepare's => my custom
+        Unknown, //@prepare's => my custom
         UltraCondensed,
         ExtraCondensed,
         Condensed,
@@ -89,10 +90,12 @@ namespace Typography.OpenFont.Extensions
         UltraExpanded = 9
     }
 
-    public static partial class TypefaceExtensions
+    public static class TypefaceExtensions
     {
-
-        public static ushort GetWhitespaceWidth(this Typeface typeface) => typeface._whitespaceWidth;
+        public static ushort GetWhitespaceWidth(this Typeface typeface)
+        {
+            return typeface._whitespaceWidth;
+        }
 
         public static bool RecommendToUseTypoMetricsForLineSpacing(this Typeface typeface)
         {
@@ -111,7 +114,10 @@ namespace Typography.OpenFont.Extensions
             return ((typeface.OS2Table.fsSelection >> 7) & 1) != 0;
         }
 
-        public static TranslatedOS2FontStyle TranslateOS2FontStyle(this Typeface typeface) => TranslateOS2FontStyle(typeface.OS2Table);
+        public static TranslatedOS2FontStyle TranslateOS2FontStyle(this Typeface typeface)
+        {
+            return TranslateOS2FontStyle(typeface.OS2Table);
+        }
 
         internal static TranslatedOS2FontStyle TranslateOS2FontStyle(OS2Table os2Table)
         {
@@ -131,55 +137,38 @@ namespace Typography.OpenFont.Extensions
             //8                         WWS     The font has ‘name’ table strings consistent with a weight / width / slope family without requiring use of ‘name’ IDs 21 and 22. (Please see more detailed description below.)
             //9                         OBLIQUE     Font contains oblique characters.
             //10–15 < reserved > Reserved; set to 0.
-            ushort fsSelection = os2Table.fsSelection;
-            TranslatedOS2FontStyle result = Extensions.TranslatedOS2FontStyle.UNSET;
+            var fsSelection = os2Table.fsSelection;
+            var result = TranslatedOS2FontStyle.UNSET;
 
-            if ((fsSelection & 0x1) != 0)
-            {
+            if ((fsSelection & 0x1) != 0) result |= TranslatedOS2FontStyle.ITALIC;
 
-                result |= Extensions.TranslatedOS2FontStyle.ITALIC;
-            }
+            if (((fsSelection >> 5) & 0x1) != 0) result |= TranslatedOS2FontStyle.BOLD;
 
-            if (((fsSelection >> 5) & 0x1) != 0)
-            {
-                result |= Extensions.TranslatedOS2FontStyle.BOLD;
-            }
-
-            if (((fsSelection >> 6) & 0x1) != 0)
-            {
-                result |= Extensions.TranslatedOS2FontStyle.REGULAR;
-            }
-            if (((fsSelection >> 9) & 0x1) != 0)
-            {
-                result |= Extensions.TranslatedOS2FontStyle.OBLIQUE;
-            }
+            if (((fsSelection >> 6) & 0x1) != 0) result |= TranslatedOS2FontStyle.REGULAR;
+            if (((fsSelection >> 9) & 0x1) != 0) result |= TranslatedOS2FontStyle.OBLIQUE;
 
             return result;
         }
 
-        internal static OS2FsSelection TranslateOS2FsSelection(OS2Table os2Table) => new OS2FsSelection(os2Table.fsSelection);
-
+        internal static OS2FsSelection TranslateOS2FsSelection(OS2Table os2Table)
+        {
+            return new OS2FsSelection(os2Table.fsSelection);
+        }
 
 
         public static OS2WidthClass TranslateOS2WidthClass(ushort os2Weight)
         {
-            if (os2Weight >= (ushort)OS2WidthClass.UltraExpanded)
-            {
-                return OS2WidthClass.Unknown;
-            }
-            else
-            {
-                return (OS2WidthClass)os2Weight;
-            }
+            if (os2Weight >= (ushort)OS2WidthClass.UltraExpanded) return OS2WidthClass.Unknown;
+
+            return (OS2WidthClass)os2Weight;
         }
 
 
         /// <summary>
-        /// overall calculated line spacing 
+        ///     overall calculated line spacing
         /// </summary>
-        static int Calculate_TypoMetricLineSpacing(Typeface typeface)
+        private static int Calculate_TypoMetricLineSpacing(Typeface typeface)
         {
-
             //from https://www.microsoft.com/typography/OTSpec/recom.htm#tad
             //sTypoAscender, sTypoDescender and sTypoLineGap
             //sTypoAscender is used to determine the optimum offset from the top of a text frame to the first baseline.
@@ -205,25 +194,21 @@ namespace Typography.OpenFont.Extensions
             //OS/2.sTypoAscender - OS/2.sTypoDescender + OS/2.sTypoLineGap
 
 
-
-
             //sTypoLineGap will usually be set by the font developer such that the value of the above expression is approximately 120% of the em.
             //The application can use this value as the default horizontal line spacing. 
             //The Minion Pro font family (designed on a 1000-unit em), for example, sets sTypoLineGap = 200.
 
 
             return typeface.Ascender - typeface.Descender + typeface.LineGap;
-
         }
 
         /// <summary>
-        /// calculate Baseline-to-Baseline Distance (BTBD) for Windows
+        ///     calculate Baseline-to-Baseline Distance (BTBD) for Windows
         /// </summary>
         /// <param name="typeface"></param>
         /// <returns>return 'unscaled-to-pixel' BTBD value</returns>
-        static int Calculate_BTBD_Windows(Typeface typeface)
+        private static int Calculate_BTBD_Windows(Typeface typeface)
         {
-
             //from https://www.microsoft.com/typography/otspec/recom.htm#tad
 
             //Baseline to Baseline Distances
@@ -255,17 +240,19 @@ namespace Typography.OpenFont.Extensions
 
             int usWinAscent = typeface.OS2Table.usWinAscent;
             int usWinDescent = typeface.OS2Table.usWinDescent;
-            int internal_leading = usWinAscent + usWinDescent - typeface.UnitsPerEm;
-            HorizontalHeader hhea = typeface.HheaTable;
-            int external_leading = System.Math.Max(0, hhea.LineGap - ((usWinAscent + usWinDescent) - (hhea.Ascent - hhea.Descent)));
+            var internal_leading = usWinAscent + usWinDescent - typeface.UnitsPerEm;
+            var hhea = typeface.HheaTable;
+            var external_leading =
+                Math.Max(0, hhea.LineGap - (usWinAscent + usWinDescent - (hhea.Ascent - hhea.Descent)));
             return usWinAscent + usWinDescent + external_leading;
         }
+
         /// <summary>
-        /// calculate Baseline-to-Baseline Distance (BTBD) for macOS
+        ///     calculate Baseline-to-Baseline Distance (BTBD) for macOS
         /// </summary>
         /// <param name="typeface"></param>
         /// <returns>return 'unscaled-to-pixel' BTBD value</returns>
-        static int CalculateBTBD_Mac(Typeface typeface)
+        private static int CalculateBTBD_Mac(Typeface typeface)
         {
             //from https://www.microsoft.com/typography/otspec/recom.htm#tad
 
@@ -286,14 +273,13 @@ namespace Typography.OpenFont.Extensions
             //so that all pixels fit within these limitations; this is true for screen display only.
 
             //TODO: please test this
-            HorizontalHeader hhea = typeface.HheaTable;
+            var hhea = typeface.HheaTable;
             return hhea.Ascent + hhea.Descent + hhea.LineGap;
         }
 
 
         public static int CalculateRecommendLineSpacing(this Typeface typeface, out LineSpacingChoice choice)
         {
-
             //from https://docs.microsoft.com/en-us/typography/opentype/spec/os2#wa
             //usWinAscent
             //Format: 	uint16
@@ -389,13 +375,14 @@ namespace Typography.OpenFont.Extensions
             //        return Calculate_BTBD_Windows(typeface);
             //    }
             //}
-
         }
+
         public static int CalculateRecommendLineSpacing(this Typeface typeface)
         {
             return CalculateMaxLineClipHeight(typeface);
             //return CalculateRecommendLineSpacing(typeface, out var _);
         }
+
         public static int CalculateLineSpacing(this Typeface typeface, LineSpacingChoice choice)
         {
             switch (choice)
@@ -409,6 +396,7 @@ namespace Typography.OpenFont.Extensions
                     return Calculate_TypoMetricLineSpacing(typeface);
             }
         }
+
         public static int CalculateMaxLineClipHeight(this Typeface typeface)
         {
             //TODO: review here
@@ -417,66 +405,100 @@ namespace Typography.OpenFont.Extensions
 
 
         //-------------------------------------------
-        public static bool HasMathTable(this Typeface typeface) => typeface.MathConsts != null;
-
-        public static bool HasSvgTable(this Typeface typeface) => typeface.HasSvgTable;
-
-        public static bool HasColorTable(this Typeface typeface) => typeface.HasColorAndPal;
-
-
-        class CffBoundFinder : IGlyphTranslator
+        public static bool HasMathTable(this Typeface typeface)
         {
+            return typeface.MathConsts != null;
+        }
 
-            float _minX, _maxX, _minY, _maxY;
-            float _curX, _curY;
-            float _latestMove_X, _latestMove_Y;
+        public static bool HasSvgTable(this Typeface typeface)
+        {
+            return typeface.HasSvgTable;
+        }
+
+        public static bool HasColorTable(this Typeface typeface)
+        {
+            return typeface.HasColorAndPal;
+        }
+
+        public static void UpdateAllCffGlyphBounds(this Typeface typeface)
+        {
+            //TODO: review here again,
+
+            if (typeface.IsCffFont && !typeface._evalCffGlyphBounds)
+            {
+                var j = typeface.GlyphCount;
+                var evalEngine = new CffEvaluationEngine();
+                var boundFinder = new CffBoundFinder();
+                for (ushort i = 0; i < j; ++i)
+                {
+                    var g = typeface.GetGlyph(i);
+                    boundFinder.Reset();
+
+                    evalEngine.Run(boundFinder, g._cff1GlyphData.GlyphInstructions);
+
+                    g.Bounds = boundFinder.GetResultBounds();
+                }
+
+                typeface._evalCffGlyphBounds = true;
+            }
+        }
+
+
+        //-------------------------------------------
+        //my custom extension
+        public static int GetCustomTypefaceKey(Typeface typeface)
+        {
+            return typeface._typefaceKey;
+        }
+
+        public static int SetCustomTypefaceKey(Typeface typeface, int typefaceKey)
+        {
+            return typeface._typefaceKey = typefaceKey;
+        }
+
+
+        private class CffBoundFinder : IGlyphTranslator
+        {
             /// <summary>
-            /// curve flatten steps  => this a copy from Typography.Contours's GlyphPartFlattener
+            ///     curve flatten steps  => this a copy from Typography.Contours's GlyphPartFlattener
             /// </summary>
-            int _nsteps = 3;
-            bool _contourOpen = false;
-            bool _first_eval = true;
-            public CffBoundFinder()
-            {
+            private readonly int _nsteps = 3;
 
-            }
-            public void Reset()
-            {
-                _curX = _curY = _latestMove_X = _latestMove_Y = 0;
-                _minX = _minY = float.MaxValue;//**
-                _maxX = _maxY = float.MinValue;//**
-                _first_eval = true;
-                _contourOpen = false;
-            }
+            private bool _contourOpen;
+            private float _curX, _curY;
+            private bool _first_eval = true;
+            private float _latestMove_X, _latestMove_Y;
+            private float _minX, _maxX, _minY, _maxY;
+
             public void BeginRead(int contourCount)
             {
-
             }
+
             public void EndRead()
             {
-
             }
+
             public void CloseContour()
             {
                 _contourOpen = false;
                 _curX = _latestMove_X;
                 _curY = _latestMove_Y;
             }
+
             public void Curve3(float x1, float y1, float x2, float y2)
             {
-
                 //this a copy from Typography.Contours -> GlyphPartFlattener
 
-                float eachstep = (float)1 / _nsteps;
-                float t = eachstep;//start
+                var eachstep = (float)1 / _nsteps;
+                var t = eachstep; //start
 
-                for (int n = 1; n < _nsteps; ++n)
+                for (var n = 1; n < _nsteps; ++n)
                 {
-                    float c = 1.0f - t;
+                    var c = 1.0f - t;
 
                     UpdateMinMax(
-                         (c * c * _curX) + (2 * t * c * x1) + (t * t * x2),  //x
-                         (c * c * _curY) + (2 * t * c * y1) + (t * t * y2)); //y
+                        c * c * _curX + 2 * t * c * x1 + t * t * x2, //x
+                        c * c * _curY + 2 * t * c * y1 + t * t * y2); //y
 
                     t += eachstep;
                 }
@@ -491,23 +513,23 @@ namespace Typography.OpenFont.Extensions
 
             public void Curve4(float x1, float y1, float x2, float y2, float x3, float y3)
             {
-
                 //this a copy from Typography.Contours -> GlyphPartFlattener
 
 
-                float eachstep = (float)1 / _nsteps;
-                float t = eachstep;//start
+                var eachstep = (float)1 / _nsteps;
+                var t = eachstep; //start
 
-                for (int n = 1; n < _nsteps; ++n)
+                for (var n = 1; n < _nsteps; ++n)
                 {
-                    float c = 1.0f - t;
+                    var c = 1.0f - t;
 
                     UpdateMinMax(
-                        (_curX * c * c * c) + (x1 * 3 * t * c * c) + (x2 * 3 * t * t * c) + x3 * t * t * t,  //x
-                        (_curY * c * c * c) + (y1 * 3 * t * c * c) + (y2 * 3 * t * t * c) + y3 * t * t * t); //y
+                        _curX * c * c * c + x1 * 3 * t * c * c + x2 * 3 * t * t * c + x3 * t * t * t, //x
+                        _curY * c * c * c + y1 * 3 * t * c * c + y2 * 3 * t * t * c + y3 * t * t * t); //y
 
                     t += eachstep;
                 }
+
                 //
                 UpdateMinMax(
                     _curX = x3,
@@ -515,6 +537,7 @@ namespace Typography.OpenFont.Extensions
 
                 _contourOpen = true;
             }
+
             public void LineTo(float x1, float y1)
             {
                 UpdateMinMax(
@@ -523,44 +546,38 @@ namespace Typography.OpenFont.Extensions
 
                 _contourOpen = true;
             }
+
             public void MoveTo(float x0, float y0)
             {
-
-                if (_contourOpen)
-                {
-                    CloseContour();
-                }
+                if (_contourOpen) CloseContour();
 
                 UpdateMinMax(
                     _curX = x0,
                     _curY = y0);
             }
-            void UpdateMinMax(float x0, float y0)
-            {
 
+            public void Reset()
+            {
+                _curX = _curY = _latestMove_X = _latestMove_Y = 0;
+                _minX = _minY = float.MaxValue; //**
+                _maxX = _maxY = float.MinValue; //**
+                _first_eval = true;
+                _contourOpen = false;
+            }
+
+            private void UpdateMinMax(float x0, float y0)
+            {
                 if (_first_eval)
                 {
                     //4 times
 
-                    if (x0 < _minX)
-                    {
-                        _minX = x0;
-                    }
+                    if (x0 < _minX) _minX = x0;
                     //
-                    if (x0 > _maxX)
-                    {
-                        _maxX = x0;
-                    }
+                    if (x0 > _maxX) _maxX = x0;
                     //
-                    if (y0 < _minY)
-                    {
-                        _minY = y0;
-                    }
+                    if (y0 < _minY) _minY = y0;
                     //
-                    if (y0 > _maxY)
-                    {
-                        _maxY = y0;
-                    }
+                    if (y0 > _maxY) _maxY = y0;
 
                     _first_eval = false;
                 }
@@ -569,75 +586,43 @@ namespace Typography.OpenFont.Extensions
                     //2 times
 
                     if (x0 < _minX)
-                    {
                         _minX = x0;
-                    }
-                    else if (x0 > _maxX)
-                    {
-                        _maxX = x0;
-                    }
+                    else if (x0 > _maxX) _maxX = x0;
 
                     if (y0 < _minY)
-                    {
                         _minY = y0;
-                    }
-                    else if (y0 > _maxY)
-                    {
-                        _maxY = y0;
-                    }
+                    else if (y0 > _maxY) _maxY = y0;
                 }
-
             }
 
             public Bounds GetResultBounds()
             {
                 return new Bounds(
-                    (short)System.Math.Floor(_minX),
-                    (short)System.Math.Floor(_minY),
-                    (short)System.Math.Ceiling(_maxX),
-                    (short)System.Math.Ceiling(_maxY));
+                    (short)Math.Floor(_minX),
+                    (short)Math.Floor(_minY),
+                    (short)Math.Ceiling(_maxX),
+                    (short)Math.Ceiling(_maxY));
             }
         }
-        public static void UpdateAllCffGlyphBounds(this Typeface typeface)
-        {
-            //TODO: review here again,
-
-            if (typeface.IsCffFont && !typeface._evalCffGlyphBounds)
-            {
-                int j = typeface.GlyphCount;
-                CFF.CffEvaluationEngine evalEngine = new CFF.CffEvaluationEngine();
-                CffBoundFinder boundFinder = new CffBoundFinder();
-                for (ushort i = 0; i < j; ++i)
-                {
-                    Glyph g = typeface.GetGlyph(i);
-                    boundFinder.Reset();
-
-                    evalEngine.Run(boundFinder, g._cff1GlyphData.GlyphInstructions);
-
-                    g.Bounds = boundFinder.GetResultBounds();
-                }
-                typeface._evalCffGlyphBounds = true;
-            }
-        }
-
-
-
-        //-------------------------------------------
-        //my custom extension
-        public static int GetCustomTypefaceKey(Typeface typeface) => typeface._typefaceKey;
-        public static int SetCustomTypefaceKey(Typeface typeface, int typefaceKey) => typeface._typefaceKey = typefaceKey;
     }
 }
 
 namespace Typography.OpenFont.Tables
 {
     /// <summary>
-    /// access to some openfont table directly
+    ///     access to some openfont table directly
     /// </summary>
     public static class TypefaceInternalTypeAccessExtensions
     {
-        public static OS2Table GetOS2Table(this Typeface typeface) => typeface.OS2Table;
-        public static NameEntry GetNameEntry(this Typeface typeface) => typeface.NameEntry;
+        public static OS2Table GetOS2Table(this Typeface typeface)
+        {
+            return typeface.OS2Table;
+        }
+
+        public static NameEntry GetNameEntry(this Typeface typeface)
+        {
+            return typeface.NameEntry;
+        }
     }
 }
 

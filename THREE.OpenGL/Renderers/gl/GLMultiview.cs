@@ -1,136 +1,120 @@
-﻿using OpenTK.Graphics.ES30;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
+using OpenTK.Graphics.ES30;
 
+namespace THREE;
 
-namespace THREE
+[Serializable]
+public class GLMultiview
 {
-    [Serializable]
-    public class GLMultiview
+    private bool available;
+
+    private List<Camera> CameraArray = new();
+
+    private GLRenderTarget currentRenderTarget;
+    public int DEFAULT_NUMVIEWS = 2;
+
+    private GLExtensions extensions;
+
+    private List<Matrix3> mat3 = new();
+
+    private List<Matrix4> mat4 = new();
+
+    private int maxNumViews;
+
+    private GLProperties properties;
+
+    private GLRenderer renderer;
+
+    private Vector2 renderSize;
+
+    private GLRenderTarget renderTarget;
+
+    public GLMultiview(GLRenderer renderer)
     {
-        public int DEFAULT_NUMVIEWS = 2;
+        extensions = renderer.Extensions;
+        properties = renderer.Properties;
+        this.renderer = renderer;
+    }
 
-        private GLExtensions extensions;
+    public bool IsAvailable()
+    {
+        available = false;
+        var extension = extensions.Get("GL_OVR_multiview2");
 
-        private GLProperties properties;
-
-        private GLRenderTarget renderTarget;
-
-        private GLRenderTarget currentRenderTarget;
-
-        private GLRenderer renderer;
-
-        private bool available;
-
-        private int maxNumViews = 0;
-
-        private List<Matrix4> mat4 = new List<Matrix4>();
-
-        private List<Matrix3> mat3 = new List<Matrix3>();
-
-        private List<Camera> CameraArray = new List<Camera>();
-
-        private Vector2 renderSize;
-
-        public GLMultiview(GLRenderer renderer)
+        if (extension != -1)
         {
-            this.extensions = renderer.extensions;
-            this.properties = renderer.properties;
-            this.renderer = renderer;
+            available = true;
+            maxNumViews = GL.GetInteger(GetPName.MaxViewportDims);
 
-        }
+            renderTarget = new GLMultiviewRenderTarget(0, 0, DEFAULT_NUMVIEWS);
 
-        public bool IsAvailable()
-        {
-            available = false;
-            var extension = extensions.Get("GL_OVR_multiview2");
+            renderSize = Vector2.Zero();
 
-            if (extension != -1)
+            for (var i = 0; i < maxNumViews; i++)
             {
-                available = true;
-                maxNumViews = GL.GetInteger(GetPName.MaxViewportDims);
-
-                renderTarget = new GLMultiviewRenderTarget(0, 0, DEFAULT_NUMVIEWS);
-
-                renderSize = Vector2.Zero();
-
-                for (int i = 0; i < maxNumViews; i++)
-                {
-                    mat4.Add(new Matrix4());
-                    mat3.Add(new Matrix3());
-                }
+                mat4.Add(new Matrix4());
+                mat3.Add(new Matrix3());
             }
-
-            return available;
         }
 
-        public List<Camera> GetCameraArray(Camera camera)
-        {
-            if (camera is ArrayCamera)
-            {
-                return (camera as ArrayCamera).Cameras;
-            }
+        return available;
+    }
 
-            this.CameraArray.Add(camera);
+    public List<Camera> GetCameraArray(Camera camera)
+    {
+        if (camera is ArrayCamera) return (camera as ArrayCamera).Cameras;
 
-            return this.CameraArray;
-        }
+        CameraArray.Add(camera);
 
-        public void UpdateCameraProjectionMatricesUniform(Camera camera, Hashtable uniforms)
-        {
-            var cameras = this.GetCameraArray(camera);
+        return CameraArray;
+    }
 
-            for (var i = 0; i < cameras.Count; i++)
-            {
-                mat4[i] = cameras[i].ProjectionMatrix;
-            }
+    public void UpdateCameraProjectionMatricesUniform(Camera camera, Hashtable uniforms)
+    {
+        var cameras = GetCameraArray(camera);
 
-            if (uniforms.ContainsKey("projectionMatrices"))
-                uniforms["projectionMatrices"] = mat4;
-            else
-                uniforms.Add("projectionMatrices", mat4);
+        for (var i = 0; i < cameras.Count; i++) mat4[i] = cameras[i].ProjectionMatrix;
 
-        }
+        if (uniforms.ContainsKey("projectionMatrices"))
+            uniforms["projectionMatrices"] = mat4;
+        else
+            uniforms.Add("projectionMatrices", mat4);
+    }
 
-        public void UpdateCameraViewMatricesUniform(Camera camera, Hashtable uniforms)
-        {
-            var cameras = this.GetCameraArray(camera);
+    public void UpdateCameraViewMatricesUniform(Camera camera, Hashtable uniforms)
+    {
+        var cameras = GetCameraArray(camera);
 
-            for (var i = 0; i < cameras.Count; i++)
-            {
-                mat4[i] = cameras[i].MatrixWorldInverse;
-            }
+        for (var i = 0; i < cameras.Count; i++) mat4[i] = cameras[i].MatrixWorldInverse;
 
-            if (uniforms.ContainsKey("viewMatrices"))
-                uniforms["viewMatrices"] = mat4;
-            else
-                uniforms.Add("viewMatrices", mat4);
+        if (uniforms.ContainsKey("viewMatrices"))
+            uniforms["viewMatrices"] = mat4;
+        else
+            uniforms.Add("viewMatrices", mat4);
+    }
 
-        }
+    public void UpdateObjectMatricesUniforms(Object3D object3D, Camera camera, Hashtable uniforms)
+    {
+    }
 
-        public void UpdateObjectMatricesUniforms(Object3D object3D, Camera camera, Hashtable uniforms)
-        {
-        }
+    public bool IsMultiviewCompatible(Camera camera)
+    {
+        return true;
+    }
 
-        public bool IsMultiviewCompatible(Camera camera)
-        {
-            return true;
-        }
+    public void ResizeRenderTarget(Camera camera)
+    {
+    }
 
-        public void ResizeRenderTarget(Camera camera)
-        {
-        }
+    public void AttachCamera(Camera camera)
+    {
+    }
 
-        public void AttachCamera(Camera camera)
-        {
-        }
+    public void DetachCamera(Camera camera)
+    {
+    }
 
-        public void DetachCamera(Camera camera)
-        {
-        }
-
-        public void Flush(Camera camera)
-        {
-        }
+    public void Flush(Camera camera)
+    {
     }
 }

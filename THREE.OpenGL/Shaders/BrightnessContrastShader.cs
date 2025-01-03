@@ -1,18 +1,17 @@
-﻿
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class BrightnessContrastShader : ShaderMaterial
 {
-    [Serializable]
-    public class BrightnessContrastShader : ShaderMaterial
+    public BrightnessContrastShader()
     {
-        public BrightnessContrastShader() : base()
-        {
-            Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
-            Uniforms.Add("brightness", new GLUniform { { "value", 0.0f } });
-            Uniforms.Add("contrast", new GLUniform { { "value", 0.0f } });
+        Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
+        Uniforms.Add("brightness", new GLUniform { { "value", 0.0f } });
+        Uniforms.Add("contrast", new GLUniform { { "value", 0.0f } });
 
-            VertexShader = @"
+        VertexShader = @"
                 varying vec2 vUv; 
 
 
@@ -25,9 +24,9 @@ namespace THREE
 
 
                 "
-             ;
+            ;
 
-            FragmentShader = @"
+        FragmentShader = @"
                 uniform sampler2D tDiffuse; 
 
                 uniform float brightness;
@@ -50,8 +49,9 @@ namespace THREE
 		        }
 
             ";
-        }
+    }
 
-        public BrightnessContrastShader(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public BrightnessContrastShader(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

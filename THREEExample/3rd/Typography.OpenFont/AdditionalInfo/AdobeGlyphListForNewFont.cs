@@ -110,15 +110,13 @@
 //#   removing duplicate Unicode mappings; and
 //#   renaming "tcommaaccent" to "tcedilla" and "Tcommaaccent" to "Tcedilla"
 //# 
-using System.Text;
-using System.IO;
-using System.Collections.Generic;
-namespace Typography.OpenFont
+
+namespace Typography.OpenFont;
+
+internal static class AdobeGlyphListForNewFont
 {
-    static class AdobeGlyphListForNewFont
-    {       
-        const string aglfn =
-            @"# 
+    private const string aglfn =
+        @"# 
 0041; A;LATIN CAPITAL LETTER A
 00C6;AE;LATIN CAPITAL LETTER AE
 01FC;AEacute;LATIN CAPITAL LETTER AE WITH ACUTE
@@ -707,7 +705,4 @@ namespace Typography.OpenFont
 03B6;zeta;GREEK SMALL LETTER ZETA
 #END
 ";
-
-
-    }
 }

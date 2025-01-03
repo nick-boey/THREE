@@ -1,40 +1,22 @@
-﻿
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class Sky : Mesh
 {
-	[Serializable]
-    public class Sky : Mesh
+    public static GLUniforms Uniforms = new()
     {
+        { "turbidity", new GLUniform { { "value", 2 } } },
+        { "rayleigh", new GLUniform { { "value", 1 } } },
+        { "mieCoefficient", new GLUniform { { "value", 0.005f } } },
+        { "mieDirectionalG", new GLUniform { { "value", 0.8f } } },
+        { "sunPosition", new GLUniform { { "value", new Vector3() } } },
+        { "up", new GLUniform { { "value", new Vector3(0, 1, 0) } } }
+    };
 
-        public Sky() : base(new BoxGeometry(1, 1, 1),
-                new ShaderMaterial()
-                {
-                    Name = "SkyShader",
-                    FragmentShader = FragmentShader,
-                    VertexShader = VertexShader,
-                    Uniforms = UniformsUtils.CloneUniforms(Uniforms),
-                    Side = Constants.BackSide,
-                    DepthWrite = false
-                })
-        {
-            // Empty Constructor
-        }
-
-        public Sky(SerializationInfo info, StreamingContext context) : base(info, context) { }
-
-        public static GLUniforms Uniforms = new GLUniforms()
-            {
-                { "turbidity", new GLUniform{{"value", 2 } } },
-                { "rayleigh", new GLUniform { { "value", 1 } } },
-                { "mieCoefficient", new GLUniform { { "value", 0.005f } } },
-                { "mieDirectionalG", new GLUniform { { "value", 0.8f } } },
-                { "sunPosition", new GLUniform { { "value", new Vector3() } } },
-                { "up", new GLUniform { { "value", new Vector3(0, 1, 0) } } }
-            };
-
-        public static string VertexShader =
-            @"uniform vec3 sunPosition;
+    public static string VertexShader =
+        @"uniform vec3 sunPosition;
 			uniform float rayleigh;
 			uniform float turbidity;
 			uniform float mieCoefficient;
@@ -91,8 +73,8 @@ namespace THREE
 				vBetaM = totalMie(turbidity) * mieCoefficient;
 			}";
 
-        public static string FragmentShader =
-            @"varying vec3 vWorldPosition;
+    public static string FragmentShader =
+        @"varying vec3 vWorldPosition;
 			varying vec3 vSunDirection;
 			varying float vSunfade;
 			varying vec3 vBetaR;
@@ -155,6 +137,21 @@ namespace THREE
 				#include <encodings_fragment>
 			}";
 
+    public Sky() : base(new BoxGeometry(),
+        new ShaderMaterial
+        {
+            Name = "SkyShader",
+            FragmentShader = FragmentShader,
+            VertexShader = VertexShader,
+            Uniforms = UniformsUtils.CloneUniforms(Uniforms),
+            Side = Constants.BackSide,
+            DepthWrite = false
+        })
+    {
+        // Empty Constructor
+    }
 
+    public Sky(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

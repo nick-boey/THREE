@@ -1,39 +1,28 @@
-﻿
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class Scene : Object3D
 {
-    [Serializable]
-    public class Scene : Object3D
+    public bool AutoUpdate = true;
+    public object? Background = null;
+    public bool ClearBeforeRender = true;
+    public Texture? Environment;
+    public Fog? Fog = null;
+    public bool IsScene = true;
+    public Material? OverrideMaterial = null;
+
+    public Scene()
     {
-        public Fog Fog;
+        type = "Scene";
+    }
 
-        public Material OverrideMaterial;
+    public Scene(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
+    }
 
-        public bool AutoUpdate;
-
-        public object Background = null;
-
-        public bool ClearBeforeRender = true;
-
-        public Texture Environment;
-
-        public bool IsScene = true;
-        public Scene()
-        {
-            this.type = "Scene";
-            this.Background = null;
-            this.Environment = null;
-            this.Fog = null;
-            this.OverrideMaterial = null;
-
-            this.AutoUpdate = true;
-        }
-        public Scene(SerializationInfo info, StreamingContext context) : base(info, context) { }
-
-        public virtual void Resize(float width, float height)
-        {
-
-        }
+    public virtual void Resize(float width, float height)
+    {
     }
 }

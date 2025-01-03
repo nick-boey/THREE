@@ -46,123 +46,16 @@
 //#   (2) Unicode scalar value--four uppercase hexadecimal digits
 //#
 
-using System.Text;
-using System.IO;
+using System;
 using System.Collections.Generic;
-namespace Typography.OpenFont
+using System.Globalization;
+using System.IO;
+
+namespace Typography.OpenFont;
+
+internal static class AdobeGlyphList
 {
-    static class AdobeGlyphList
-    {
-
-        static Dictionary<string, int> s_glyphNameToUnicodeScalarValueDic = new Dictionary<string, int>();
-        static Dictionary<int, string> s_unicodeScalarValueToGlyphNameDic = new Dictionary<int, string>();
-        static bool s_init = false;
-        public static string GetGlyphNameByUnicodeValue(int unicodeValue)
-        {
-            if (!s_init)
-            {
-                InitData();
-            }
-            //
-            s_unicodeScalarValueToGlyphNameDic.TryGetValue(unicodeValue, out string glyphName);
-            return glyphName;
-        }
-        public static int GetUnicodeValueByGlyphName(string glyphName)
-        {
-            if (!s_init)
-            {
-                InitData();
-            }
-            //
-            s_glyphNameToUnicodeScalarValueDic.TryGetValue(glyphName, out int unicodeValue);
-            return unicodeValue;
-        }
-        static void InitData()
-        {
-            using (StringReader strReader = new StringReader(glyphListTxt))
-            {
-                string line = strReader.ReadLine();
-                while (line != null)
-                {
-                    //parse each line
-
-                    line = line.Trim();
-                    if (line.StartsWith("#"))
-                    {
-                        //line comment
-                        line = strReader.ReadLine();
-                        continue;
-                    }
-
-                    string[] kp = line.Split(';');
-                    if (kp.Length == 2)
-                    {
-                        //
-                        string glyphName = kp[0].Trim();
-                        string[] unicodeParts = kp[1].Trim().Split(' ');
-                        int partCount = unicodeParts.Length;
-                        int unicodeValue = 0;
-                        switch (partCount)
-                        {
-                            case 0:
-                            default: throw new System.Exception("??");
-                            case 1:
-                                unicodeValue =
-                                    int.Parse(unicodeParts[0], System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture);
-                                break;
-                            case 2:
-                                unicodeValue =
-                                    int.Parse(unicodeParts[0], System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture) << 8 |
-                                    int.Parse(unicodeParts[1], System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture);
-                                break;
-                            case 3:
-                                unicodeValue =
-                                  int.Parse(unicodeParts[0], System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture) << 16 |
-                                  int.Parse(unicodeParts[1], System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture) << 8 |
-                                  int.Parse(unicodeParts[2], System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture);
-                                break;
-                            case 4:
-                                unicodeValue =
-                                  int.Parse(unicodeParts[0], System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture) << 24 |
-                                  int.Parse(unicodeParts[1], System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture) << 16 |
-                                  int.Parse(unicodeParts[2], System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture) << 8 |
-                                  int.Parse(unicodeParts[3], System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture);
-                                break;
-                        }
-                         
-
-                        if (!s_unicodeScalarValueToGlyphNameDic.ContainsKey(unicodeValue))
-                        {
-                            s_unicodeScalarValueToGlyphNameDic.Add(unicodeValue, glyphName);
-                        }
-                        else
-                        {
-
-                            //one unicode may has more than 1 name
-                            //eg. ..
-                            //Cdot; 010A
-                            //Cdotaccent; 010A       
-                        }
-                        //
-                        if (!s_glyphNameToUnicodeScalarValueDic.ContainsKey(glyphName))
-                        {
-                            s_glyphNameToUnicodeScalarValueDic.Add(glyphName, unicodeValue);
-                        }
-                        else
-                        {
-                            //TODO: review here
-                            throw new System.Exception("duplicate?");
-                        }
-
-                    }
-                    //---------------------------
-                    line = strReader.ReadLine();
-                }
-
-            }
-            s_init = true;
-        }
-        const string glyphListTxt = @"
+    private const string glyphListTxt = @"
 A;0041
 AE;00C6
 AEacute;01FC
@@ -4446,5 +4339,107 @@ zuhiragana;305A
 zukatakana;30BA
 #END
 ";
+
+    private static readonly Dictionary<string, int> s_glyphNameToUnicodeScalarValueDic = new();
+    private static readonly Dictionary<int, string> s_unicodeScalarValueToGlyphNameDic = new();
+    private static bool s_init;
+
+    public static string GetGlyphNameByUnicodeValue(int unicodeValue)
+    {
+        if (!s_init) InitData();
+        //
+        s_unicodeScalarValueToGlyphNameDic.TryGetValue(unicodeValue, out var glyphName);
+        return glyphName;
+    }
+
+    public static int GetUnicodeValueByGlyphName(string glyphName)
+    {
+        if (!s_init) InitData();
+        //
+        s_glyphNameToUnicodeScalarValueDic.TryGetValue(glyphName, out var unicodeValue);
+        return unicodeValue;
+    }
+
+    private static void InitData()
+    {
+        using (var strReader = new StringReader(glyphListTxt))
+        {
+            var line = strReader.ReadLine();
+            while (line != null)
+            {
+                //parse each line
+
+                line = line.Trim();
+                if (line.StartsWith("#"))
+                {
+                    //line comment
+                    line = strReader.ReadLine();
+                    continue;
+                }
+
+                var kp = line.Split(';');
+                if (kp.Length == 2)
+                {
+                    //
+                    var glyphName = kp[0].Trim();
+                    var unicodeParts = kp[1].Trim().Split(' ');
+                    var partCount = unicodeParts.Length;
+                    var unicodeValue = 0;
+                    switch (partCount)
+                    {
+                        case 0:
+                        default: throw new Exception("??");
+                        case 1:
+                            unicodeValue =
+                                int.Parse(unicodeParts[0], NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+                            break;
+                        case 2:
+                            unicodeValue =
+                                (int.Parse(unicodeParts[0], NumberStyles.HexNumber, CultureInfo.InvariantCulture) <<
+                                 8) |
+                                int.Parse(unicodeParts[1], NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+                            break;
+                        case 3:
+                            unicodeValue =
+                                (int.Parse(unicodeParts[0], NumberStyles.HexNumber, CultureInfo.InvariantCulture) <<
+                                 16) |
+                                (int.Parse(unicodeParts[1], NumberStyles.HexNumber, CultureInfo.InvariantCulture) <<
+                                 8) |
+                                int.Parse(unicodeParts[2], NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+                            break;
+                        case 4:
+                            unicodeValue =
+                                (int.Parse(unicodeParts[0], NumberStyles.HexNumber, CultureInfo.InvariantCulture) <<
+                                 24) |
+                                (int.Parse(unicodeParts[1], NumberStyles.HexNumber, CultureInfo.InvariantCulture) <<
+                                 16) |
+                                (int.Parse(unicodeParts[2], NumberStyles.HexNumber, CultureInfo.InvariantCulture) <<
+                                 8) |
+                                int.Parse(unicodeParts[3], NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+                            break;
+                    }
+
+
+                    if (!s_unicodeScalarValueToGlyphNameDic.ContainsKey(unicodeValue))
+                        s_unicodeScalarValueToGlyphNameDic.Add(unicodeValue, glyphName);
+
+                    //one unicode may has more than 1 name
+                    //eg. ..
+                    //Cdot; 010A
+                    //Cdotaccent; 010A       
+                    //
+                    if (!s_glyphNameToUnicodeScalarValueDic.ContainsKey(glyphName))
+                        s_glyphNameToUnicodeScalarValueDic.Add(glyphName, unicodeValue);
+                    else
+                        //TODO: review here
+                        throw new Exception("duplicate?");
+                }
+
+                //---------------------------
+                line = strReader.ReadLine();
+            }
+        }
+
+        s_init = true;
     }
 }

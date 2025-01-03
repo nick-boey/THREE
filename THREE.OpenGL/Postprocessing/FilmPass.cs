@@ -1,62 +1,52 @@
-﻿
-using System;
-using THREE.Renderers.Shaders;
+﻿namespace THREE;
 
-namespace THREE
+[Serializable]
+public class FilmPass : Pass
 {
-    [Serializable]
-    public class FilmPass : Pass
+    public ShaderMaterial material;
+    public GLUniforms uniforms;
+
+    public FilmPass(float? noiseIntensity, float? scanlinesIntensity, float? scanlinesCount, bool? grayscale)
     {
-        public GLUniforms uniforms;
+        var shader = new FilmShader();
 
-        public ShaderMaterial material;
+        uniforms = UniformsUtils.CloneUniforms(shader.Uniforms);
 
-        public FilmPass(float? noiseIntensity, float? scanlinesIntensity, float? scanlinesCount, bool? grayscale)
+        material = new ShaderMaterial();
+        material.Uniforms = uniforms;
+        material.VertexShader = shader.VertexShader;
+        material.FragmentShader = shader.FragmentShader;
+
+
+        if (grayscale != null) (uniforms["grayscale"] as GLUniform)["value"] = grayscale.Value;
+        if (noiseIntensity != null) (uniforms["nIntensity"] as GLUniform)["value"] = noiseIntensity.Value;
+        if (scanlinesIntensity != null) (uniforms["sIntensity"] as GLUniform)["value"] = scanlinesIntensity.Value;
+        if (scanlinesCount != null) (uniforms["sCount"] as GLUniform)["value"] = scanlinesCount.Value;
+
+        fullScreenQuad = new FullScreenQuad(material);
+    }
+
+    public override void Render(GLRenderer renderer, GLRenderTarget writeBuffer, GLRenderTarget readBuffer,
+        float? deltaTime = null, bool? maskActive = null)
+    {
+        (uniforms["tDiffuse"] as GLUniform)["value"] = readBuffer.Texture;
+        var currentDeltaTime = (float)(uniforms["time"] as GLUniform)["value"] + deltaTime.Value;
+        (uniforms["time"] as GLUniform)["value"] = currentDeltaTime;
+
+        if (RenderToScreen)
         {
-            var shader = new FilmShader();
-
-            this.uniforms = UniformsUtils.CloneUniforms(shader.Uniforms);
-
-            material = new ShaderMaterial();
-            material.Uniforms = uniforms;
-            material.VertexShader = shader.VertexShader;
-            material.FragmentShader = shader.FragmentShader;
-
-
-            if (grayscale != null) (this.uniforms["grayscale"] as GLUniform)["value"] = grayscale.Value;
-            if (noiseIntensity != null) (this.uniforms["nIntensity"] as GLUniform)["value"] = noiseIntensity.Value;
-            if (scanlinesIntensity != null) (this.uniforms["sIntensity"] as GLUniform)["value"] = scanlinesIntensity.Value;
-            if (scanlinesCount != null) (this.uniforms["sCount"] as GLUniform)["value"] = scanlinesCount.Value;
-
-            this.fullScreenQuad = new FullScreenQuad(this.material);
+            renderer.SetRenderTarget(null);
+            fullScreenQuad.Render(renderer);
         }
-
-        public override void Render(GLRenderer renderer, GLRenderTarget writeBuffer, GLRenderTarget readBuffer, float? deltaTime = null, bool? maskActive = null)
+        else
         {
-            (this.uniforms["tDiffuse"] as GLUniform)["value"] = readBuffer.Texture;
-            float currentDeltaTime = (float)(this.uniforms["time"] as GLUniform)["value"] + deltaTime.Value;
-            (this.uniforms["time"] as GLUniform)["value"] = currentDeltaTime;
-
-            if (this.RenderToScreen)
-            {
-
-                renderer.SetRenderTarget(null);
-                this.fullScreenQuad.Render(renderer);
-
-            }
-            else
-            {
-
-                renderer.SetRenderTarget(writeBuffer);
-                if (this.Clear) renderer.Clear();
-                this.fullScreenQuad.Render(renderer);
-
-            }
+            renderer.SetRenderTarget(writeBuffer);
+            if (Clear) renderer.Clear();
+            fullScreenQuad.Render(renderer);
         }
+    }
 
-        public override void SetSize(float width, float height)
-        {
-
-        }
+    public override void SetSize(float width, float height)
+    {
     }
 }

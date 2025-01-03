@@ -1,26 +1,26 @@
 ﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class BokehShader : ShaderMaterial
 {
-	[Serializable]
-    public class BokehShader : ShaderMaterial
+    public BokehShader()
     {
-        public BokehShader() : base()
-        {
-            Defines.Add("DEPTH_PACKING", "1");
-            Defines.Add("PERSPECTIVE_CAMERA", "1");
+        Defines.Add("DEPTH_PACKING", "1");
+        Defines.Add("PERSPECTIVE_CAMERA", "1");
 
-            Uniforms.Add("tColor", new GLUniform { { "value", null } });
-            Uniforms.Add("tDepth", new GLUniform { { "value", null } });
-            Uniforms.Add("focus", new GLUniform { { "value", 1.0f } });
-            Uniforms.Add("aspect", new GLUniform { { "value", 1.0f } });
-            Uniforms.Add("aperture", new GLUniform { { "value", 0.025f } });
-            Uniforms.Add("maxblur", new GLUniform { { "value", 0.01f } });
-            Uniforms.Add("nearClip", new GLUniform { { "value", 1.0f } });
-            Uniforms.Add("farClip", new GLUniform { { "value", 1000.0f } });
+        Uniforms.Add("tColor", new GLUniform { { "value", null } });
+        Uniforms.Add("tDepth", new GLUniform { { "value", null } });
+        Uniforms.Add("focus", new GLUniform { { "value", 1.0f } });
+        Uniforms.Add("aspect", new GLUniform { { "value", 1.0f } });
+        Uniforms.Add("aperture", new GLUniform { { "value", 0.025f } });
+        Uniforms.Add("maxblur", new GLUniform { { "value", 0.01f } });
+        Uniforms.Add("nearClip", new GLUniform { { "value", 1.0f } });
+        Uniforms.Add("farClip", new GLUniform { { "value", 1000.0f } });
 
 
-            VertexShader = @"
+        VertexShader = @"
                 varying vec2 vUv; 
 
 
@@ -35,7 +35,7 @@ namespace THREE
                 "
             ;
 
-            FragmentShader = @"
+        FragmentShader = @"
 			#include <common>
 
 			varying vec2 vUv;
@@ -139,9 +139,9 @@ namespace THREE
 
 
 ";
+    }
 
-        }
-
-        public BokehShader(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public BokehShader(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

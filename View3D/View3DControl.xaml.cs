@@ -1,43 +1,30 @@
 using System.ComponentModel;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using MouseButton = OpenTK.Windowing.GraphicsLibraryFramework.MouseButton;
+using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.Common;
 using OpenTK.Wpf;
+using MouseButton = OpenTK.Windowing.GraphicsLibraryFramework.MouseButton;
 using GL = OpenTK.Graphics.OpenGL4.GL;
-using OpenTK.Graphics.OpenGL4;
+using MouseWheelEventArgs = System.Windows.Input.MouseWheelEventArgs;
 
 namespace View3D;
 
 /// <summary>
-/// Interaction logic for UserControl1.xaml
+///     Interaction logic for UserControl1.xaml
 /// </summary>
 public partial class View3DControl : UserControl, IDisposable
 {
-    public static bool IsInDesignerMode
-    {
-        get
-        {
-            return ((bool)(DesignerProperties.IsInDesignModeProperty.GetMetadata(typeof(DependencyObject))
-                .DefaultValue));
-        }
-    }
+    private bool _disposed;
 
-    public PerspectiveView? Container;
+    public ViewContainer? Container;
 
     public View3DControl()
     {
         InitializeComponent();
 
-        GLWpfControlSettings settings = new GLWpfControlSettings
+        var settings = new GLWpfControlSettings
         {
             MajorVersion = 3,
             MinorVersion = 3,
@@ -53,7 +40,20 @@ public partial class View3DControl : UserControl, IDisposable
         //KeyUp += glControl_KeyUp;
     }
 
-    public void Load(PerspectiveView container)
+    public static bool IsInDesignerMode =>
+        (bool)DesignerProperties.IsInDesignModeProperty.GetMetadata(typeof(DependencyObject))
+            .DefaultValue;
+
+    public virtual void Dispose()
+    {
+        Container?.GLControl.Dispose();
+        Container?.Dispose();
+
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    public void Load(ViewContainer container)
     {
         Container = container;
         Container.Load(OpenTKControl);
@@ -120,43 +120,37 @@ public partial class View3DControl : UserControl, IDisposable
     }
     */
 
-    private MouseButton GetMouseButton(System.Windows.Input.MouseEventArgs e)
+    private MouseButton GetMouseButton(MouseEventArgs e)
     {
-        if (e.RightButton == MouseButtonState.Pressed)
-        {
-            return MouseButton.Right;
-        }
+        if (e.RightButton == MouseButtonState.Pressed) return MouseButton.Right;
 
-        if (e.MiddleButton == MouseButtonState.Pressed)
-        {
-            return MouseButton.Middle;
-        }
+        if (e.MiddleButton == MouseButtonState.Pressed) return MouseButton.Middle;
 
         return MouseButton.Left;
     }
 
-    private void glControl_MouseDown(object sender, System.Windows.Input.MouseEventArgs e)
+    private void glControl_MouseDown(object sender, MouseEventArgs e)
     {
         if (Container == null) return;
         var position = e.GetPosition(this);
         Container.OnMouseDown(GetMouseButton(e), (int)position.X, (int)position.Y);
     }
 
-    private void glControl_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    private void glControl_MouseMove(object sender, MouseEventArgs e)
     {
         if (Container == null) return;
         var position = e.GetPosition(this);
         Container.OnMouseMove(GetMouseButton(e), (int)position.X, (int)position.Y);
     }
 
-    private void glControl_MouseUp(object sender, System.Windows.Input.MouseEventArgs e)
+    private void glControl_MouseUp(object sender, MouseEventArgs e)
     {
         if (Container == null) return;
         var position = e.GetPosition(this);
         Container.OnMouseUp(GetMouseButton(e), (int)position.X, (int)position.Y);
     }
 
-    private void glControl_MouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
+    private void glControl_MouseWheel(object sender, MouseWheelEventArgs e)
     {
         if (Container == null) return;
         var position = e.GetPosition(this);
@@ -177,25 +171,10 @@ public partial class View3DControl : UserControl, IDisposable
         }
     }
 
-
-    private bool _disposed;
-
-    public virtual void Dispose()
-    {
-        Container?.GLControl.Dispose();
-        Container?.Dispose();
-
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
     protected virtual void Dispose(bool disposing)
     {
         if (_disposed) return;
-        if (disposing)
-        {
-            Container?.Dispose();
-        }
+        if (disposing) Container?.Dispose();
 
         _disposed = true;
     }

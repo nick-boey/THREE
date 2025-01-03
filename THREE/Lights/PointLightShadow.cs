@@ -1,74 +1,69 @@
-﻿using System.Collections.Generic;
+﻿namespace THREE;
 
-namespace THREE
+[Serializable]
+public class PointLightShadow : LightShadow
 {
-    [Serializable]
-    public class PointLightShadow : LightShadow
+    private List<Vector3> _cubeDirections = new()
     {
+        new Vector3(1, 0, 0),
+        new Vector3(-1, 0, 0),
+        new Vector3(0, 0, 1),
+        new Vector3(0, 0, -1),
+        new Vector3(0, 1, 0),
+        new Vector3(0, -1, 0)
+    };
 
+    private List<Vector3> _cubeUps = new()
+    {
+        new Vector3(0, 1, 0),
+        new Vector3(0, 1, 0),
+        new Vector3(0, 1, 0),
+        new Vector3(0, 1, 0),
+        new Vector3(0, 0, 1),
+        new Vector3(0, 0, -1)
+    };
 
-        private List<Vector3> _cubeDirections = new List<Vector3>
+    public PointLightShadow()
+        : base(new PerspectiveCamera(90, 1, 0.5f, 500))
+    {
+        _frameExtents = new Vector2(4, 2);
+        _viewportCount = 6;
+
+        _viewports = new List<Vector4>
         {
-            new Vector3(1,0,0),
-            new Vector3(-1,0,0),
-            new Vector3(0,0,1),
-            new Vector3(0,0,-1),
-            new Vector3(0,1,0),
-            new Vector3(0,-1,0)
+            new(2, 1, 1, 1),
+            new(0, 1, 1, 1),
+            new(3, 1, 1, 1),
+            new(1, 1, 1, 1),
+            new(3, 0, 1, 1),
+            new(1, 0, 1, 1)
         };
+    }
 
-        private List<Vector3> _cubeUps = new List<Vector3>
-        {
-            new Vector3(0,1,0),
-            new Vector3(0,1,0),
-            new Vector3(0,1,0),
-            new Vector3(0,1,0),
-            new Vector3(0,0,1),
-            new Vector3(0,0,-1)
-        };
+    public void UpdateMatrices(Light light, int? _viewportIndex = null)
+    {
+        var viewportIndex = 0;
+        if (_viewportIndex == null) viewportIndex = 0;
+        else viewportIndex = (int)_viewportIndex;
 
-        public PointLightShadow()
-            : base(new PerspectiveCamera(90, 1, 0.5f, 500))
-        {
-            _frameExtents = new Vector2(4, 2);
-            this._viewportCount = 6;
+        var camera = Camera;
+        var shadowMatrix = Matrix;
+        var lightPositionWorld = _lightPositionWorld;
+        var lookTarget = _lookTarget;
+        var projScreenMatrix = _projScreenMatrix;
 
-            _viewports = new List<Vector4>
-                {
-                    new Vector4(2,1,1,1),
-                    new Vector4(0,1,1,1),
-                    new Vector4(3,1,1,1),
-                    new Vector4(1,1,1,1),
-                    new Vector4(3,0,1,1),
-                    new Vector4(1,0,1,1)
-                };
-        }
+        lightPositionWorld.SetFromMatrixPosition(light.MatrixWorld);
+        camera.Position.Copy(lightPositionWorld);
 
-        public void UpdateMatrices(Light light, int? _viewportIndex = null)
-        {
-            int viewportIndex = 0;
-            if (_viewportIndex == null) viewportIndex = 0;
-            else viewportIndex = (int)_viewportIndex;
+        lookTarget.Copy(camera.Position);
+        lookTarget.Add(_cubeDirections[viewportIndex]);
+        camera.Up.Copy(_cubeUps[viewportIndex]);
+        camera.LookAt(lookTarget);
+        camera.UpdateMatrixWorld();
 
-            var camera = this.Camera;
-            var shadowMatrix = this.Matrix;
-            var lightPositionWorld = this._lightPositionWorld;
-            var lookTarget = this._lookTarget;
-            var projScreenMatrix = this._projScreenMatrix;
+        shadowMatrix.MakeTranslation(-lightPositionWorld.X, -lightPositionWorld.Y, -lightPositionWorld.Z);
 
-            lightPositionWorld.SetFromMatrixPosition(light.MatrixWorld);
-            camera.Position.Copy(lightPositionWorld);
-
-            lookTarget.Copy(camera.Position);
-            lookTarget.Add(this._cubeDirections[viewportIndex]);
-            camera.Up.Copy(this._cubeUps[viewportIndex]);
-            camera.LookAt(lookTarget);
-            camera.UpdateMatrixWorld();
-
-            shadowMatrix.MakeTranslation(-lightPositionWorld.X, -lightPositionWorld.Y, -lightPositionWorld.Z);
-
-            projScreenMatrix.MultiplyMatrices(camera.ProjectionMatrix, camera.MatrixWorldInverse);
-            this._frustum.SetFromProjectionMatrix(projScreenMatrix);
-        }
+        projScreenMatrix.MultiplyMatrices(camera.ProjectionMatrix, camera.MatrixWorldInverse);
+        _frustum.SetFromProjectionMatrix(projScreenMatrix);
     }
 }

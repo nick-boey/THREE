@@ -1,21 +1,20 @@
 ﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class FocusShader : ShaderMaterial
 {
-	[Serializable]
-    public class FocusShader : ShaderMaterial
+    public FocusShader()
     {
-        public FocusShader() : base()
-        {
-            Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
-            Uniforms.Add("screenWidth", new GLUniform { { "value", 1024.0f } });
-            Uniforms.Add("screenHeight", new GLUniform { { "value", 1024.0f } });
-            Uniforms.Add("sampleDistance", new GLUniform { { "value", 0.94f } });
-            Uniforms.Add("waveFactor", new GLUniform { { "value", 0.00125f } });
+        Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
+        Uniforms.Add("screenWidth", new GLUniform { { "value", 1024.0f } });
+        Uniforms.Add("screenHeight", new GLUniform { { "value", 1024.0f } });
+        Uniforms.Add("sampleDistance", new GLUniform { { "value", 0.94f } });
+        Uniforms.Add("waveFactor", new GLUniform { { "value", 0.00125f } });
 
 
-
-            VertexShader = @"
+        VertexShader = @"
                 varying vec2 vUv; 
 
 
@@ -30,7 +29,7 @@ namespace THREE
             "
             ;
 
-            FragmentShader = @"
+        FragmentShader = @"
 				uniform float screenWidth; 
 				uniform float screenHeight;
 				uniform float sampleDistance;
@@ -86,8 +85,9 @@ namespace THREE
 
 
 			";
-        }
+    }
 
-        public FocusShader(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public FocusShader(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

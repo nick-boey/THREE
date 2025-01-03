@@ -1,40 +1,22 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class OutlineMaterial : ShaderMaterial
 {
-    [Serializable]
-    public class OutlineMaterial : ShaderMaterial
-    {
-        private float angleThreshold;
-        public float AngleThreshold 
-        {
-            get { return angleThreshold; } 
-            set
-            {
-                angleThreshold = value;
-                (Uniforms["uAngleThresh"] as GLUniform)["value"] = ((value / 180) * Math.PI) % Math.PI;
-            } 
-        }
-        public bool Outline 
-        {
-            get { return (bool)(Uniforms["uOutline"] as GLUniform)["value"]; }
-            set
-            {
-                (Uniforms["uOutline"] as GLUniform)["value"] = value;
+    private float angleThreshold;
+
+    private string fragmentShader = @"
+            uniform vec3 uColor;
+            varying vec4 vDebug;
+
+            void main(){
+              gl_FragColor = vec4(uColor,1.);
             }
-        }
-        public new Color Color 
-        {
-            get { return (Color)(Uniforms["uColor"] as GLUniform)["value"]; }
-            set
-            {
-                (Uniforms["uColor"] as GLUniform)["value"] = value;
-            }
-        }
-        private string vertexShader = @"
+            ";
+
+    private string vertexShader = @"
 attribute vec3 aN0;
 attribute vec3 aN1;
 attribute vec4 aOtherVert;
@@ -94,28 +76,43 @@ void main() {
 	gl_Position.z = -2000.; //wtf?
 }
 ";
-        private string fragmentShader = @"
-            uniform vec3 uColor;
-            varying vec4 vDebug;
 
-            void main(){
-              gl_FragColor = vec4(uColor,1.);
-            }
-            ";
-        public OutlineMaterial(float angleThreshold=0,bool outline=true, Color? color = null,Hashtable parameter = null) : base(parameter)
+    public OutlineMaterial(float angleThreshold = 0, bool outline = true, Color? color = null,
+        Hashtable parameter = null) : base(parameter)
+    {
+        Uniforms = new GLUniforms
         {
-            Uniforms = new GLUniforms
-            {
-                { "uAngleThresh", new GLUniform { {"value", 0 } } },
-                { "uOutline", new GLUniform{{ "value", true } } },
-                { "uColor", new GLUniform { {"value", new Color() } } }
-            };
-            VertexShader = vertexShader;
-            FragmentShader = fragmentShader;
-            AngleThreshold = angleThreshold;
-            Outline = outline;
-            if (color != null) Color = color.Value;
-            else Color = Color.Hex(0xffffff);
+            { "uAngleThresh", new GLUniform { { "value", 0 } } },
+            { "uOutline", new GLUniform { { "value", true } } },
+            { "uColor", new GLUniform { { "value", new Color() } } }
+        };
+        VertexShader = vertexShader;
+        FragmentShader = fragmentShader;
+        AngleThreshold = angleThreshold;
+        Outline = outline;
+        if (color != null) Color = color.Value;
+        else Color = Color.Hex(0xffffff);
+    }
+
+    public float AngleThreshold
+    {
+        get => angleThreshold;
+        set
+        {
+            angleThreshold = value;
+            (Uniforms["uAngleThresh"] as GLUniform)["value"] = value / 180 * Math.PI % Math.PI;
         }
+    }
+
+    public bool Outline
+    {
+        get => (bool)(Uniforms["uOutline"] as GLUniform)["value"];
+        set => (Uniforms["uOutline"] as GLUniform)["value"] = value;
+    }
+
+    public new Color Color
+    {
+        get => (Color)(Uniforms["uColor"] as GLUniform)["value"];
+        set => (Uniforms["uColor"] as GLUniform)["value"] = value;
     }
 }

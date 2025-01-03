@@ -1,18 +1,17 @@
-﻿
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class KaleidoShader : ShaderMaterial
 {
-	[Serializable]
-    public class KaleidoShader : ShaderMaterial
+    public KaleidoShader()
     {
-        public KaleidoShader() : base()
-        {
-            Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
-            Uniforms.Add("sides", new GLUniform { { "value", 6.0f } });
-            Uniforms.Add("angle", new GLUniform { { "value", 0.0f } });
+        Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
+        Uniforms.Add("sides", new GLUniform { { "value", 6.0f } });
+        Uniforms.Add("angle", new GLUniform { { "value", 0.0f } });
 
-            VertexShader = @"
+        VertexShader = @"
                 varying vec2 vUv; 
 
 
@@ -27,7 +26,7 @@ namespace THREE
             "
             ;
 
-            FragmentShader = @"
+        FragmentShader = @"
 				uniform sampler2D tDiffuse; 
 				uniform float sides;
 				uniform float angle;
@@ -50,8 +49,9 @@ namespace THREE
 
 
 			";
-        }
+    }
 
-        public KaleidoShader(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public KaleidoShader(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

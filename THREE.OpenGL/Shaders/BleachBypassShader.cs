@@ -1,17 +1,16 @@
 ﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class BleachBypassShader : ShaderMaterial
 {
-	[Serializable]
-    public class BleachBypassShader : ShaderMaterial
+    public BleachBypassShader()
     {
+        Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
+        Uniforms.Add("opacity", new GLUniform { { "value", 1.0f } });
 
-        public BleachBypassShader()
-        {
-            Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
-            Uniforms.Add("opacity", new GLUniform { { "value", 1.0f } });
-
-            VertexShader = @"
+        VertexShader = @"
                 varying vec2 vUv; 
 
 
@@ -24,9 +23,9 @@ namespace THREE
 
 
                 "
-             ;
+            ;
 
-            FragmentShader = @"
+        FragmentShader = @"
 				uniform float opacity; 
 
 				uniform sampler2D tDiffuse;
@@ -58,10 +57,9 @@ namespace THREE
 
 
 			";
-        }
-
-        public BleachBypassShader(SerializationInfo info, StreamingContext context) : base(info, context) { }
     }
 
-    
+    public BleachBypassShader(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
+    }
 }

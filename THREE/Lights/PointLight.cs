@@ -1,41 +1,41 @@
 ﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class PointLight : Light
 {
-    [Serializable]
-    public class PointLight : Light
+    public PointLight()
     {
-        public new float Power
-        {
-            get
-            {
-                return (float)(this.Intensity * 4 * System.Math.PI);
-            }
-            set
-            {
-                this.Intensity = (float)(value / (4 * System.Math.PI));
-            }
-        }
+        Distance = 0;
+        Decay = 1;
+        Shadow = new PointLightShadow();
+        type = "PointLight";
+    }
 
-        public PointLight() : base() 
-        {
-            this.Distance = 0;
-            this.Decay =  1;
-            this.Shadow = new PointLightShadow();
-            this.type = "PointLight";
-        }
-        public PointLight(Color color, float? intensity = null, float? distance = null, float? decay = null)
-            : base(color, intensity)
-        {
-            this.Distance = distance != null ? (float)distance : 0;
-            this.Decay = decay != null ? (float)decay : 1;
+    public PointLight(Color color, float? intensity = null, float? distance = null, float? decay = null)
+        : base(color, intensity)
+    {
+        Distance = distance != null ? (float)distance : 0;
+        Decay = decay != null ? (float)decay : 1;
 
-            this.Shadow = new PointLightShadow();
+        Shadow = new PointLightShadow();
 
-            this.type = "PointLight";
-        }
+        type = "PointLight";
+    }
 
-        public PointLight(SerializationInfo info, StreamingContext context) : base(info, context) { }
-        public PointLight(int color, float? intensity = null, float? distance = null, float? decay = null) : this(Color.Hex(color), intensity, distance, decay) { }
+    public PointLight(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
+    }
+
+    public PointLight(int color, float? intensity = null, float? distance = null, float? decay = null) : this(
+        Color.Hex(color), intensity, distance, decay)
+    {
+    }
+
+    public new float Power
+    {
+        get => (float)(Intensity * 4 * Math.PI);
+        set => Intensity = (float)(value / (4 * Math.PI));
     }
 }

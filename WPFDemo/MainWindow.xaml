@@ -9,23 +9,25 @@
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
-                <MenuItem Header="_Exit" Click="Exit_Click"/>
+                <MenuItem Header="_Exit" Click="Exit_Click" />
             </MenuItem>
             <MenuItem Header="_Help">
-                <MenuItem Header="_About" Click="About_Click"/>
+                <MenuItem Header="_About" Click="About_Click" />
             </MenuItem>
         </Menu>
         <Grid x:Name="MainGrid">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="3*"/>
-                <ColumnDefinition Width="Auto"/>               
+                <ColumnDefinition />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TreeView x:Name="treeViewSample" Grid.Column="0" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch" SelectedItemChanged="treeViewSample_SelectedItemChanged"/>
-            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch"/>
-            <local:GLRenderWindow x:Name="Host" Grid.Column="2" Grid.ColumnSpan="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>           
-            
+            <TreeView x:Name="treeViewSample" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                      SelectedItemChanged="treeViewSample_SelectedItemChanged" />
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" />
+            <local:GLRenderWindow x:Name="Host" Grid.Column="2" Grid.ColumnSpan="3" HorizontalAlignment="Stretch"
+                                  VerticalAlignment="Stretch" />
+
         </Grid>
     </DockPanel>
 </Window>

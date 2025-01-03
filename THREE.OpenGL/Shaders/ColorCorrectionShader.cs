@@ -1,19 +1,18 @@
-﻿
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class ColorCorrectionShader : ShaderMaterial
 {
-    [Serializable]
-    public class ColorCorrectionShader : ShaderMaterial
+    public ColorCorrectionShader()
     {
-        public ColorCorrectionShader() : base()
-        {
-            Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
-            Uniforms.Add("powRGB", new GLUniform { { "value", new Vector3(2, 2, 2) } });
-            Uniforms.Add("mulRGB", new GLUniform { { "value", new Vector3(1, 1, 1) } });
-            Uniforms.Add("addRGB", new GLUniform { { "value", new Vector3(0, 0, 0) } });
+        Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
+        Uniforms.Add("powRGB", new GLUniform { { "value", new Vector3(2, 2, 2) } });
+        Uniforms.Add("mulRGB", new GLUniform { { "value", new Vector3(1, 1, 1) } });
+        Uniforms.Add("addRGB", new GLUniform { { "value", new Vector3(0, 0, 0) } });
 
-            VertexShader = @"
+        VertexShader = @"
                 varying vec2 vUv; 
 
 
@@ -26,9 +25,9 @@ namespace THREE
 
 
                 "
-             ;
+            ;
 
-            FragmentShader = @"
+        FragmentShader = @"
                 uniform sampler2D tDiffuse; 
 
                 uniform vec3 powRGB;
@@ -44,8 +43,9 @@ namespace THREE
 
 		        }
             ";
-        }
+    }
 
-        public ColorCorrectionShader(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public ColorCorrectionShader(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

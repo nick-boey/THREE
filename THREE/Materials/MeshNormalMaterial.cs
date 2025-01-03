@@ -1,35 +1,36 @@
-﻿
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class MeshNormalMaterial : Material
 {
-    [Serializable]
-    public class MeshNormalMaterial : Material
+    public MeshNormalMaterial()
     {
-        public MeshNormalMaterial() : base()
-        {
-            this.type = "MeshNormalMaterial";
+        type = "MeshNormalMaterial";
 
-            this.BumpMap = null;
-            this.BumpScale = 1;
+        BumpMap = null;
+        BumpScale = 1;
 
-            this.NormalMap = null;
-            this.NormalMapType = Constants.TangentSpaceNormalMap;
-            this.NormalScale = new Vector2(1, 1);
+        NormalMap = null;
+        NormalMapType = Constants.TangentSpaceNormalMap;
+        NormalScale = new Vector2(1, 1);
 
-            this.DisplacementMap = null;
-            this.DisplacementScale = 1;
-            this.DisplacementBias = 0;
+        DisplacementMap = null;
+        DisplacementScale = 1;
+        DisplacementBias = 0;
 
-            this.Wireframe = false;
-            this.WireframeLineWidth = 1;
+        Wireframe = false;
+        WireframeLineWidth = 1;
 
-            this.Fog = false;
+        Fog = false;
 
-            this.Skinning = false;
-            this.MorphTargets = false;
-            this.MorphNormals = false;
-        }
-        public MeshNormalMaterial(SerializationInfo info, StreamingContext context) : base(info, context) { }
+        Skinning = false;
+        MorphTargets = false;
+        MorphNormals = false;
+    }
+
+    public MeshNormalMaterial(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

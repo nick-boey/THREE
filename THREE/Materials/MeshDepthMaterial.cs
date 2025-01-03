@@ -1,33 +1,34 @@
 ﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class MeshDepthMaterial : Material
 {
-    [Serializable]
-    public class MeshDepthMaterial : Material
+    public MeshDepthMaterial()
     {
-        public MeshDepthMaterial() : base()
-        {
-            this.type = "MeshDepthMaterial";
+        type = "MeshDepthMaterial";
 
-            this.Skinning = false;
+        Skinning = false;
 
-            this.MorphTargets = false;
+        MorphTargets = false;
 
-            this.AlphaMap = null;
+        AlphaMap = null;
 
-            this.DisplacementMap = null;
+        DisplacementMap = null;
 
-            this.DisplacementScale = 1.0f;
+        DisplacementScale = 1.0f;
 
-            this.DisplacementBias = 0.0f;
+        DisplacementBias = 0.0f;
 
-            this.Wireframe = false;
+        Wireframe = false;
 
-            this.WireframeLineWidth = 1;
+        WireframeLineWidth = 1;
 
-            this.Fog = false;
+        Fog = false;
+    }
 
-        }
-        public MeshDepthMaterial(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public MeshDepthMaterial(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

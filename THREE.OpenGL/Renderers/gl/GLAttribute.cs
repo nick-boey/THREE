@@ -1,15 +1,13 @@
-﻿using System.Collections.Generic;
+﻿namespace THREE;
 
-namespace THREE
+[Serializable]
+public class GLAttribute : Dictionary<string, object>, IGLAttribute
 {
-    [Serializable]
-    public class GLAttribute : Dictionary<string, object>,IGLAttribute
-    {
-        public string Name { get; set; }
-        public Type Type { get; set; }
-        public int ItemSize { get; set; }
-        //public VertexAttribPointerType type;
+    public string Name { get; set; }
+    public Type Type { get; set; }
 
-        //public int bytesPerElement;
-    }
+    public int ItemSize { get; set; }
+    //public VertexAttribPointerType type;
+
+    //public int bytesPerElement;
 }

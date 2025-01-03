@@ -1,31 +1,31 @@
-﻿
-namespace THREE
+﻿namespace THREE;
+
+[Serializable]
+public class Fog
 {
-    [Serializable]
-    public class Fog
+    public Color Color;
+
+    public float Far;
+    public string Name;
+
+    public float Near;
+
+    public Fog()
     {
-        public string Name;
+    }
 
-        public Color Color;
+    public Fog(Color color, float? near = null, float? far = null)
+    {
+        Name = "";
 
-        public float Near;
+        Color = color;
 
-        public float Far;
+        Near = near != null ? near.Value : 1;
 
-        public Fog()
-        {
-        }
-        public Fog(Color color, float? near = null, float? far = null)
-        {
-            this.Name = "";
+        Far = far != null ? far.Value : 1000;
+    }
 
-            this.Color = color;
-
-            this.Near = near != null ? near.Value : 1;
-
-            this.Far = far != null ? far.Value : 1000;
-
-        }
-        public Fog(int color, float? near = null, float? far = null) : this(Color.Hex(color), near, far) { }
+    public Fog(int color, float? near = null, float? far = null) : this(Color.Hex(color), near, far)
+    {
     }
 }

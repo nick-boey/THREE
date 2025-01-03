@@ -1,15 +1,16 @@
-﻿
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class Bone : Object3D
 {
-    [Serializable]
-    public class Bone : Object3D
+    public Bone()
     {
-        public Bone() : base()
-        {
-            this.type = "Bone";
-        }
-        public Bone(SerializationInfo info, StreamingContext context) : base(info, context) { }
+        type = "Bone";
+    }
+
+    public Bone(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

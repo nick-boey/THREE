@@ -1,16 +1,16 @@
 ﻿using System.Runtime.Serialization;
 
-namespace THREE
-{
-	[Serializable]
-    public class MirrorShader : ShaderMaterial
-    {
-        public MirrorShader() : base()
-        {
-            Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
-            Uniforms.Add("side", new GLUniform { { "value", 1 } });
+namespace THREE;
 
-            VertexShader = @"
+[Serializable]
+public class MirrorShader : ShaderMaterial
+{
+    public MirrorShader()
+    {
+        Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
+        Uniforms.Add("side", new GLUniform { { "value", 1 } });
+
+        VertexShader = @"
                 varying vec2 vUv; 
 
 
@@ -25,7 +25,7 @@ namespace THREE
             "
             ;
 
-            FragmentShader = @"
+        FragmentShader = @"
 				uniform sampler2D tDiffuse; 
 				uniform int side;
 
@@ -50,8 +50,9 @@ namespace THREE
 
 
 			";
-        }
+    }
 
-        public MirrorShader(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public MirrorShader(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

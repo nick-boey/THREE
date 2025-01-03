@@ -1,57 +1,55 @@
-﻿using System.Collections.Generic;
+﻿namespace THREE;
 
-namespace THREE
+[Serializable]
+public class GLRenderState
 {
-    [Serializable]
-    public class GLRenderState
+    private GLLights lights;
+    private List<Light> lightsArray = new();
+
+    private List<Light> shadowsArray = new();
+
+    public RenderState State;
+
+    public GLRenderState(GLExtensions extensions, GLCapabilities capabilities)
     {
-        private List<Light> lightsArray = new List<Light>();
+        lights = new GLLights(extensions, capabilities);
+        State.LightsArray = lightsArray;
+        State.ShadowsArray = shadowsArray;
+        State.Lights = lights;
+    }
 
-        private List<Light> shadowsArray = new List<Light>();
+    public void Init()
+    {
+        lightsArray.Clear();
+        shadowsArray.Clear();
+    }
 
-        private GLLights lights;
+    public void SetupLights()
+    {
+        lights.Setup(lightsArray);
+    }
 
-        public struct RenderState
-        {
-            public List<Light> LightsArray;
+    public void SetupLightsView(Camera camera)
+    {
+        lights.SetupView(lightsArray, camera);
+    }
 
-            public List<Light> ShadowsArray;
+    public void PushLight(Light light)
+    {
+        lightsArray.Add(light);
+    }
 
-            public GLLights Lights;
-        }
+    public void PushShadow(Light shadowLight)
+    {
+        shadowsArray.Add(shadowLight);
+    }
 
-        public RenderState State;
+    public struct RenderState
+    {
+        public List<Light> LightsArray;
 
-        public GLRenderState(GLExtensions extensions, GLCapabilities capabilities)
-        {
-            lights = new GLLights(extensions, capabilities);
-            State.LightsArray = lightsArray;
-            State.ShadowsArray = shadowsArray;
-            State.Lights = lights;
-        }
+        public List<Light> ShadowsArray;
 
-        public void Init()
-        {
-            lightsArray.Clear();
-            shadowsArray.Clear();
-        }
-
-        public void SetupLights()
-        {
-            lights.Setup(lightsArray);
-        }
-        public void SetupLightsView(Camera camera)
-        {
-            lights.SetupView(lightsArray, camera);
-        }
-        public void PushLight(Light light)
-        {
-            lightsArray.Add(light);
-        }
-
-        public void PushShadow(Light shadowLight)
-        {
-            shadowsArray.Add(shadowLight);
-        }
+        public GLLights Lights;
     }
 }

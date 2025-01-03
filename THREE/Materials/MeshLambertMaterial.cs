@@ -1,66 +1,70 @@
 ﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class MeshLambertMaterial : Material
 {
-    [Serializable]
-    public class MeshLambertMaterial : Material
+    public MeshLambertMaterial()
     {
-        public MeshLambertMaterial() : base()
-        {
-            this.type = "MeshLambertMaterial";
+        type = "MeshLambertMaterial";
 
-            this.Color = THREE.Color.ColorName(ColorKeywords.white);
+        Color = THREE.Color.ColorName(ColorKeywords.white);
 
-            this.Opacity = 1;
+        Opacity = 1;
 
-            this.Emissive = THREE.Color.Hex(0x000000);
+        Emissive = THREE.Color.Hex(0x000000);
 
-            this.Combine = Constants.MultiplyOperation;
+        Combine = Constants.MultiplyOperation;
 
-            this.RefractionRatio = 0.98f;
+        RefractionRatio = 0.98f;
 
-            this.Transparent = false;
+        Transparent = false;
 
-            this.WireframeLineWidth = 1;
+        WireframeLineWidth = 1;
 
-            this.WireframeLineCap = "round";
-            this.WireframeLineJoin = "round";
-        }
-        public MeshLambertMaterial(SerializationInfo info, StreamingContext context) : base(info, context) { }
+        WireframeLineCap = "round";
+        WireframeLineJoin = "round";
+    }
 
-        protected MeshLambertMaterial(MeshLambertMaterial source) : base()
-        {
-            Copy(source);
-        }
-        public override object Clone()
-        {
-            var material = new MeshLambertMaterial();
-            material.Copy(this);
-            return material;
-        }
-        public object Copy(MeshLambertMaterial source)
-        {
-            base.Copy(source);
-            this.type = source.type;
+    public MeshLambertMaterial(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
+    }
 
-            this.Color = source.Color;
+    protected MeshLambertMaterial(MeshLambertMaterial source)
+    {
+        Copy(source);
+    }
 
-            this.Opacity = source.Opacity;
+    public override object Clone()
+    {
+        var material = new MeshLambertMaterial();
+        material.Copy(this);
+        return material;
+    }
 
-            this.Emissive = source.Emissive;
+    public object Copy(MeshLambertMaterial source)
+    {
+        base.Copy(source);
+        type = source.type;
 
-            this.Combine = source.Combine;
+        Color = source.Color;
 
-            this.RefractionRatio = source.RefractionRatio;
+        Opacity = source.Opacity;
 
-            this.Transparent = source.Transparent;
+        Emissive = source.Emissive;
 
-            this.WireframeLineWidth = source.WireframeLineWidth;
+        Combine = source.Combine;
 
-            this.WireframeLineCap = source.WireframeLineCap;
-            this.WireframeLineJoin = source.WireframeLineJoin;
+        RefractionRatio = source.RefractionRatio;
 
-            return this;
-        }
+        Transparent = source.Transparent;
+
+        WireframeLineWidth = source.WireframeLineWidth;
+
+        WireframeLineCap = source.WireframeLineCap;
+        WireframeLineJoin = source.WireframeLineJoin;
+
+        return this;
     }
 }

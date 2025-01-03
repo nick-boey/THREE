@@ -1,49 +1,49 @@
-﻿using System.Collections.Generic;
-using System.Runtime.Serialization;
+﻿namespace THREE;
 
-namespace THREE
+[Serializable]
+public struct InstancedGroups
 {
-    [Serializable]
-    public struct InstancedGroups
+    public int Start;
+
+    public int Count;
+
+    public int Instances;
+}
+
+[Serializable]
+public class InstancedBufferGeometry : BufferGeometry
+{
+    public new List<InstancedGroups> Groups = new();
+
+    public int InstanceCount = int.MaxValue;
+
+    public int? MaxInstanceCount;
+
+    public InstancedBufferGeometry()
     {
-        public int Start;
-
-        public int Count;
-
-        public int Instances;
     }
-    [Serializable]
-    public class InstancedBufferGeometry : BufferGeometry
+
+    protected InstancedBufferGeometry(InstancedBufferGeometry source)
     {
-        public new List<InstancedGroups> Groups = new List<InstancedGroups>();
+        Copy(source);
+    }
 
-        public int? MaxInstanceCount;
+    public new InstancedBufferGeometry Clone()
+    {
+        return new InstancedBufferGeometry(this);
+    }
 
-        public int InstanceCount = int.MaxValue;
+    public InstancedBufferGeometry Copy(InstancedBufferGeometry source)
+    {
+        Groups = new List<InstancedGroups>(source.Groups);
+        MaxInstanceCount = source.MaxInstanceCount;
+        InstanceCount = source.InstanceCount;
 
-        public InstancedBufferGeometry() : base()
-        {
+        return this;
+    }
 
-        }
-        protected InstancedBufferGeometry(InstancedBufferGeometry source)
-        {
-            Copy(source);
-        }
-        public new InstancedBufferGeometry Clone()
-        {
-            return new InstancedBufferGeometry(this);
-        }
-        public InstancedBufferGeometry Copy(InstancedBufferGeometry source)
-        {
-            this.Groups = new List<InstancedGroups>(source.Groups);
-            this.MaxInstanceCount = source.MaxInstanceCount;
-            this.InstanceCount = source.InstanceCount;
-
-            return this;
-        }
-        public override void AddGroup(int start, int count, int instances)
-        {
-            this.Groups.Add(new InstancedGroups { Start = start, Count = count, Instances = instances });
-        }
+    public override void AddGroup(int start, int count, int instances)
+    {
+        Groups.Add(new InstancedGroups { Start = start, Count = count, Instances = instances });
     }
 }

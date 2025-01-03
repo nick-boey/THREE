@@ -1,26 +1,27 @@
-﻿using System;
+﻿namespace THREE;
 
-namespace THREE
+[Serializable]
+public class GeometryGroup : BaseGeometry
 {
-    [Serializable]
-    public class GeometryGroup : BaseGeometry
+    protected static int GeometryGroupIdCount;
+
+    public GeometryGroup()
     {
-        protected static int GeometryGroupIdCount;
-        public GeometryGroup()
-        {
-            Id = GeometryGroupIdCount++;
-        }
-        public override void ComputeBoundingBox()
-        {
-            throw new NotImplementedException();
-        }
-        public override void ComputeBoundingSphere()
-        {
-            throw new NotImplementedException();
-        }
-        public override void ComputeVertexNormals(bool areaWeighted = false)
-        {
-            throw new NotImplementedException();
-        }
+        Id = GeometryGroupIdCount++;
+    }
+
+    public override void ComputeBoundingBox()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void ComputeBoundingSphere()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void ComputeVertexNormals(bool areaWeighted = false)
+    {
+        throw new NotImplementedException();
     }
 }

@@ -1,19 +1,18 @@
-﻿
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class PixelShader : ShaderMaterial
 {
-    [Serializable]
-    public class PixelShader : ShaderMaterial
+    public PixelShader()
     {
-        public PixelShader() : base()
-        {
-            Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
-            Uniforms.Add("resolution", new GLUniform { { "value", new Vector2(256, 256) } });
-            Uniforms.Add("pixelSize", new GLUniform { { "value", 1.0f } });
+        Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
+        Uniforms.Add("resolution", new GLUniform { { "value", new Vector2(256, 256) } });
+        Uniforms.Add("pixelSize", new GLUniform { { "value", 1.0f } });
 
 
-            VertexShader = @"
+        VertexShader = @"
                 varying vec2 vUv; 
 
 
@@ -28,7 +27,7 @@ namespace THREE
             "
             ;
 
-            FragmentShader = @"
+        FragmentShader = @"
 				uniform sampler2D tDiffuse; 
 				uniform float pixelSize;
 				uniform vec2 resolution;
@@ -45,8 +44,9 @@ namespace THREE
 
 
 			";
-        }
+    }
 
-        public PixelShader(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public PixelShader(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

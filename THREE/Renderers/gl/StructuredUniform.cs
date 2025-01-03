@@ -1,107 +1,92 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class StructuredUniform : GLUniform, IStructuredUniform
 {
-    [Serializable]
-    public class StructuredUniform : GLUniform,IStructuredUniform
+    public StructuredUniform()
     {
-        public List<GLUniform> Seq { get; set; } = new List<GLUniform>();
+        UniformKind = "StructuredUniform";
+    }
 
+    public StructuredUniform(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
+    }
 
-        public StructuredUniform()
+    public StructuredUniform(string id) : this()
+    {
+        Id = id;
+    }
+
+    public List<GLUniform> Seq { get; set; } = new();
+
+    public void SetValue(IStructuredUniform uniform, object value, IGLTextures textures = null)
+    {
+        for (var j = 0; j < uniform.Seq.Count; j++)
         {
-            UniformKind = "StructuredUniform";
+            var u = uniform.Seq[j];
+
+            var v = (value as Hashtable)[u.Id];
+
+            if (u is ISingleUniform)
+                (u as ISingleUniform).SetValue(v, textures);
+
+            else if (u is IPureArrayUniform)
+                (u as IPureArrayUniform).SetValue(v, textures);
+
+            else if (u is IStructuredUniform)
+                (u as IStructuredUniform).SetValue(v, textures);
+            else
+                Trace.TraceWarning("StructuredUniform.SetValue : Unknown uniformtype");
         }
+    }
 
-        public StructuredUniform(SerializationInfo info, StreamingContext context) : base(info, context) { }
-
-        public StructuredUniform(string id) : this()
+    public void SetValue(object value, IGLTextures textures = null)
+    {
+        for (int i = 0, n = Seq.Count; i != n; ++i)
         {
-            this.Id = id;
-        }
+            var u = Seq[i];
+            object v = null;
 
-        public void SetValue(IStructuredUniform uniform, object value, IGLTextures textures=null)
-        {
-            for (int j = 0; j < uniform.Seq.Count; j++)
+            if (value is GLUniform)
             {
-                GLUniform u = uniform.Seq[j];
-
-                object v = (value as Hashtable)[u.Id];
-
-                if (u is ISingleUniform)
-                    (u as ISingleUniform).SetValue(v, textures);
-
-                else if (u is IPureArrayUniform)
-                    (u as IPureArrayUniform).SetValue(v, textures);
-
-                else if (u is IStructuredUniform)
-                    (u as IStructuredUniform).SetValue(v, textures);
-                else
-                {
-                    Trace.TraceWarning("StructuredUniform.SetValue : Unknown uniformtype");
-                }
+                v = (value as GLUniform)[u.Id];
+            }
+            else if (value is GLUniform[])
+            {
+                //var id = Convert.ToInt32(u.Id);
+                //value = (value as GLUniform[])[id];
+                v = (value as GLUniform[])[i];
+                if (v == null) Debug.WriteLine("Value is null");
+            }
+            else
+            {
+                v = value;
             }
 
-        }
+            if (u.UniformKind.Equals("SingleUniform"))
+                (u as ISingleUniform).SetValue(v, textures);
+            else if (u.UniformKind.Equals("PureArrayUniform"))
+                (u as IPureArrayUniform).SetValue(v, textures);
+            else if (u is IStructuredUniform)
+                //if (value is Hashtable[])
+                //{
+                //    //var id = Convert.ToInt32(u.Id);
+                //    //value = (value as Hashtable[])[id];
+                //    v = (value as Hashtable[])[i];
+                //}
+                //else
+                //{
+                //    v = value;
+                //}
+                (u as IStructuredUniform).SetValue(v, textures);
 
-        public void SetValue(object value, IGLTextures textures=null)
-        {
-            for (int i = 0, n = Seq.Count; i != n; ++i)
-            {
-                GLUniform u = Seq[i];
-                object v = null;
-
-                if (value is GLUniform)
-                {
-                    v = (value as GLUniform)[u.Id];
-                }
-                else if (value is GLUniform[])
-                {
-                    //var id = Convert.ToInt32(u.Id);
-                    //value = (value as GLUniform[])[id];
-                    v = (value as GLUniform[])[i];
-                    if (v == null)
-                    {
-                        Debug.WriteLine("Value is null");
-                    }
-                }
-                else
-                {
-                    v = value;
-                }
-                if (u.UniformKind.Equals("SingleUniform"))
-                {
-                    (u as ISingleUniform).SetValue(v, textures);
-                }
-                else if (u.UniformKind.Equals("PureArrayUniform"))
-                {
-                    (u as IPureArrayUniform).SetValue(v, textures);
-                }
-                else if (u is IStructuredUniform)
-                {
-
-                    //if (value is Hashtable[])
-                    //{
-                    //    //var id = Convert.ToInt32(u.Id);
-                    //    //value = (value as Hashtable[])[id];
-                    //    v = (value as Hashtable[])[i];
-                    //}
-                    //else
-                    //{
-                    //    v = value;
-                    //}
-                    (u as IStructuredUniform).SetValue(v, textures);
-                    //SetValue( u as StructuredUniform,v, textures);
-                }
-
-                else
-                {
-                    Trace.TraceWarning("StructuredUniform.SetValue : Unknown uniformtype");
-                }
-            }
+            //SetValue( u as StructuredUniform,v, textures);
+            else
+                Trace.TraceWarning("StructuredUniform.SetValue : Unknown uniformtype");
         }
     }
 }

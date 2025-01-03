@@ -2,11 +2,10 @@
 //https://docs.microsoft.com/en-us/typography/opentype/spec/math
 
 using System.IO;
-
+using Typography.OpenFont.MathGlyphs;
 
 namespace Typography.OpenFont.MathGlyphs
 {
-
     public readonly struct MathValueRecord
     {
         //MathValueRecord
@@ -17,21 +16,15 @@ namespace Typography.OpenFont.MathGlyphs
         public readonly ushort DeviceTable;
         public MathValueRecord(short value, ushort deviceTable)
         {
-            this.Value = value;
-            this.DeviceTable = deviceTable;
+            Value = value;
+            DeviceTable = deviceTable;
         }
 #if DEBUG
         public override string ToString()
         {
-            if (DeviceTable == 0)
-            {
-                return Value.ToString();
-            }
-            else
-            {
-                return Value + "," + DeviceTable;
-            }
+            if (DeviceTable == 0) return Value.ToString();
 
+            return Value + "," + DeviceTable;
         }
 #endif
     }
@@ -49,301 +42,343 @@ namespace Typography.OpenFont.MathGlyphs
         //Dist – Defines a distance between baselines of two elements.
 
         /// <summary>
-        /// Percentage of scaling down for script level 1. 
-        /// Suggested value: 80%.
+        ///     Percentage of scaling down for script level 1.
+        ///     Suggested value: 80%.
         /// </summary>
         public short ScriptPercentScaleDown { get; internal set; }
+
         /// <summary>
-        /// Percentage of scaling down for script level 2 (ScriptScript).
-        /// Suggested value: 60%.
+        ///     Percentage of scaling down for script level 2 (ScriptScript).
+        ///     Suggested value: 60%.
         /// </summary>
         public short ScriptScriptPercentScaleDown { get; internal set; }
+
         /// <summary>
-        /// Minimum height required for a delimited expression to be treated as a sub-formula.
-        /// Suggested value: normal line height ×1.5.
+        ///     Minimum height required for a delimited expression to be treated as a sub-formula.
+        ///     Suggested value: normal line height ×1.5.
         /// </summary>
         public ushort DelimitedSubFormulaMinHeight { get; internal set; }
+
         /// <summary>
-        ///  	Minimum height of n-ary operators (such as integral and summation) for formulas in display mode.
+        ///     Minimum height of n-ary operators (such as integral and summation) for formulas in display mode.
         /// </summary>
         public ushort DisplayOperatorMinHeight { get; internal set; }
 
 
         /// <summary>
-        /// White space to be left between math formulas to ensure proper line spacing. 
-        /// For example, for applications that treat line gap as a part of line ascender,
-        /// formulas with ink going above (os2.sTypoAscender + os2.sTypoLineGap - MathLeading) 
-        /// or with ink going below os2.sTypoDescender will result in increasing line height.
+        ///     White space to be left between math formulas to ensure proper line spacing.
+        ///     For example, for applications that treat line gap as a part of line ascender,
+        ///     formulas with ink going above (os2.sTypoAscender + os2.sTypoLineGap - MathLeading)
+        ///     or with ink going below os2.sTypoDescender will result in increasing line height.
         /// </summary>
         public MathValueRecord MathLeading { get; internal set; }
+
         /// <summary>
-        /// Axis height of the font.
+        ///     Axis height of the font.
         /// </summary>
         public MathValueRecord AxisHeight { get; internal set; }
+
         /// <summary>
-        /// Maximum (ink) height of accent base that does not require raising the accents.
-        /// Suggested: x‑height of the font (os2.sxHeight) plus any possible overshots.
+        ///     Maximum (ink) height of accent base that does not require raising the accents.
+        ///     Suggested: x‑height of the font (os2.sxHeight) plus any possible overshots.
         /// </summary>
         public MathValueRecord AccentBaseHeight { get; internal set; }
+
         /// <summary>
-        ///Maximum (ink) height of accent base that does not require flattening the accents. 
-        ///Suggested: cap height of the font (os2.sCapHeight).
+        ///     Maximum (ink) height of accent base that does not require flattening the accents.
+        ///     Suggested: cap height of the font (os2.sCapHeight).
         /// </summary>
         public MathValueRecord FlattenedAccentBaseHeight { get; internal set; }
 
         //---------------------------------------------------------
         /// <summary>
-        /// The standard shift down applied to subscript elements.
-        /// Positive for moving in the downward direction. 
-        /// Suggested: os2.ySubscriptYOffset.
+        ///     The standard shift down applied to subscript elements.
+        ///     Positive for moving in the downward direction.
+        ///     Suggested: os2.ySubscriptYOffset.
         /// </summary>
         public MathValueRecord SubscriptShiftDown { get; internal set; }
+
         /// <summary>
-        /// Maximum allowed height of the (ink) top of subscripts that does not require moving subscripts further down.
-        /// Suggested: 4/5 x- height.
+        ///     Maximum allowed height of the (ink) top of subscripts that does not require moving subscripts further down.
+        ///     Suggested: 4/5 x- height.
         /// </summary>
         public MathValueRecord SubscriptTopMax { get; internal set; }
+
         /// <summary>
-        /// Minimum allowed drop of the baseline of subscripts relative to the (ink) bottom of the base.
-        /// Checked for bases that are treated as a box or extended shape. 
-        /// Positive for subscript baseline dropped below the base bottom.
+        ///     Minimum allowed drop of the baseline of subscripts relative to the (ink) bottom of the base.
+        ///     Checked for bases that are treated as a box or extended shape.
+        ///     Positive for subscript baseline dropped below the base bottom.
         /// </summary>
         public MathValueRecord SubscriptBaselineDropMin { get; internal set; }
+
         /// <summary>
-        /// Standard shift up applied to superscript elements. 
-        /// Suggested: os2.ySuperscriptYOffset.
+        ///     Standard shift up applied to superscript elements.
+        ///     Suggested: os2.ySuperscriptYOffset.
         /// </summary>
         public MathValueRecord SuperscriptShiftUp { get; internal set; }
+
         /// <summary>
-        /// Standard shift of superscripts relative to the base, in cramped style.
+        ///     Standard shift of superscripts relative to the base, in cramped style.
         /// </summary>
         public MathValueRecord SuperscriptShiftUpCramped { get; internal set; }
+
         /// <summary>
-        /// Minimum allowed height of the (ink) bottom of superscripts that does not require moving subscripts further up. 
-        /// Suggested: ¼ x-height.
+        ///     Minimum allowed height of the (ink) bottom of superscripts that does not require moving subscripts further up.
+        ///     Suggested: ¼ x-height.
         /// </summary>
         public MathValueRecord SuperscriptBottomMin { get; internal set; }
+
         /// <summary>
-        ///  Maximum allowed drop of the baseline of superscripts relative to the (ink) top of the base. Checked for bases that are treated as a box or extended shape. 
-        ///  Positive for superscript baseline below the base top.
+        ///     Maximum allowed drop of the baseline of superscripts relative to the (ink) top of the base. Checked for bases that
+        ///     are treated as a box or extended shape.
+        ///     Positive for superscript baseline below the base top.
         /// </summary>
         public MathValueRecord SuperscriptBaselineDropMax { get; internal set; }
+
         /// <summary>
-        /// Minimum gap between the superscript and subscript ink. 
-        /// Suggested: 4×default rule thickness.
+        ///     Minimum gap between the superscript and subscript ink.
+        ///     Suggested: 4×default rule thickness.
         /// </summary>
         public MathValueRecord SubSuperscriptGapMin { get; internal set; }
+
         /// <summary>
-        /// The maximum level to which the (ink) bottom of superscript can be pushed to increase the gap between 
-        /// superscript and subscript, before subscript starts being moved down. 
-        /// Suggested: 4/5 x-height.
+        ///     The maximum level to which the (ink) bottom of superscript can be pushed to increase the gap between
+        ///     superscript and subscript, before subscript starts being moved down.
+        ///     Suggested: 4/5 x-height.
         /// </summary>
         public MathValueRecord SuperscriptBottomMaxWithSubscript { get; internal set; }
+
         /// <summary>
-        /// Extra white space to be added after each subscript and superscript. Suggested: 0.5pt for a 12 pt font.
+        ///     Extra white space to be added after each subscript and superscript. Suggested: 0.5pt for a 12 pt font.
         /// </summary>
         public MathValueRecord SpaceAfterScript { get; internal set; }
 
         //---------------------------------------------------------
         /// <summary>
-        /// Minimum gap between the (ink) bottom of the upper limit, and the (ink) top of the base operator.
+        ///     Minimum gap between the (ink) bottom of the upper limit, and the (ink) top of the base operator.
         /// </summary>
         public MathValueRecord UpperLimitGapMin { get; internal set; }
+
         /// <summary>
-        /// Minimum distance between baseline of upper limit and (ink) top of the base operator.
+        ///     Minimum distance between baseline of upper limit and (ink) top of the base operator.
         /// </summary>
         public MathValueRecord UpperLimitBaselineRiseMin { get; internal set; }
+
         /// <summary>
-        /// Minimum gap between (ink) top of the lower limit, and (ink) bottom of the base operator.
+        ///     Minimum gap between (ink) top of the lower limit, and (ink) bottom of the base operator.
         /// </summary>
         public MathValueRecord LowerLimitGapMin { get; internal set; }
+
         /// <summary>
-        /// Minimum distance between baseline of the lower limit and (ink) bottom of the base operator.
+        ///     Minimum distance between baseline of the lower limit and (ink) bottom of the base operator.
         /// </summary>
         public MathValueRecord LowerLimitBaselineDropMin { get; internal set; }
 
         //---------------------------------------------------------
         /// <summary>
-        /// Standard shift up applied to the top element of a stack.
+        ///     Standard shift up applied to the top element of a stack.
         /// </summary>
         public MathValueRecord StackTopShiftUp { get; internal set; }
+
         /// <summary>
-        /// Standard shift up applied to the top element of a stack in display style.
+        ///     Standard shift up applied to the top element of a stack in display style.
         /// </summary>
         public MathValueRecord StackTopDisplayStyleShiftUp { get; internal set; }
+
         /// <summary>
-        /// Standard shift down applied to the bottom element of a stack. 
-        /// Positive for moving in the downward direction.
+        ///     Standard shift down applied to the bottom element of a stack.
+        ///     Positive for moving in the downward direction.
         /// </summary>
         public MathValueRecord StackBottomShiftDown { get; internal set; }
+
         /// <summary>
-        /// Standard shift down applied to the bottom element of a stack in display style.
-        /// Positive for moving in the downward direction.
+        ///     Standard shift down applied to the bottom element of a stack in display style.
+        ///     Positive for moving in the downward direction.
         /// </summary>
         public MathValueRecord StackBottomDisplayStyleShiftDown { get; internal set; }
+
         /// <summary>
-        /// Minimum gap between (ink) bottom of the top element of a stack, and the (ink) top of the bottom element.
-        /// Suggested: 3×default rule thickness.
+        ///     Minimum gap between (ink) bottom of the top element of a stack, and the (ink) top of the bottom element.
+        ///     Suggested: 3×default rule thickness.
         /// </summary>
         public MathValueRecord StackGapMin { get; internal set; }
+
         /// <summary>
-        /// Minimum gap between (ink) bottom of the top element of a stack, and the (ink) top of the bottom element in display style.
-        /// Suggested: 7×default rule thickness.
+        ///     Minimum gap between (ink) bottom of the top element of a stack, and the (ink) top of the bottom element in display
+        ///     style.
+        ///     Suggested: 7×default rule thickness.
         /// </summary>
         public MathValueRecord StackDisplayStyleGapMin { get; internal set; }
 
         /// <summary>
-        /// Standard shift up applied to the top element of the stretch stack.
+        ///     Standard shift up applied to the top element of the stretch stack.
         /// </summary>
         public MathValueRecord StretchStackTopShiftUp { get; internal set; }
+
         /// <summary>
-        /// Standard shift down applied to the bottom element of the stretch stack.
-        /// Positive for moving in the downward direction.
-        /// </summary>         
+        ///     Standard shift down applied to the bottom element of the stretch stack.
+        ///     Positive for moving in the downward direction.
+        /// </summary>
         public MathValueRecord StretchStackBottomShiftDown { get; internal set; }
+
         /// <summary>
-        /// Minimum gap between the ink of the stretched element, and the (ink) bottom of the element above. 
-        /// Suggested: UpperLimitGapMin.
+        ///     Minimum gap between the ink of the stretched element, and the (ink) bottom of the element above.
+        ///     Suggested: UpperLimitGapMin.
         /// </summary>
         public MathValueRecord StretchStackGapAboveMin { get; internal set; }
+
         /// <summary>
-        /// Minimum gap between the ink of the stretched element, and the (ink) top of the element below. 
-        /// Suggested: LowerLimitGapMin.
+        ///     Minimum gap between the ink of the stretched element, and the (ink) top of the element below.
+        ///     Suggested: LowerLimitGapMin.
         /// </summary>
         public MathValueRecord StretchStackGapBelowMin { get; internal set; }
 
 
-
         //---------------------------------------------------------
         /// <summary>
-        /// Standard shift up applied to the numerator.
+        ///     Standard shift up applied to the numerator.
         /// </summary>
         public MathValueRecord FractionNumeratorShiftUp { get; internal set; }
+
         /// <summary>
-        /// Standard shift up applied to the numerator in display style. Suggested: StackTopDisplayStyleShiftUp.
+        ///     Standard shift up applied to the numerator in display style. Suggested: StackTopDisplayStyleShiftUp.
         /// </summary>
         public MathValueRecord FractionNumeratorDisplayStyleShiftUp { get; internal set; }
+
         /// <summary>
-        /// Standard shift down applied to the denominator. Positive for moving in the downward direction.
+        ///     Standard shift down applied to the denominator. Positive for moving in the downward direction.
         /// </summary>
         public MathValueRecord FractionDenominatorShiftDown { get; internal set; }
+
         /// <summary>
-        /// Standard shift down applied to the denominator in display style. Positive for moving in the downward direction. 
-        /// Suggested: StackBottomDisplayStyleShiftDown
+        ///     Standard shift down applied to the denominator in display style. Positive for moving in the downward direction.
+        ///     Suggested: StackBottomDisplayStyleShiftDown
         /// </summary>
         public MathValueRecord FractionDenominatorDisplayStyleShiftDown { get; internal set; }
+
         /// <summary>
-        ///  Minimum tolerated gap between the (ink) bottom of the numerator and the ink of the fraction bar. 
-        ///  Suggested: default rule thickness.
+        ///     Minimum tolerated gap between the (ink) bottom of the numerator and the ink of the fraction bar.
+        ///     Suggested: default rule thickness.
         /// </summary>
         public MathValueRecord FractionNumeratorGapMin { get; internal set; }
+
         /// <summary>
-        /// Minimum tolerated gap between the (ink) bottom of the numerator and the ink of the fraction bar in display style. 
-        /// Suggested: 3×default rule thickness
+        ///     Minimum tolerated gap between the (ink) bottom of the numerator and the ink of the fraction bar in display style.
+        ///     Suggested: 3×default rule thickness
         /// </summary>
         public MathValueRecord FractionNumDisplayStyleGapMin { get; internal set; }
+
         /// <summary>
-        /// Thickness of the fraction bar. 
-        /// Suggested: default rule thickness.
+        ///     Thickness of the fraction bar.
+        ///     Suggested: default rule thickness.
         /// </summary>
         public MathValueRecord FractionRuleThickness { get; internal set; }
+
         /// <summary>
-        ///  Minimum tolerated gap between the (ink) top of the denominator and the ink of the fraction bar.
-        ///  Suggested: default rule thickness.
+        ///     Minimum tolerated gap between the (ink) top of the denominator and the ink of the fraction bar.
+        ///     Suggested: default rule thickness.
         /// </summary>
         public MathValueRecord FractionDenominatorGapMin { get; internal set; }
+
         /// <summary>
-        /// Minimum tolerated gap between the (ink) top of the denominator and the ink of the fraction bar in display style. 
-        /// Suggested: 3×default rule thickness
+        ///     Minimum tolerated gap between the (ink) top of the denominator and the ink of the fraction bar in display style.
+        ///     Suggested: 3×default rule thickness
         /// </summary>
         public MathValueRecord FractionDenomDisplayStyleGapMin { get; internal set; }
 
 
-
         //---------------------------------------------------------
         /// <summary>
-        /// Horizontal distance between the top and bottom elements of a skewed fraction.
+        ///     Horizontal distance between the top and bottom elements of a skewed fraction.
         /// </summary>
         public MathValueRecord SkewedFractionHorizontalGap { get; internal set; }
+
         /// <summary>
-        /// Vertical distance between the ink of the top and bottom elements of a skewed fraction
+        ///     Vertical distance between the ink of the top and bottom elements of a skewed fraction
         /// </summary>
         public MathValueRecord SkewedFractionVerticalGap { get; internal set; }
 
 
-
         //---------------------------------------------------------
         /// <summary>
-        /// Distance between the overbar and the (ink) top of he base.
-        /// Suggested: 3×default rule thickness.
+        ///     Distance between the overbar and the (ink) top of he base.
+        ///     Suggested: 3×default rule thickness.
         /// </summary>
         public MathValueRecord OverbarVerticalGap { get; internal set; }
+
         /// <summary>
-        /// Thickness of overbar. 
-        /// Suggested: default rule thickness.
+        ///     Thickness of overbar.
+        ///     Suggested: default rule thickness.
         /// </summary>
         public MathValueRecord OverbarRuleThickness { get; internal set; }
+
         /// <summary>
-        /// Extra white space reserved above the overbar. 
-        /// Suggested: default rule thickness.
+        ///     Extra white space reserved above the overbar.
+        ///     Suggested: default rule thickness.
         /// </summary>
         public MathValueRecord OverbarExtraAscender { get; internal set; }
 
 
-
         //---------------------------------------------------------
         /// <summary>
-        /// Distance between underbar and (ink) bottom of the base. 
-        /// Suggested: 3×default rule thickness.
+        ///     Distance between underbar and (ink) bottom of the base.
+        ///     Suggested: 3×default rule thickness.
         /// </summary>
         public MathValueRecord UnderbarVerticalGap { get; internal set; }
+
         /// <summary>
-        /// Thickness of underbar. 
-        /// Suggested: default rule thickness.
+        ///     Thickness of underbar.
+        ///     Suggested: default rule thickness.
         /// </summary>
         public MathValueRecord UnderbarRuleThickness { get; internal set; }
+
         /// <summary>
-        /// Extra white space reserved below the underbar. Always positive. 
-        /// Suggested: default rule thickness.
+        ///     Extra white space reserved below the underbar. Always positive.
+        ///     Suggested: default rule thickness.
         /// </summary>
         public MathValueRecord UnderbarExtraDescender { get; internal set; }
 
 
-
         //---------------------------------------------------------
         /// <summary>
-        /// Space between the (ink) top of the expression and the bar over it. 
-        /// Suggested: 1¼ default rule thickness.
+        ///     Space between the (ink) top of the expression and the bar over it.
+        ///     Suggested: 1¼ default rule thickness.
         /// </summary>
         public MathValueRecord RadicalVerticalGap { get; internal set; }
+
         /// <summary>
-        ///  Space between the (ink) top of the expression and the bar over it. 
-        ///  Suggested: default rule thickness + ¼ x-height.
+        ///     Space between the (ink) top of the expression and the bar over it.
+        ///     Suggested: default rule thickness + ¼ x-height.
         /// </summary>
         public MathValueRecord RadicalDisplayStyleVerticalGap { get; internal set; }
+
         /// <summary>
-        ///  Thickness of the radical rule. This is the thickness of the rule in designed or constructed radical signs. 
-        ///  Suggested: default rule thickness.
+        ///     Thickness of the radical rule. This is the thickness of the rule in designed or constructed radical signs.
+        ///     Suggested: default rule thickness.
         /// </summary>
         public MathValueRecord RadicalRuleThickness { get; internal set; }
+
         /// <summary>
-        /// Extra white space reserved above the radical.
-        /// Suggested: RadicalRuleThickness.
+        ///     Extra white space reserved above the radical.
+        ///     Suggested: RadicalRuleThickness.
         /// </summary>
         public MathValueRecord RadicalExtraAscender { get; internal set; }
+
         /// <summary>
-        /// Extra horizontal kern before the degree of a radical, if such is present.
+        ///     Extra horizontal kern before the degree of a radical, if such is present.
         /// </summary>
         public MathValueRecord RadicalKernBeforeDegree { get; internal set; }
+
         /// <summary>
-        /// Negative kern after the degree of a radical, if such is present. 
-        /// Suggested: −10/18 of em
+        ///     Negative kern after the degree of a radical, if such is present.
+        ///     Suggested: −10/18 of em
         /// </summary>
         public MathValueRecord RadicalKernAfterDegree { get; internal set; }
+
         /// <summary>
-        ///  Height of the bottom of the radical degree, 
-        ///  if such is present, in proportion to the ascender of the radical sign. 
-        ///  Suggested: 60%.
+        ///     Height of the bottom of the radical degree,
+        ///     if such is present, in proportion to the ascender of the radical sign.
+        ///     Suggested: 60%.
         /// </summary>
         public short RadicalDegreeBottomRaisePercent { get; internal set; }
 
@@ -358,9 +393,23 @@ namespace Typography.OpenFont.MathGlyphs
     public class MathGlyphInfo
     {
         public readonly ushort GlyphIndex;
+
+        //
+        private MathKernInfoRecord _mathKernRec;
+
+        /// <summary>
+        ///     horizontal glyph construction
+        /// </summary>
+        public MathGlyphConstruction HoriGlyphConstruction;
+
+        /// <summary>
+        ///     vertical glyph construction
+        /// </summary>
+        public MathGlyphConstruction VertGlyphConstruction;
+
         public MathGlyphInfo(ushort glyphIndex)
         {
-            this.GlyphIndex = glyphIndex;
+            GlyphIndex = glyphIndex;
         }
 
         public MathValueRecord? ItalicCorrection { get; internal set; }
@@ -374,28 +423,17 @@ namespace Typography.OpenFont.MathGlyphs
         public MathKern BottomRightMathKern => _mathKernRec.BottomRight;
         public bool HasSomeMathKern { get; private set; }
 
-        //
-        MathKernInfoRecord _mathKernRec;
         internal void SetMathKerns(MathKernInfoRecord mathKernRec)
         {
             _mathKernRec = mathKernRec;
             HasSomeMathKern = true;
         }
-
-        /// <summary>
-        /// vertical glyph construction
-        /// </summary>
-        public MathGlyphConstruction VertGlyphConstruction;
-        /// <summary>
-        /// horizontal glyph construction
-        /// </summary>
-        public MathGlyphConstruction HoriGlyphConstruction;
-
     }
+
     public class MathGlyphConstruction
     {
-        public MathValueRecord GlyphAsm_ItalicCorrection;
         public GlyphPartRecord[] GlyphAsm_GlyphPartRecords;
+        public MathValueRecord GlyphAsm_ItalicCorrection;
         public MathGlyphVariantRecord[] glyphVariantRecords;
     }
 
@@ -449,7 +487,8 @@ namespace Typography.OpenFont.MathGlyphs
         public readonly ushort PartFlags;
         public bool IsExtender => (PartFlags & 0x0001) != 0;
 
-        public GlyphPartRecord(ushort glyphId, ushort startConnectorLength, ushort endConnectorLength, ushort fullAdvance, ushort partFlags)
+        public GlyphPartRecord(ushort glyphId, ushort startConnectorLength, ushort endConnectorLength,
+            ushort fullAdvance, ushort partFlags)
         {
             GlyphId = glyphId;
             StartConnectorLength = startConnectorLength;
@@ -474,10 +513,11 @@ namespace Typography.OpenFont.MathGlyphs
         //uint16    AdvanceMeasurement  Advance width/height, in design units, of the variant, in the direction of requested glyph extension.
         public readonly ushort VariantGlyph;
         public readonly ushort AdvanceMeasurement;
+
         public MathGlyphVariantRecord(ushort variantGlyph, ushort advanceMeasurement)
         {
-            this.VariantGlyph = variantGlyph;
-            this.AdvanceMeasurement = advanceMeasurement;
+            VariantGlyph = variantGlyph;
+            AdvanceMeasurement = advanceMeasurement;
         }
 
 #if DEBUG
@@ -490,9 +530,10 @@ namespace Typography.OpenFont.MathGlyphs
 
     public class MathKern
     {
+        public MathValueRecord[] CorrectionHeights;
+
         //reference =>see  MathKernTable
         public ushort HeightCount;
-        public MathValueRecord[] CorrectionHeights;
         public MathValueRecord[] KernValues;
 
         public MathKern(ushort heightCount, MathValueRecord[] correctionHeights, MathValueRecord[] kernValues)
@@ -510,17 +551,18 @@ namespace Typography.OpenFont.MathGlyphs
 #endif
     }
 
-    readonly struct MathKernInfoRecord
+    internal readonly struct MathKernInfoRecord
     {
         //resolved value
         public readonly MathKern TopRight;
         public readonly MathKern TopLeft;
         public readonly MathKern BottomRight;
         public readonly MathKern BottomLeft;
+
         public MathKernInfoRecord(MathKern topRight,
-             MathKern topLeft,
-             MathKern bottomRight,
-             MathKern bottomLeft)
+            MathKern topLeft,
+            MathKern bottomRight,
+            MathKern bottomLeft)
         {
             TopRight = topLeft;
             TopLeft = topLeft;
@@ -532,9 +574,7 @@ namespace Typography.OpenFont.MathGlyphs
 
 namespace Typography.OpenFont.Tables
 {
-    using Typography.OpenFont.MathGlyphs;
-
-    static class MathValueRecordReaderHelper
+    internal static class MathValueRecordReaderHelper
     {
         public static MathValueRecord ReadMathValueRecord(this BinaryReader reader)
         {
@@ -543,19 +583,15 @@ namespace Typography.OpenFont.Tables
 
         public static MathValueRecord[] ReadMathValueRecords(this BinaryReader reader, int count)
         {
-            MathValueRecord[] records = new MathValueRecord[count];
-            for (int i = 0; i < count; ++i)
-            {
-                records[i] = reader.ReadMathValueRecord();
-            }
+            var records = new MathValueRecord[count];
+            for (var i = 0; i < count; ++i) records[i] = reader.ReadMathValueRecord();
             return records;
         }
     }
 
-    readonly struct MathGlyphLoader
+    internal readonly struct MathGlyphLoader
     {
-
-        static MathGlyphInfo GetMathGlyphOrCreateNew(MathGlyphInfo[] mathGlyphInfos, ushort glyphIndex)
+        private static MathGlyphInfo GetMathGlyphOrCreateNew(MathGlyphInfo[] mathGlyphInfos, ushort glyphIndex)
         {
             return mathGlyphInfos[glyphIndex] ?? (mathGlyphInfos[glyphIndex] = new MathGlyphInfo(glyphIndex));
         }
@@ -568,52 +604,49 @@ namespace Typography.OpenFont.Tables
 
 
             //expand all information to the glyph  
-            int glyphCount = typeface.GlyphCount;
-            MathGlyphInfo[] mathGlyphInfos = new MathGlyphInfo[glyphCount];
+            var glyphCount = typeface.GlyphCount;
+            var mathGlyphInfos = new MathGlyphInfo[glyphCount];
 
 
-            int index = 0;
+            var index = 0;
             //-----------------
             //2. MathGlyphInfo
             //-----------------
-            {    //2.1 expand italic correction
-                MathItalicsCorrectonInfoTable italicCorrection = mathTable._mathItalicCorrectionInfo;
+            {
+                //2.1 expand italic correction
+                var italicCorrection = mathTable._mathItalicCorrectionInfo;
                 index = 0; //reset
                 if (italicCorrection.CoverageTable != null)
-                {
-                    foreach (ushort glyphIndex in italicCorrection.CoverageTable.GetExpandedValueIter())
+                    foreach (var glyphIndex in italicCorrection.CoverageTable.GetExpandedValueIter())
                     {
-                        GetMathGlyphOrCreateNew(mathGlyphInfos, glyphIndex).ItalicCorrection = italicCorrection.ItalicCorrections[index];
+                        GetMathGlyphOrCreateNew(mathGlyphInfos, glyphIndex).ItalicCorrection =
+                            italicCorrection.ItalicCorrections[index];
                         index++;
                     }
-                }
             }
             //--------
             {
                 //2.2 expand top accent
-                MathTopAccentAttachmentTable topAccentAttachment = mathTable._mathTopAccentAttachmentTable;
+                var topAccentAttachment = mathTable._mathTopAccentAttachmentTable;
                 index = 0; //reset
                 if (topAccentAttachment.CoverageTable != null)
-                {
-                    foreach (ushort glyphIndex in topAccentAttachment.CoverageTable.GetExpandedValueIter())
+                    foreach (var glyphIndex in topAccentAttachment.CoverageTable.GetExpandedValueIter())
                     {
-                        GetMathGlyphOrCreateNew(mathGlyphInfos, glyphIndex).TopAccentAttachment = topAccentAttachment.TopAccentAttachment[index];
+                        GetMathGlyphOrCreateNew(mathGlyphInfos, glyphIndex).TopAccentAttachment =
+                            topAccentAttachment.TopAccentAttachment[index];
                         index++;
                     }
-                }
             }
             //--------
             {
                 //2.3 expand , expand shape
                 index = 0; //reset
                 if (mathTable._extendedShapeCoverageTable != null)
-                {
-                    foreach (ushort glyphIndex in mathTable._extendedShapeCoverageTable.GetExpandedValueIter())
+                    foreach (var glyphIndex in mathTable._extendedShapeCoverageTable.GetExpandedValueIter())
                     {
                         GetMathGlyphOrCreateNew(mathGlyphInfos, glyphIndex).IsShapeExtensible = true;
                         index++;
                     }
-                }
             }
             //--------
             {
@@ -621,8 +654,8 @@ namespace Typography.OpenFont.Tables
                 index = 0; //reset
                 if (mathTable._mathKernInfoCoverage != null)
                 {
-                    MathKernInfoRecord[] kernRecs = mathTable._mathKernInfoRecords;
-                    foreach (ushort glyphIndex in mathTable._mathKernInfoCoverage.GetExpandedValueIter())
+                    var kernRecs = mathTable._mathKernInfoRecords;
+                    foreach (var glyphIndex in mathTable._mathKernInfoCoverage.GetExpandedValueIter())
                     {
                         GetMathGlyphOrCreateNew(mathGlyphInfos, glyphIndex).SetMathKerns(kernRecs[index]);
                         index++;
@@ -633,47 +666,83 @@ namespace Typography.OpenFont.Tables
             //3. MathVariants
             //-----------------
             {
-
-                MathVariantsTable mathVariants = mathTable._mathVariantsTable;
+                var mathVariants = mathTable._mathVariantsTable;
 
                 //3.1  vertical
                 index = 0; //reset
-                foreach (ushort glyphIndex in mathVariants.vertCoverage.GetExpandedValueIter())
+                foreach (var glyphIndex in mathVariants.vertCoverage.GetExpandedValueIter())
                 {
-                    GetMathGlyphOrCreateNew(mathGlyphInfos, glyphIndex).VertGlyphConstruction = mathVariants.vertConstructionTables[index];
+                    GetMathGlyphOrCreateNew(mathGlyphInfos, glyphIndex).VertGlyphConstruction =
+                        mathVariants.vertConstructionTables[index];
                     index++;
                 }
+
                 //
                 //3.2 horizontal
-                index = 0;//reset
+                index = 0; //reset
                 if (mathVariants.horizCoverage != null)
-                {
-                    foreach (ushort glyphIndex in mathVariants.horizCoverage.GetExpandedValueIter())
+                    foreach (var glyphIndex in mathVariants.horizCoverage.GetExpandedValueIter())
                     {
-                        GetMathGlyphOrCreateNew(mathGlyphInfos, glyphIndex).HoriGlyphConstruction = mathVariants.horizConstructionTables[index];
+                        GetMathGlyphOrCreateNew(mathGlyphInfos, glyphIndex).HoriGlyphConstruction =
+                            mathVariants.horizConstructionTables[index];
                         index++;
                     }
-                }
             }
             typeface.LoadMathGlyphInfos(mathGlyphInfos);
         }
-
     }
 
 
-
-    class MathTable : TableEntry
+    internal class MathTable : TableEntry
     {
         public const string _N = "MATH";
-        public override string Name => _N;
+
+        /// <summary>
+        ///     (2.3)
+        /// </summary>
+        internal CoverageTable _extendedShapeCoverageTable;
+
         //
         internal MathConstants _mathConstTable;
+
+
+        /// <summary>
+        ///     (2.1)
+        /// </summary>
+        internal MathItalicsCorrectonInfoTable _mathItalicCorrectionInfo;
+
+
+        /// <summary>
+        ///     (2.4)
+        /// </summary>
+        internal CoverageTable _mathKernInfoCoverage;
+
+        /// <summary>
+        ///     (2.4)
+        /// </summary>
+        internal MathKernInfoRecord[] _mathKernInfoRecords;
+
+
+        /// <summary>
+        ///     (2.2)
+        /// </summary>
+        internal MathTopAccentAttachmentTable _mathTopAccentAttachmentTable;
+
+
+        //--------------------------------------------------------------------------
+
+        /// <summary>
+        ///     (3)
+        /// </summary>
+        internal MathVariantsTable _mathVariantsTable;
+
+        public override string Name => _N;
 
         protected override void ReadContentFrom(BinaryReader reader)
         {
             //eg. latin-modern-math-regular.otf, asana-math.otf
 
-            long beginAt = reader.BaseStream.Position;
+            var beginAt = reader.BaseStream.Position;
             //math table header
             //Type          Name    Description
             //uint16        MajorVersion Major version of the MATH table, = 1.
@@ -682,11 +751,11 @@ namespace Typography.OpenFont.Tables
             //Offset16      MathGlyphInfo   Offset to MathGlyphInfo table -from the beginning of MATH table.
             //Offset16      MathVariants    Offset to MathVariants table -from the beginning of MATH table.
 
-            ushort majorVersion = reader.ReadUInt16();
-            ushort minorVersion = reader.ReadUInt16();
-            ushort mathConstants_offset = reader.ReadUInt16();
-            ushort mathGlyphInfo_offset = reader.ReadUInt16();
-            ushort mathVariants_offset = reader.ReadUInt16();
+            var majorVersion = reader.ReadUInt16();
+            var minorVersion = reader.ReadUInt16();
+            var mathConstants_offset = reader.ReadUInt16();
+            var mathGlyphInfo_offset = reader.ReadUInt16();
+            var mathVariants_offset = reader.ReadUInt16();
             //---------------------------------
 
             //(1)
@@ -704,11 +773,12 @@ namespace Typography.OpenFont.Tables
             //NOTE: expose  MinConnectorOverlap via _mathConstTable
             _mathConstTable.MinConnectorOverlap = _mathVariantsTable.MinConnectorOverlap;
         }
+
         /// <summary>
-        /// (1) MathConstants
+        ///     (1) MathConstants
         /// </summary>
         /// <param name="reader"></param>
-        void ReadMathConstantsTable(BinaryReader reader)
+        private void ReadMathConstantsTable(BinaryReader reader)
         {
             //MathConstants Table
 
@@ -718,7 +788,7 @@ namespace Typography.OpenFont.Tables
             //The table also contains general use constants that may affect all parts of the formula,
             //such as axis height and math leading.Note that most of the constants deal with the vertical positioning.
 
-            MathConstants mc = new MathConstants();
+            var mc = new MathConstants();
             mc.ScriptPercentScaleDown = reader.ReadInt16();
             mc.ScriptScriptPercentScaleDown = reader.ReadInt16();
             mc.DelimitedSubFormulaMinHeight = reader.ReadUInt16();
@@ -808,12 +878,11 @@ namespace Typography.OpenFont.Tables
         //--------------------------------------------------------------------------
 
         /// <summary>
-        /// (2) MathGlyphInfo
+        ///     (2) MathGlyphInfo
         /// </summary>
         /// <param name="reader"></param>
-        void ReadMathGlyphInfoTable(BinaryReader reader)
+        private void ReadMathGlyphInfoTable(BinaryReader reader)
         {
-
             //MathGlyphInfo Table
             //  The MathGlyphInfo table contains positioning information that is defined on per - glyph basis.
             //  The table consists of the following parts:
@@ -825,11 +894,11 @@ namespace Typography.OpenFont.Tables
 
             //  NOTE: Here, and elsewhere in the subclause – please refer to subclause 6.2.4 "Features and Lookups" for description of the coverage table formats.
 
-            long startAt = reader.BaseStream.Position;
-            ushort offsetTo_MathItalicsCorrectionInfo_Table = reader.ReadUInt16();
-            ushort offsetTo_MathTopAccentAttachment_Table = reader.ReadUInt16();
-            ushort offsetTo_Extended_Shape_coverage_Table = reader.ReadUInt16();
-            ushort offsetTo_MathKernInfo_Table = reader.ReadUInt16();
+            var startAt = reader.BaseStream.Position;
+            var offsetTo_MathItalicsCorrectionInfo_Table = reader.ReadUInt16();
+            var offsetTo_MathTopAccentAttachment_Table = reader.ReadUInt16();
+            var offsetTo_Extended_Shape_coverage_Table = reader.ReadUInt16();
+            var offsetTo_MathKernInfo_Table = reader.ReadUInt16();
             //-----------------------
 
             //(2.1)
@@ -855,10 +924,9 @@ namespace Typography.OpenFont.Tables
 
             //(2.3)
             if (offsetTo_Extended_Shape_coverage_Table > 0)
-            {
                 //may be null, eg. found in font Linux Libertine Regular (https://sourceforge.net/projects/linuxlibertine/)
-                _extendedShapeCoverageTable = CoverageTable.CreateFrom(reader, startAt + offsetTo_Extended_Shape_coverage_Table);
-            }
+                _extendedShapeCoverageTable =
+                    CoverageTable.CreateFrom(reader, startAt + offsetTo_Extended_Shape_coverage_Table);
 
             //(2.4)
             if (offsetTo_MathKernInfo_Table > 0)
@@ -870,45 +938,33 @@ namespace Typography.OpenFont.Tables
             }
         }
 
-
         /// <summary>
-        /// (2.1)
-        /// </summary>
-        internal MathItalicsCorrectonInfoTable _mathItalicCorrectionInfo;
-        /// <summary>
-        /// (2.1)
+        ///     (2.1)
         /// </summary>
         /// <param name="reader"></param>
-        void ReadMathItalicCorrectionInfoTable(BinaryReader reader)
+        private void ReadMathItalicCorrectionInfoTable(BinaryReader reader)
         {
-            long beginAt = reader.BaseStream.Position;
+            var beginAt = reader.BaseStream.Position;
             _mathItalicCorrectionInfo = new MathItalicsCorrectonInfoTable();
             //MathItalicsCorrectionInfo Table
             //Type           Name                           Description
             //Offset16       Coverage                       Offset to Coverage table - from the beginning of MathItalicsCorrectionInfo table.
             //uint16         ItalicsCorrectionCount         Number of italics correction values.Should coincide with the number of covered glyphs.
             //MathValueRecord ItalicsCorrection[ItalicsCorrectionCount]  Array of MathValueRecords defining italics correction values for each covered glyph. 
-            ushort coverageOffset = reader.ReadUInt16();
-            ushort italicCorrectionCount = reader.ReadUInt16();
+            var coverageOffset = reader.ReadUInt16();
+            var italicCorrectionCount = reader.ReadUInt16();
             _mathItalicCorrectionInfo.ItalicCorrections = reader.ReadMathValueRecords(italicCorrectionCount);
             //read coverage ...
             if (coverageOffset > 0)
-            {
                 //may be null?, eg. found in font Linux Libertine Regular (https://sourceforge.net/projects/linuxlibertine/)
                 _mathItalicCorrectionInfo.CoverageTable = CoverageTable.CreateFrom(reader, beginAt + coverageOffset);
-            }
         }
 
-
         /// <summary>
-        /// (2.2)
-        /// </summary>
-        internal MathTopAccentAttachmentTable _mathTopAccentAttachmentTable;
-        /// <summary>
-        /// (2.2)
+        ///     (2.2)
         /// </summary>
         /// <param name="reader"></param>
-        void ReadMathTopAccentAttachment(BinaryReader reader)
+        private void ReadMathTopAccentAttachment(BinaryReader reader)
         {
             //MathTopAccentAttachment Table
 
@@ -933,39 +989,23 @@ namespace Typography.OpenFont.Tables
             //MathValueRecord TopAccentAttachment[TopAccentAttachmentCount]  Array of MathValueRecords defining top accent attachment points for each covered glyph.
 
 
-            long beginAt = reader.BaseStream.Position;
+            var beginAt = reader.BaseStream.Position;
             _mathTopAccentAttachmentTable = new MathTopAccentAttachmentTable();
 
-            ushort coverageOffset = reader.ReadUInt16();
-            ushort topAccentAttachmentCount = reader.ReadUInt16();
+            var coverageOffset = reader.ReadUInt16();
+            var topAccentAttachmentCount = reader.ReadUInt16();
             _mathTopAccentAttachmentTable.TopAccentAttachment = reader.ReadMathValueRecords(topAccentAttachmentCount);
             if (coverageOffset > 0)
-            {
                 //may be null?, eg. found in font Linux Libertine Regular (https://sourceforge.net/projects/linuxlibertine/)
-                _mathTopAccentAttachmentTable.CoverageTable = CoverageTable.CreateFrom(reader, beginAt + coverageOffset);
-            }
-
+                _mathTopAccentAttachmentTable.CoverageTable =
+                    CoverageTable.CreateFrom(reader, beginAt + coverageOffset);
         }
 
         /// <summary>
-        /// (2.3)
-        /// </summary>
-        internal CoverageTable _extendedShapeCoverageTable;
-
-
-        /// <summary>
-        /// (2.4)
-        /// </summary>
-        internal CoverageTable _mathKernInfoCoverage;
-        /// <summary>
-        /// (2.4)
-        /// </summary>
-        internal MathKernInfoRecord[] _mathKernInfoRecords;
-        /// <summary>
-        /// (2.4)
+        ///     (2.4)
         /// </summary>
         /// <param name="reader"></param>
-        void ReadMathKernInfoTable(BinaryReader reader)
+        private void ReadMathKernInfoTable(BinaryReader reader)
         {
             // MathKernInfo Table
 
@@ -985,10 +1025,10 @@ namespace Typography.OpenFont.Tables
             //...
             //Each MathKernInfoRecord points to up to four kern tables for each of the corners around the glyph.
 
-            long beginAt = reader.BaseStream.Position;
+            var beginAt = reader.BaseStream.Position;
 
-            ushort mathKernCoverage_offset = reader.ReadUInt16();
-            ushort mathKernCount = reader.ReadUInt16();
+            var mathKernCoverage_offset = reader.ReadUInt16();
+            var mathKernCount = reader.ReadUInt16();
 
 
             //MathKernInfoRecord Table 
@@ -1001,16 +1041,15 @@ namespace Typography.OpenFont.Tables
             //    //Offset16  BottomRightMathKern Offset to MathKern table for bottom right corner - from the beginning of MathKernInfo table. May be NULL.
             //    //Offset16  BottomLeftMathKern  Offset to MathKern table for bottom left corner - from the beginning of MathKernInfo table. May be NULL.
 
-            ushort[] allKernRecOffset = Utils.ReadUInt16Array(reader, 4 * mathKernCount);//*** 
+            var allKernRecOffset = reader.ReadUInt16Array(4 * mathKernCount); //*** 
 
             //read each kern table  
             _mathKernInfoRecords = new MathKernInfoRecord[mathKernCount];
-            int index = 0;
+            var index = 0;
             ushort m_kern_offset = 0;
 
-            for (int i = 0; i < mathKernCount; ++i)
+            for (var i = 0; i < mathKernCount; ++i)
             {
-
                 //top-right
                 m_kern_offset = allKernRecOffset[index];
 
@@ -1021,6 +1060,7 @@ namespace Typography.OpenFont.Tables
                     reader.BaseStream.Position = beginAt + m_kern_offset;
                     topRight = ReadMathKernTable(reader);
                 }
+
                 //top-left
                 m_kern_offset = allKernRecOffset[index + 1];
                 if (m_kern_offset > 0)
@@ -1028,6 +1068,7 @@ namespace Typography.OpenFont.Tables
                     reader.BaseStream.Position = beginAt + m_kern_offset;
                     topLeft = ReadMathKernTable(reader);
                 }
+
                 //bottom-right
                 m_kern_offset = allKernRecOffset[index + 2];
                 if (m_kern_offset > 0)
@@ -1035,6 +1076,7 @@ namespace Typography.OpenFont.Tables
                     reader.BaseStream.Position = beginAt + m_kern_offset;
                     bottomRight = ReadMathKernTable(reader);
                 }
+
                 //bottom-left
                 m_kern_offset = allKernRecOffset[index + 3];
                 if (m_kern_offset > 0)
@@ -1045,21 +1087,20 @@ namespace Typography.OpenFont.Tables
 
                 _mathKernInfoRecords[i] = new MathKernInfoRecord(topRight, topLeft, bottomRight, bottomLeft);
 
-                index += 4;//***
+                index += 4; //***
             }
 
             //-----
             _mathKernInfoCoverage = CoverageTable.CreateFrom(reader, beginAt + mathKernCoverage_offset);
-
         }
+
         /// <summary>
-        /// (2.4)
+        ///     (2.4)
         /// </summary>
         /// <param name="reader"></param>
         /// <returns></returns>
-        static MathKern ReadMathKernTable(BinaryReader reader)
+        private static MathKern ReadMathKernTable(BinaryReader reader)
         {
-
             //The MathKern table contains adjustments to horizontal positions of subscripts and superscripts
             //The kerning algorithm consists of the following steps:
 
@@ -1079,25 +1120,18 @@ namespace Typography.OpenFont.Tables
             //Last value is the value to be applied for all heights greater than the last height in this table.
             //Negative values are interpreted as "move glyphs closer to each other".
 
-            ushort heightCount = reader.ReadUInt16();
+            var heightCount = reader.ReadUInt16();
             return new MathKern(heightCount,
                 reader.ReadMathValueRecords(heightCount),
                 reader.ReadMathValueRecords(heightCount + 1)
-                );
+            );
         }
 
-
-        //--------------------------------------------------------------------------
-
         /// <summary>
-        /// (3)
-        /// </summary>
-        internal MathVariantsTable _mathVariantsTable;
-        /// <summary>
-        /// (3) MathVariants
+        ///     (3) MathVariants
         /// </summary>
         /// <param name="reader"></param>
-        void ReadMathVariantsTable(BinaryReader reader)
+        private void ReadMathVariantsTable(BinaryReader reader)
         {
             //MathVariants Table
 
@@ -1139,35 +1173,32 @@ namespace Typography.OpenFont.Tables
 
             _mathVariantsTable = new MathVariantsTable();
 
-            long beginAt = reader.BaseStream.Position;
+            var beginAt = reader.BaseStream.Position;
             //
             _mathVariantsTable.MinConnectorOverlap = reader.ReadUInt16();
             //
-            ushort vertGlyphCoverageOffset = reader.ReadUInt16();
-            ushort horizGlyphCoverageOffset = reader.ReadUInt16();
-            ushort vertGlyphCount = reader.ReadUInt16();
-            ushort horizGlyphCount = reader.ReadUInt16();
-            ushort[] vertGlyphConstructions = Utils.ReadUInt16Array(reader, vertGlyphCount);
-            ushort[] horizonGlyphConstructions = Utils.ReadUInt16Array(reader, horizGlyphCount);
+            var vertGlyphCoverageOffset = reader.ReadUInt16();
+            var horizGlyphCoverageOffset = reader.ReadUInt16();
+            var vertGlyphCount = reader.ReadUInt16();
+            var horizGlyphCount = reader.ReadUInt16();
+            var vertGlyphConstructions = reader.ReadUInt16Array(vertGlyphCount);
+            var horizonGlyphConstructions = reader.ReadUInt16Array(horizGlyphCount);
             //
 
             if (vertGlyphCoverageOffset > 0)
-            {
                 _mathVariantsTable.vertCoverage = CoverageTable.CreateFrom(reader, beginAt + vertGlyphCoverageOffset);
-            }
 
             if (horizGlyphCoverageOffset > 0)
-            {
                 //may be null?, eg. found in font Linux Libertine Regular (https://sourceforge.net/projects/linuxlibertine/)
                 _mathVariantsTable.horizCoverage = CoverageTable.CreateFrom(reader, beginAt + horizGlyphCoverageOffset);
-            }
 
             //read math construction table
 
             //(3.1)
             //vertical
-            var vertGlyphConstructionTables = _mathVariantsTable.vertConstructionTables = new MathGlyphConstruction[vertGlyphCount];
-            for (int i = 0; i < vertGlyphCount; ++i)
+            var vertGlyphConstructionTables =
+                _mathVariantsTable.vertConstructionTables = new MathGlyphConstruction[vertGlyphCount];
+            for (var i = 0; i < vertGlyphCount; ++i)
             {
                 reader.BaseStream.Position = beginAt + vertGlyphConstructions[i];
                 vertGlyphConstructionTables[i] = ReadMathGlyphConstructionTable(reader);
@@ -1175,8 +1206,9 @@ namespace Typography.OpenFont.Tables
 
             //(3.2)
             //horizon
-            var horizGlyphConstructionTables = _mathVariantsTable.horizConstructionTables = new MathGlyphConstruction[horizGlyphCount];
-            for (int i = 0; i < horizGlyphCount; ++i)
+            var horizGlyphConstructionTables =
+                _mathVariantsTable.horizConstructionTables = new MathGlyphConstruction[horizGlyphCount];
+            for (var i = 0; i < horizGlyphCount; ++i)
             {
                 reader.BaseStream.Position = beginAt + horizonGlyphConstructions[i];
                 horizGlyphConstructionTables[i] = ReadMathGlyphConstructionTable(reader);
@@ -1185,13 +1217,12 @@ namespace Typography.OpenFont.Tables
 
 
         /// <summary>
-        /// (3.1, 3.2)
+        ///     (3.1, 3.2)
         /// </summary>
         /// <param name="reader"></param>
         /// <returns></returns>
-        MathGlyphConstruction ReadMathGlyphConstructionTable(BinaryReader reader)
+        private MathGlyphConstruction ReadMathGlyphConstructionTable(BinaryReader reader)
         {
-
             //MathGlyphConstruction Table  
             //The MathGlyphConstruction table provides information on finding or assembling extended variants for one particular glyph.
             //It can be used for shapes that grow in both horizontal and vertical directions.
@@ -1218,38 +1249,38 @@ namespace Typography.OpenFont.Tables
             //uint16        VariantCount    Count of glyph growing variants for this glyph.
             //MathGlyphVariantRecord MathGlyphVariantRecord [VariantCount]   MathGlyphVariantRecords for alternative variants of the glyphs.
 
-            long beginAt = reader.BaseStream.Position;
+            var beginAt = reader.BaseStream.Position;
 
             var glyphConstructionTable = new MathGlyphConstruction();
 
-            ushort glyphAsmOffset = reader.ReadUInt16();
-            ushort variantCount = reader.ReadUInt16();
+            var glyphAsmOffset = reader.ReadUInt16();
+            var variantCount = reader.ReadUInt16();
 
             var variantRecords = glyphConstructionTable.glyphVariantRecords = new MathGlyphVariantRecord[variantCount];
 
-            for (int i = 0; i < variantCount; ++i)
-            {
+            for (var i = 0; i < variantCount; ++i)
                 variantRecords[i] = new MathGlyphVariantRecord(
                     reader.ReadUInt16(),
                     reader.ReadUInt16()
-                    );
-            }
+                );
 
 
             //read glyph asm table
-            if (glyphAsmOffset > 0)//may be NULL
+            if (glyphAsmOffset > 0) //may be NULL
             {
                 reader.BaseStream.Position = beginAt + glyphAsmOffset;
                 FillGlyphAssemblyInfo(reader, glyphConstructionTable);
             }
+
             return glyphConstructionTable;
         }
+
         /// <summary>
-        /// (3.1, 3.2,)
+        ///     (3.1, 3.2,)
         /// </summary>
         /// <param name="reader"></param>
         /// <param name="glyphConstruction"></param>
-        static void FillGlyphAssemblyInfo(BinaryReader reader, MathGlyphConstruction glyphConstruction)
+        private static void FillGlyphAssemblyInfo(BinaryReader reader, MathGlyphConstruction glyphConstruction)
         {
             //since MathGlyphConstructionTable: GlyphAssembly is 1:1 
             //---------
@@ -1275,23 +1306,22 @@ namespace Typography.OpenFont.Tables
 
 
             glyphConstruction.GlyphAsm_ItalicCorrection = reader.ReadMathValueRecord();
-            ushort partCount = reader.ReadUInt16();
+            var partCount = reader.ReadUInt16();
             var partRecords = glyphConstruction.GlyphAsm_GlyphPartRecords = new GlyphPartRecord[partCount];
-            for (int i = 0; i < partCount; ++i)
-            {
+            for (var i = 0; i < partCount; ++i)
                 partRecords[i] = new GlyphPartRecord(
                     reader.ReadUInt16(),
                     reader.ReadUInt16(),
                     reader.ReadUInt16(),
                     reader.ReadUInt16(),
                     reader.ReadUInt16()
-                    );
-            }
+                );
         }
     }
 
-    class MathItalicsCorrectonInfoTable
+    internal class MathItalicsCorrectonInfoTable
     {
+        public CoverageTable CoverageTable;
         //MathItalicsCorrectonInfo Table 
         //The MathItalicsCorrectionInfo table contains italics correction values for slanted glyphs used in math typesetting.The table consists of the following parts:
 
@@ -1306,26 +1336,21 @@ namespace Typography.OpenFont.Tables
         //    When positioning superscripts and subscripts, their default horizontal positions are also different by the amount of the italics correction of the preceding glyph.
 
         public MathValueRecord[] ItalicCorrections;
-        public CoverageTable CoverageTable;
-
     }
-    class MathTopAccentAttachmentTable
+
+    internal class MathTopAccentAttachmentTable
     {
+        public CoverageTable CoverageTable;
         public MathValueRecord[] TopAccentAttachment;
-        public CoverageTable CoverageTable;
     }
 
 
-    class MathVariantsTable
+    internal class MathVariantsTable
     {
-        public ushort MinConnectorOverlap;
-        public CoverageTable vertCoverage;
-        public CoverageTable horizCoverage;
-        public MathGlyphConstruction[] vertConstructionTables;
         public MathGlyphConstruction[] horizConstructionTables;
+        public CoverageTable horizCoverage;
+        public ushort MinConnectorOverlap;
+        public MathGlyphConstruction[] vertConstructionTables;
+        public CoverageTable vertCoverage;
     }
-
-
-
-
 }

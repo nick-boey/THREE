@@ -1,44 +1,43 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class GLRenderStates
 {
-    [Serializable]
-    public class GLRenderStates
+    private GLCapabilities capabilities;
+    private GLExtensions extensions;
+    public Hashtable renderStates = new();
+
+    public GLRenderStates(GLExtensions extensions, GLCapabilities capabilities)
     {
-        public Hashtable renderStates = new Hashtable();
-        private GLExtensions extensions;
-        private GLCapabilities capabilities;
-        public GLRenderStates(GLExtensions extensions, GLCapabilities capabilities)
+        this.extensions = extensions;
+        this.capabilities = capabilities;
+    }
+
+    public GLRenderState Get(Object3D scene, int renderCallDepth = 0)
+    {
+        GLRenderState renderState;
+
+        if (!renderStates.Contains(scene))
         {
-            this.extensions = extensions;
-            this.capabilities = capabilities;
+            renderState = new GLRenderState(extensions, capabilities);
+            var list = new List<GLRenderState> { renderState };
+            renderStates.Add(scene, list);
         }
-
-        public GLRenderState Get(Object3D scene, int renderCallDepth=0)
+        else
         {
-            GLRenderState renderState;
-
-            if (!renderStates.Contains(scene))
+            if (renderCallDepth >= (renderStates[scene] as List<GLRenderState>).Count)
             {
-                renderState = new GLRenderState(extensions,capabilities);
-                List<GLRenderState> list = new List<GLRenderState>() { renderState };
-                renderStates.Add(scene, list);
+                renderState = new GLRenderState(extensions, capabilities);
+                (renderStates[scene] as List<GLRenderState>).Add(renderState);
             }
             else
             {
-                if (renderCallDepth >= (renderStates[scene] as List<GLRenderState>).Count)
-                {
-                    renderState = new GLRenderState(extensions,capabilities);
-                    (renderStates[scene] as List<GLRenderState>).Add(renderState);
-                }
-                else
-                {
-                    renderState = (renderStates[scene] as List<GLRenderState>)[renderCallDepth];
-                }
+                renderState = (renderStates[scene] as List<GLRenderState>)[renderCallDepth];
             }
-
-            return renderState;
         }
+
+        return renderState;
     }
 }

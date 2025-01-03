@@ -1,49 +1,42 @@
-﻿using System;
+﻿namespace THREE;
 
-namespace THREE
+[Serializable]
+public class Layers
 {
-    [Serializable]
-    public class Layers
+    public int Mask = 1 | 0;
+
+    public void Set(int channel)
     {
-        public int Mask = 1 | 0;
+        Mask = (1 << channel) | 0;
+    }
 
-        public Layers()
-        {
-        }
+    public void Enable(int channel)
+    {
+        Mask |= (1 << channel) | 0;
+    }
 
-        public void Set(int channel)
-        {
-            this.Mask = 1 << channel | 0;
-        }
+    public void EnableAll()
+    {
+        Mask = Convert.ToInt32(0xffffffff | 0);
+    }
 
-        public void Enable(int channel)
-        {
-            this.Mask |= 1 << channel | 0;
-        }
+    public void Toggle(int channel)
+    {
+        Mask ^= (1 << channel) | 0;
+    }
 
-        public void EnableAll()
-        {
-            this.Mask = Convert.ToInt32(0xffffffff | 0);
-        }
+    public void Disable(int channel)
+    {
+        Mask &= ~((1 << channel) | 0);
+    }
 
-        public void Toggle(int channel)
-        {
-            this.Mask ^= 1 << channel | 0;
-        }
+    public void DisableAll()
+    {
+        Mask = 0;
+    }
 
-        public void Disable(int channel)
-        {
-            this.Mask &= ~(1 << channel | 0);
-        }
-
-        public void DisableAll()
-        {
-            this.Mask = 0;
-        }
-        public bool Test(Layers layers)
-        {
-            return (this.Mask & layers.Mask) != 0;
-        }
-
+    public bool Test(Layers layers)
+    {
+        return (Mask & layers.Mask) != 0;
     }
 }

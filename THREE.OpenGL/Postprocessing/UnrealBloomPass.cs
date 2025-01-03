@@ -1,188 +1,192 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using THREE.Renderers.Shaders;
+﻿using System.Collections;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class UnrealBloomPass : Pass, IDisposable
 {
-    [Serializable]
-    public class UnrealBloomPass : Pass, IDisposable
+    public static Vector2 BlurDirectionX = new(1.0f, 0.0f);
+    public static Vector2 BlurDirectionY = new(0.0f, 1.0f);
+    private MeshBasicMaterial basic;
+    private List<Vector3> BloomTintColors;
+    public Color ClearColor;
+    private ShaderMaterial compositeMaterial;
+    private GLUniforms copyUniforms;
+    private bool disposed;
+    private GLUniforms highPassUniforms;
+    private ShaderMaterial materialCopy;
+    private ShaderMaterial materialHighPassFilter;
+    public int nMips;
+    private float oldClearAlpha;
+    private Color oldClearColor;
+    public float Radius;
+    public GLRenderTarget renderTargetBright;
+    public List<GLRenderTarget> RenderTargetsHorizontal = new();
+    public List<GLRenderTarget> RenderTargetsVertical = new();
+
+    public Vector2 Resolution;
+    private List<ShaderMaterial> separableBlurMaterials = new();
+    public float Strength;
+    public float Threshold;
+
+    public UnrealBloomPass(Vector2 resolution = null, float? strength = null, float? radius = null,
+        float? threshold = null)
     {
-        public static Vector2 BlurDirectionX = new Vector2(1.0f, 0.0f);
-        public static Vector2 BlurDirectionY = new Vector2(0.0f, 1.0f);
+        Strength = strength != null ? strength.Value : 1;
+        Radius = radius != null ? radius.Value : 0;
+        Threshold = threshold != null ? threshold.Value : 0;
 
-        public Vector2 Resolution;
-        public float Strength;
-        public float Radius;
-        public float Threshold;
-        public Color ClearColor;
-        public List<GLRenderTarget> RenderTargetsHorizontal = new List<GLRenderTarget>();
-        public List<GLRenderTarget> RenderTargetsVertical = new List<GLRenderTarget>();
-        public int nMips;
-        public GLRenderTarget renderTargetBright;
-        GLUniforms highPassUniforms;
-        ShaderMaterial materialHighPassFilter;
-        List<ShaderMaterial> separableBlurMaterials = new List<ShaderMaterial>();
-        ShaderMaterial compositeMaterial;
-        List<Vector3> BloomTintColors;
-        GLUniforms copyUniforms;
-        ShaderMaterial materialCopy;
-        Color oldClearColor;
-        float oldClearAlpha;
-        MeshBasicMaterial basic;
+        Resolution = resolution != null ? new Vector2(resolution.X, resolution.Y) : new Vector2(256, 256);
+        ClearColor = new Color(0, 0, 0);
 
-        public event EventHandler<EventArgs> Disposed;
-
-        public UnrealBloomPass(Vector2 resolution = null, float? strength = null, float? radius = null, float? threshold = null) : base()
+        // render targets
+        var pars = new Hashtable
         {
-            Strength = strength != null ? strength.Value : 1;
-            Radius = radius != null ? radius.Value : 0;
-            Threshold = threshold != null ? threshold.Value : 0;
+            { "minFilter", Constants.LinearFilter }, { "magFilter", Constants.LinearFilter },
+            { "format", Constants.RGBAFormat }
+        };
 
-            Resolution = resolution != null ? new Vector2(resolution.X, resolution.Y) : new Vector2(256, 256);
-            this.ClearColor = new Color(0, 0, 0);
+        nMips = 5;
 
-            // render targets
-            Hashtable pars = new Hashtable { { "minFilter", Constants.LinearFilter }, { "magFilter", Constants.LinearFilter }, { "format", Constants.RGBAFormat } };
+        var resx = (int)Math.Round(Resolution.X / 2);
+        var resy = (int)Math.Round(Resolution.Y / 2);
 
-            this.nMips = 5;
+        renderTargetBright = new GLRenderTarget(resx, resy, pars);
+        renderTargetBright.Texture.Name = "UnrealBloomPass.bright";
+        renderTargetBright.Texture.GenerateMipmaps = false;
 
-            var resx = (int)System.Math.Round(this.Resolution.X / 2);
-            var resy = (int)System.Math.Round(this.Resolution.Y / 2);
+        for (var i = 0; i < nMips; i++)
+        {
+            var renderTargetHorizonal = new GLRenderTarget(resx, resy, pars);
 
-            this.renderTargetBright = new GLRenderTarget(resx, resy, pars);
-            this.renderTargetBright.Texture.Name = "UnrealBloomPass.bright";
-            this.renderTargetBright.Texture.GenerateMipmaps = false;
+            renderTargetHorizonal.Texture.Name = "UnrealBloomPass.h" + i;
+            renderTargetHorizonal.Texture.GenerateMipmaps = false;
 
-            for (var i = 0; i < this.nMips; i++)
-            {
+            RenderTargetsHorizontal.Add(renderTargetHorizonal);
 
-                var renderTargetHorizonal = new GLRenderTarget(resx, resy, pars);
+            var renderTargetVertical = new GLRenderTarget(resx, resy, pars);
 
-                renderTargetHorizonal.Texture.Name = "UnrealBloomPass.h" + i;
-                renderTargetHorizonal.Texture.GenerateMipmaps = false;
+            renderTargetVertical.Texture.Name = "UnrealBloomPass.v" + i;
+            renderTargetVertical.Texture.GenerateMipmaps = false;
 
-                RenderTargetsHorizontal.Add(renderTargetHorizonal);
+            RenderTargetsVertical.Add(renderTargetVertical);
 
-                var renderTargetVertical = new GLRenderTarget(resx, resy, pars);
+            resx = (int)Math.Round(resx / 2.0f);
 
-                renderTargetVertical.Texture.Name = "UnrealBloomPass.v" + i;
-                renderTargetVertical.Texture.GenerateMipmaps = false;
-
-                this.RenderTargetsVertical.Add(renderTargetVertical);
-
-                resx = (int)System.Math.Round(resx / 2.0f);
-
-                resy = (int)System.Math.Round(resy / 2.0f);
-
-            }
-
-            // luminosity high pass material
-
-
-
-            var highPassShader = new LuminosityHighPassShader();
-            this.highPassUniforms = UniformsUtils.CloneUniforms(highPassShader.Uniforms);
-
-            (this.highPassUniforms["luminosityThreshold"] as GLUniform)["value"] = threshold;
-            (this.highPassUniforms["smoothWidth"] as GLUniform)["value"] = 0.01f;
-
-            this.materialHighPassFilter = new ShaderMaterial
-            {
-                Uniforms = this.highPassUniforms,
-                VertexShader = highPassShader.VertexShader,
-                FragmentShader = highPassShader.FragmentShader,
-
-            };
-
-            // Gaussian Blur Materials
-            List<int> kernelSizeArray = new List<int> { 3, 5, 7, 9, 11 };
-            resx = (int)System.Math.Round(this.Resolution.X / 2);
-            resy = (int)System.Math.Round(this.Resolution.Y / 2);
-            for (var i = 0; i < this.nMips; i++)
-            {
-
-                this.separableBlurMaterials.Add(GetSeperableBlurMaterial(kernelSizeArray[i]));
-
-                (this.separableBlurMaterials[i].Uniforms["texSize"] as GLUniform)["value"] = new Vector2(resx, resy);
-
-                resx = (int)System.Math.Round(resx / 2.0f);
-
-                resy = (int)System.Math.Round(resy / 2.0f);
-
-            }
-
-            // Composite material
-            this.compositeMaterial = this.GetCompositeMaterial(this.nMips);
-            (this.compositeMaterial.Uniforms["blurTexture1"] as GLUniform)["value"] = this.RenderTargetsVertical[0].Texture;
-            (this.compositeMaterial.Uniforms["blurTexture2"] as GLUniform)["value"] = this.RenderTargetsVertical[1].Texture;
-            (this.compositeMaterial.Uniforms["blurTexture3"] as GLUniform)["value"] = this.RenderTargetsVertical[2].Texture;
-            (this.compositeMaterial.Uniforms["blurTexture4"] as GLUniform)["value"] = this.RenderTargetsVertical[3].Texture;
-            (this.compositeMaterial.Uniforms["blurTexture5"] as GLUniform)["value"] = this.RenderTargetsVertical[4].Texture;
-            (this.compositeMaterial.Uniforms["bloomStrength"] as GLUniform)["value"] = strength;
-            (this.compositeMaterial.Uniforms["bloomRadius"] as GLUniform)["value"] = 0.1f;
-            this.compositeMaterial.NeedsUpdate = true;
-
-            List<float> bloomFactors = new List<float> { 1.0f, 0.8f, 0.6f, 0.4f, 0.2f };
-            (this.compositeMaterial.Uniforms["bloomFactors"] as GLUniform)["value"] = bloomFactors;
-            this.BloomTintColors = new List<Vector3>{new Vector3(1, 1, 1), new Vector3(1, 1, 1), new Vector3(1, 1, 1),
-                                     new Vector3(1, 1, 1), new Vector3(1, 1, 1) };
-            (this.compositeMaterial.Uniforms["bloomTintColors"] as GLUniform)["value"] = this.BloomTintColors;
-
-
-            var copyShader = new CopyShader();
-
-            this.copyUniforms = UniformsUtils.CloneUniforms(copyShader.Uniforms);
-            (this.copyUniforms["opacity"] as GLUniform)["value"] = 1.0f;
-
-            this.materialCopy = new ShaderMaterial
-            {
-                Uniforms = this.copyUniforms,
-                VertexShader = copyShader.VertexShader,
-                FragmentShader = copyShader.FragmentShader,
-                Blending = Constants.AdditiveBlending,
-                DepthTest = false,
-                DepthWrite = false,
-                Transparent = true
-            };
-
-            this.Enabled = true;
-            this.NeedsSwap = false;
-
-            this.oldClearColor = new Color();
-            this.oldClearAlpha = 1;
-
-            this.basic = new MeshBasicMaterial();
-
-            this.fullScreenQuad = new FullScreenQuad(null);
-
+            resy = (int)Math.Round(resy / 2.0f);
         }
 
-        private ShaderMaterial GetCompositeMaterial(int nMips)
+        // luminosity high pass material
+
+
+        var highPassShader = new LuminosityHighPassShader();
+        highPassUniforms = UniformsUtils.CloneUniforms(highPassShader.Uniforms);
+
+        (highPassUniforms["luminosityThreshold"] as GLUniform)["value"] = threshold;
+        (highPassUniforms["smoothWidth"] as GLUniform)["value"] = 0.01f;
+
+        materialHighPassFilter = new ShaderMaterial
         {
-            return new ShaderMaterial
+            Uniforms = highPassUniforms,
+            VertexShader = highPassShader.VertexShader,
+            FragmentShader = highPassShader.FragmentShader
+        };
+
+        // Gaussian Blur Materials
+        var kernelSizeArray = new List<int> { 3, 5, 7, 9, 11 };
+        resx = (int)Math.Round(Resolution.X / 2);
+        resy = (int)Math.Round(Resolution.Y / 2);
+        for (var i = 0; i < nMips; i++)
+        {
+            separableBlurMaterials.Add(GetSeperableBlurMaterial(kernelSizeArray[i]));
+
+            (separableBlurMaterials[i].Uniforms["texSize"] as GLUniform)["value"] = new Vector2(resx, resy);
+
+            resx = (int)Math.Round(resx / 2.0f);
+
+            resy = (int)Math.Round(resy / 2.0f);
+        }
+
+        // Composite material
+        compositeMaterial = GetCompositeMaterial(nMips);
+        (compositeMaterial.Uniforms["blurTexture1"] as GLUniform)["value"] = RenderTargetsVertical[0].Texture;
+        (compositeMaterial.Uniforms["blurTexture2"] as GLUniform)["value"] = RenderTargetsVertical[1].Texture;
+        (compositeMaterial.Uniforms["blurTexture3"] as GLUniform)["value"] = RenderTargetsVertical[2].Texture;
+        (compositeMaterial.Uniforms["blurTexture4"] as GLUniform)["value"] = RenderTargetsVertical[3].Texture;
+        (compositeMaterial.Uniforms["blurTexture5"] as GLUniform)["value"] = RenderTargetsVertical[4].Texture;
+        (compositeMaterial.Uniforms["bloomStrength"] as GLUniform)["value"] = strength;
+        (compositeMaterial.Uniforms["bloomRadius"] as GLUniform)["value"] = 0.1f;
+        compositeMaterial.NeedsUpdate = true;
+
+        var bloomFactors = new List<float> { 1.0f, 0.8f, 0.6f, 0.4f, 0.2f };
+        (compositeMaterial.Uniforms["bloomFactors"] as GLUniform)["value"] = bloomFactors;
+        BloomTintColors = new List<Vector3>
+        {
+            new(1, 1, 1), new(1, 1, 1), new(1, 1, 1),
+            new(1, 1, 1), new(1, 1, 1)
+        };
+        (compositeMaterial.Uniforms["bloomTintColors"] as GLUniform)["value"] = BloomTintColors;
+
+
+        var copyShader = new CopyShader();
+
+        copyUniforms = UniformsUtils.CloneUniforms(copyShader.Uniforms);
+        (copyUniforms["opacity"] as GLUniform)["value"] = 1.0f;
+
+        materialCopy = new ShaderMaterial
+        {
+            Uniforms = copyUniforms,
+            VertexShader = copyShader.VertexShader,
+            FragmentShader = copyShader.FragmentShader,
+            Blending = Constants.AdditiveBlending,
+            DepthTest = false,
+            DepthWrite = false,
+            Transparent = true
+        };
+
+        Enabled = true;
+        NeedsSwap = false;
+
+        oldClearColor = new Color();
+        oldClearAlpha = 1;
+
+        basic = new MeshBasicMaterial();
+
+        fullScreenQuad = new FullScreenQuad();
+    }
+
+    public virtual void Dispose()
+    {
+        Dispose(disposed);
+    }
+
+    public event EventHandler<EventArgs> Disposed;
+
+    private ShaderMaterial GetCompositeMaterial(int nMips)
+    {
+        return new ShaderMaterial
+        {
+            Defines = new Hashtable
             {
+                { "NUM_MIPS", nMips.ToString() }
+            },
 
-                Defines = new Hashtable {
-                    { "NUM_MIPS", nMips.ToString() }
-                },
-
-                Uniforms = new GLUniforms
-                {
-                    { "blurTexture1", new GLUniform { { "value", null } } },
-                    { "blurTexture2", new GLUniform { { "value", null } } },
-                    { "blurTexture3", new GLUniform { { "value", null } } },
-                    { "blurTexture4", new GLUniform { { "value", null } } },
-                    { "blurTexture5", new GLUniform { { "value", null } } },
-                    { "dirtTexture", new GLUniform { { "value", null } } },
-                    { "bloomStrength", new GLUniform { { "value", 1.0f } } },
-                    { "bloomFactors", new GLUniform { { "value", null } } },
-                    { "bloomTintColors", new GLUniform { { "value", null } } },
-                    { "bloomRadius", new GLUniform { { "value", 0.0f } } }
-                },
+            Uniforms = new GLUniforms
+            {
+                { "blurTexture1", new GLUniform { { "value", null } } },
+                { "blurTexture2", new GLUniform { { "value", null } } },
+                { "blurTexture3", new GLUniform { { "value", null } } },
+                { "blurTexture4", new GLUniform { { "value", null } } },
+                { "blurTexture5", new GLUniform { { "value", null } } },
+                { "dirtTexture", new GLUniform { { "value", null } } },
+                { "bloomStrength", new GLUniform { { "value", 1.0f } } },
+                { "bloomFactors", new GLUniform { { "value", null } } },
+                { "bloomTintColors", new GLUniform { { "value", null } } },
+                { "bloomRadius", new GLUniform { { "value", 0.0f } } }
+            },
 
 
-                VertexShader = @"
+            VertexShader = @"
 			varying vec2 vUv;
 			void main()
 			{
@@ -191,7 +195,7 @@ namespace THREE
 				}
 			",
 
-                FragmentShader = @"
+            FragmentShader = @"
 			varying vec2 vUv;
 			uniform sampler2D blurTexture1;
 			uniform sampler2D blurTexture2;
@@ -216,27 +220,27 @@ namespace THREE
 													 lerpBloomFactor(bloomFactors[3]) * vec4(bloomTintColors[3], 1.0) * texture2D(blurTexture4, vUv) + 
 													 lerpBloomFactor(bloomFactors[4]) * vec4(bloomTintColors[4], 1.0) * texture2D(blurTexture5, vUv) );
 				}"
-            };
-        }
+        };
+    }
 
-        private ShaderMaterial GetSeperableBlurMaterial(int kernelRadius)
+    private ShaderMaterial GetSeperableBlurMaterial(int kernelRadius)
+    {
+        return new ShaderMaterial
         {
-            return new ShaderMaterial
+            Defines = new Hashtable
             {
-
-                Defines = new Hashtable {
                 { "KERNEL_RADIUS", kernelRadius.ToString() },
-                { "SIGMA" , kernelRadius.ToString() }
+                { "SIGMA", kernelRadius.ToString() }
             },
 
-                Uniforms = new GLUniforms
+            Uniforms = new GLUniforms
             {
-                { "colorTexture", new GLUniform { {"value", null } } },
-                { "texSize", new GLUniform{ { "value", new Vector2(0.5f, 0.5f) } } },
-                { "direction", new GLUniform{{"value", new Vector2(0.5f, 0.5f) } } }
+                { "colorTexture", new GLUniform { { "value", null } } },
+                { "texSize", new GLUniform { { "value", new Vector2(0.5f, 0.5f) } } },
+                { "direction", new GLUniform { { "value", new Vector2(0.5f, 0.5f) } } }
             },
 
-                VertexShader = @"
+            VertexShader = @"
 			
 			varying vec2 vUv;
 			void main()
@@ -246,7 +250,7 @@ namespace THREE
 				}
 			",
 
-                FragmentShader = @"
+            FragmentShader = @"
 			#include <common>
 			varying vec2 vUv;
 			uniform sampler2D colorTexture;
@@ -276,164 +280,138 @@ namespace THREE
 					gl_FragColor = vec4(diffuseSum / weightSum, 1.0);
 			}
 			"
-            };
-        }
+        };
+    }
 
-        public override void Render(GLRenderer renderer, GLRenderTarget writeBuffer, GLRenderTarget readBuffer, float? deltaTime = null, bool? maskActive = null)
+    public override void Render(GLRenderer renderer, GLRenderTarget writeBuffer, GLRenderTarget readBuffer,
+        float? deltaTime = null, bool? maskActive = null)
+    {
+        oldClearColor = renderer.GetClearColor();
+        oldClearAlpha = renderer.GetClearAlpha();
+        var oldAutoClear = renderer.AutoClear;
+        renderer.AutoClear = false;
+
+        renderer.SetClearColor(ClearColor, 0);
+
+        if (maskActive != null && maskActive.Value) renderer.State.buffers.stencil.SetTest(false);
+
+        // Render input to screen
+
+        if (RenderToScreen)
         {
-            this.oldClearColor = renderer.GetClearColor();
-            this.oldClearAlpha = renderer.GetClearAlpha();
-            var oldAutoClear = renderer.AutoClear;
-            renderer.AutoClear = false;
+            fullScreenQuad.material = basic;
+            basic.Map = readBuffer.Texture;
 
-            renderer.SetClearColor(this.ClearColor, 0);
-
-            if (maskActive != null && maskActive.Value) renderer.state.buffers.stencil.SetTest(false);
-
-            // Render input to screen
-
-            if (this.RenderToScreen)
-            {
-
-                this.fullScreenQuad.material = this.basic;
-                this.basic.Map = readBuffer.Texture;
-
-                renderer.SetRenderTarget(null);
-                renderer.Clear();
-                this.fullScreenQuad.Render(renderer);
-
-            }
-
-            // 1. Extract Bright Areas
-
-            (this.highPassUniforms["tDiffuse"] as GLUniform)["value"] = readBuffer.Texture;
-            (this.highPassUniforms["luminosityThreshold"] as GLUniform)["value"] = this.Threshold;
-            this.fullScreenQuad.material = this.materialHighPassFilter;
-
-            renderer.SetRenderTarget(this.renderTargetBright);
+            renderer.SetRenderTarget(null);
             renderer.Clear();
-            this.fullScreenQuad.Render(renderer);
+            fullScreenQuad.Render(renderer);
+        }
 
-            // 2. Blur All the mips progressively
+        // 1. Extract Bright Areas
 
-            var inputRenderTarget = this.renderTargetBright;
+        (highPassUniforms["tDiffuse"] as GLUniform)["value"] = readBuffer.Texture;
+        (highPassUniforms["luminosityThreshold"] as GLUniform)["value"] = Threshold;
+        fullScreenQuad.material = materialHighPassFilter;
 
-            for (var i = 0; i < this.nMips; i++)
-            {
+        renderer.SetRenderTarget(renderTargetBright);
+        renderer.Clear();
+        fullScreenQuad.Render(renderer);
 
-                this.fullScreenQuad.material = this.separableBlurMaterials[i];
+        // 2. Blur All the mips progressively
 
-                (this.separableBlurMaterials[i].Uniforms["colorTexture"] as GLUniform)["value"] = inputRenderTarget.Texture;
-                (this.separableBlurMaterials[i].Uniforms["direction"] as GLUniform)["value"] = UnrealBloomPass.BlurDirectionX;
-                renderer.SetRenderTarget(this.RenderTargetsHorizontal[i]);
-                renderer.Clear();
-                this.fullScreenQuad.Render(renderer);
+        var inputRenderTarget = renderTargetBright;
 
-                (this.separableBlurMaterials[i].Uniforms["colorTexture"] as GLUniform)["value"] = this.RenderTargetsHorizontal[i].Texture;
-                (this.separableBlurMaterials[i].Uniforms["direction"] as GLUniform)["value"] = UnrealBloomPass.BlurDirectionY;
-                renderer.SetRenderTarget(this.RenderTargetsVertical[i]);
-                renderer.Clear();
-                this.fullScreenQuad.Render(renderer);
+        for (var i = 0; i < nMips; i++)
+        {
+            fullScreenQuad.material = separableBlurMaterials[i];
 
-                inputRenderTarget = this.RenderTargetsVertical[i];
-
-            }
-
-            // Composite All the mips
-
-            this.fullScreenQuad.material = this.compositeMaterial;
-            (this.compositeMaterial.Uniforms["bloomStrength"] as GLUniform)["value"] = this.Strength;
-            (this.compositeMaterial.Uniforms["bloomRadius"] as GLUniform)["value"] = this.Radius;
-            (this.compositeMaterial.Uniforms["bloomTintColors"] as GLUniform)["value"] = this.BloomTintColors;
-
-            renderer.SetRenderTarget(this.RenderTargetsHorizontal[0]);
+            (separableBlurMaterials[i].Uniforms["colorTexture"] as GLUniform)["value"] = inputRenderTarget.Texture;
+            (separableBlurMaterials[i].Uniforms["direction"] as GLUniform)["value"] = BlurDirectionX;
+            renderer.SetRenderTarget(RenderTargetsHorizontal[i]);
             renderer.Clear();
-            this.fullScreenQuad.Render(renderer);
+            fullScreenQuad.Render(renderer);
 
-            // Blend it additively over the input texture
+            (separableBlurMaterials[i].Uniforms["colorTexture"] as GLUniform)["value"] =
+                RenderTargetsHorizontal[i].Texture;
+            (separableBlurMaterials[i].Uniforms["direction"] as GLUniform)["value"] = BlurDirectionY;
+            renderer.SetRenderTarget(RenderTargetsVertical[i]);
+            renderer.Clear();
+            fullScreenQuad.Render(renderer);
 
-            this.fullScreenQuad.material = this.materialCopy;
-
-            (this.copyUniforms["tDiffuse"] as GLUniform)["value"] = this.RenderTargetsHorizontal[0].Texture;
-            if (maskActive != null && maskActive.Value) renderer.state.buffers.stencil.SetTest(true);
-
-            if (this.RenderToScreen)
-            {
-
-                renderer.SetRenderTarget(null);
-                this.fullScreenQuad.Render(renderer);
-
-            }
-            else
-            {
-
-                renderer.SetRenderTarget(readBuffer);
-                this.fullScreenQuad.Render(renderer);
-
-            }
-
-            // Restore renderer settings
-
-            renderer.SetClearColor(this.oldClearColor, this.oldClearAlpha);
-            renderer.AutoClear = oldAutoClear;
+            inputRenderTarget = RenderTargetsVertical[i];
         }
 
-        public override void SetSize(float width, float height)
+        // Composite All the mips
+
+        fullScreenQuad.material = compositeMaterial;
+        (compositeMaterial.Uniforms["bloomStrength"] as GLUniform)["value"] = Strength;
+        (compositeMaterial.Uniforms["bloomRadius"] as GLUniform)["value"] = Radius;
+        (compositeMaterial.Uniforms["bloomTintColors"] as GLUniform)["value"] = BloomTintColors;
+
+        renderer.SetRenderTarget(RenderTargetsHorizontal[0]);
+        renderer.Clear();
+        fullScreenQuad.Render(renderer);
+
+        // Blend it additively over the input texture
+
+        fullScreenQuad.material = materialCopy;
+
+        (copyUniforms["tDiffuse"] as GLUniform)["value"] = RenderTargetsHorizontal[0].Texture;
+        if (maskActive != null && maskActive.Value) renderer.State.buffers.stencil.SetTest(true);
+
+        if (RenderToScreen)
         {
-            var resx = (int)System.Math.Round(width / 2);
-            var resy = (int)System.Math.Round(height / 2);
-
-            this.renderTargetBright.SetSize(resx, resy);
-
-            for (var i = 0; i < this.nMips; i++)
-            {
-
-                this.RenderTargetsHorizontal[i].SetSize(resx, resy);
-                this.RenderTargetsVertical[i].SetSize(resx, resy);
-
-                (this.separableBlurMaterials[i].Uniforms["texSize"] as GLUniform)["value"] = new Vector2(resx, resy);
-
-                resx = (int)System.Math.Round(resx / 2.0f);
-                resy = (int)System.Math.Round(resy / 2.0f);
-
-            }
+            renderer.SetRenderTarget(null);
+            fullScreenQuad.Render(renderer);
         }
-
-        public virtual void Dispose()
+        else
         {
-            Dispose(disposed);
+            renderer.SetRenderTarget(readBuffer);
+            fullScreenQuad.Render(renderer);
         }
-        protected virtual void RaiseDisposed()
+
+        // Restore renderer settings
+
+        renderer.SetClearColor(oldClearColor, oldClearAlpha);
+        renderer.AutoClear = oldAutoClear;
+    }
+
+    public override void SetSize(float width, float height)
+    {
+        var resx = (int)Math.Round(width / 2);
+        var resy = (int)Math.Round(height / 2);
+
+        renderTargetBright.SetSize(resx, resy);
+
+        for (var i = 0; i < nMips; i++)
         {
-            var handler = this.Disposed;
-            if (handler != null)
-                handler(this, new EventArgs());
+            RenderTargetsHorizontal[i].SetSize(resx, resy);
+            RenderTargetsVertical[i].SetSize(resx, resy);
+
+            (separableBlurMaterials[i].Uniforms["texSize"] as GLUniform)["value"] = new Vector2(resx, resy);
+
+            resx = (int)Math.Round(resx / 2.0f);
+            resy = (int)Math.Round(resy / 2.0f);
         }
-        private bool disposed;
-        protected virtual void Dispose(bool disposing)
-        {
-            if (this.disposed) return;
-            try
-            {
-                for (int i = 0; i < RenderTargetsHorizontal.Count; i++)
-                {
-                    RenderTargetsHorizontal[i].Dispose();
-                }
-                for (int i = 0; i < RenderTargetsVertical.Count; i++)
-                {
-                    RenderTargetsVertical[i].Dispose();
-                }
+    }
 
-                this.renderTargetBright.Dispose();
+    protected virtual void RaiseDisposed()
+    {
+        var handler = Disposed;
+        if (handler != null)
+            handler(this, new EventArgs());
+    }
 
-                this.RaiseDisposed();
-                this.disposed = true;
-            }
-            finally
-            {
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposed) return;
+        for (var i = 0; i < RenderTargetsHorizontal.Count; i++) RenderTargetsHorizontal[i].Dispose();
+        for (var i = 0; i < RenderTargetsVertical.Count; i++) RenderTargetsVertical[i].Dispose();
 
-            }
-            this.disposed = true;
-        }
+        renderTargetBright.Dispose();
+
+        RaiseDisposed();
+        disposed = true;
+        disposed = true;
     }
 }

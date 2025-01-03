@@ -1,31 +1,36 @@
 ﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class HemisphereLight : Light
 {
-    [Serializable]
-    public class HemisphereLight : Light
+    public HemisphereLight(Color skyColor, Color groundColor, float? itensity = null)
+        : base(skyColor, itensity)
     {
-        public HemisphereLight(Color skyColor, Color groundColor, float? itensity = null)
-            : base(skyColor, itensity)
-        {
-            this.CastShadow = false;
+        CastShadow = false;
 
-            this.Position.Copy(Object3D.DefaultUp);
+        Position.Copy(DefaultUp);
 
-            this.UpdateMatrix();
+        UpdateMatrix();
 
-            this.GroundColor = groundColor;
+        GroundColor = groundColor;
 
-            this.type = "HemisphereLight";
-        }
-        public HemisphereLight(int color, int gcolor, float? intensity) : this(Color.Hex(color), Color.Hex(gcolor), intensity) { }
+        type = "HemisphereLight";
+    }
 
-        public HemisphereLight(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public HemisphereLight(int color, int gcolor, float? intensity) : this(Color.Hex(color), Color.Hex(gcolor),
+        intensity)
+    {
+    }
 
-        protected HemisphereLight(HemisphereLight other) : base(other)
-        {
-            this.type = "HemisphereLight";
-            this.GroundColor = other.GroundColor;
-        }
+    public HemisphereLight(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
+    }
+
+    protected HemisphereLight(HemisphereLight other) : base(other)
+    {
+        type = "HemisphereLight";
+        GroundColor = other.GroundColor;
     }
 }

@@ -1,18 +1,18 @@
 ﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class VignetteShader : ShaderMaterial
 {
-	[Serializable]
-    public class VignetteShader : ShaderMaterial
+    public VignetteShader()
     {
-        public VignetteShader() : base()
-        {
-            Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
-            Uniforms.Add("offset", new GLUniform { { "value", 1.0f } });
-            Uniforms.Add("darkness", new GLUniform { { "value", 1.0f } });
+        Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
+        Uniforms.Add("offset", new GLUniform { { "value", 1.0f } });
+        Uniforms.Add("darkness", new GLUniform { { "value", 1.0f } });
 
 
-            VertexShader = @"
+        VertexShader = @"
                 varying vec2 vUv; 
 
 
@@ -27,7 +27,7 @@ namespace THREE
             "
             ;
 
-            FragmentShader = @"
+        FragmentShader = @"
 				uniform float offset; 
 				uniform float darkness;
 
@@ -57,8 +57,9 @@ namespace THREE
 
 
 			";
-        }
+    }
 
-        public VignetteShader(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public VignetteShader(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

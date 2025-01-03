@@ -1,34 +1,33 @@
 ﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class SSAOShader : ShaderMaterial
 {
-	[Serializable]
-    public class SSAOShader : ShaderMaterial
+    public SSAOShader()
     {
-        public SSAOShader()
+        Defines.Add("PERSPECTIVE_CAMERA", "1");
+        Defines.Add("KERNEL_SIZE", "32");
+
+        Uniforms = new GLUniforms
         {
-            Defines.Add("PERSPECTIVE_CAMERA", "1");
-            Defines.Add("KERNEL_SIZE", "32");
+            { "tDiffuse", new GLUniform { { "value", null } } },
+            { "tNormal", new GLUniform { { "value", null } } },
+            { "tDepth", new GLUniform { { "value", null } } },
+            { "tNoise", new GLUniform { { "value", null } } },
+            { "kernel", new GLUniform { { "value", null } } },
+            { "cameraNear", new GLUniform { { "value", null } } },
+            { "cameraFar", new GLUniform { { "value", null } } },
+            { "resolution", new GLUniform { { "value", new Vector2() } } },
+            { "cameraProjectionMatrix", new GLUniform { { "value", new Matrix4() } } },
+            { "cameraInverseProjectionMatrix", new GLUniform { { "value", new Matrix4() } } },
+            { "kernelRadius", new GLUniform { { "value", 8.0f } } },
+            { "minDistance", new GLUniform { { "value", 0.005f } } },
+            { "maxDistance", new GLUniform { { "value", 0.05f } } }
+        };
 
-            Uniforms = new GLUniforms{
-
-                { "tDiffuse", new GLUniform{{ "value", null } } },
-                { "tNormal", new GLUniform{{ "value", null } } },
-                { "tDepth", new GLUniform{{ "value", null } } },
-                { "tNoise", new GLUniform{{ "value", null } } },
-                { "kernel", new GLUniform{{ "value", null } } },
-                { "cameraNear", new GLUniform{{ "value", null } } },
-                { "cameraFar", new GLUniform{{ "value", null } } },
-                { "resolution", new GLUniform{{ "value", new Vector2() } } },
-                { "cameraProjectionMatrix", new GLUniform{{ "value", new Matrix4() } } },
-                { "cameraInverseProjectionMatrix", new GLUniform{{ "value", new Matrix4() } } },
-                { "kernelRadius", new GLUniform{{ "value", 8.0f } } },
-                { "minDistance", new GLUniform{{ "value", 0.005f } } },
-                { "maxDistance", new GLUniform{{ "value", 0.05f } } },
-
-            };
-
-            VertexShader = @"
+        VertexShader = @"
 			varying vec2 vUv; 
 
              void main() {
@@ -40,7 +39,7 @@ namespace THREE
 
                 ";
 
-            FragmentShader = @"
+        FragmentShader = @"
 			uniform sampler2D tDiffuse; 
 			uniform sampler2D tNormal;
 			uniform sampler2D tDepth;
@@ -165,28 +164,28 @@ namespace THREE
 			}
 
 		";
-
-        }
-
-        public SSAOShader(SerializationInfo info, StreamingContext context) : base(info, context) { }
-
     }
 
-	[Serializable]
-    public class SSAODepthShader : ShaderMaterial
+    public SSAOShader(SerializationInfo info, StreamingContext context) : base(info, context)
     {
-        public SSAODepthShader()
+    }
+}
+
+[Serializable]
+public class SSAODepthShader : ShaderMaterial
+{
+    public SSAODepthShader()
+    {
+        Defines.Add("PERSPECTIVE_CAMERA", "1");
+
+        Uniforms = new GLUniforms
         {
-            Defines.Add("PERSPECTIVE_CAMERA", "1");
+            { "tDepth", new GLUniform { { "value", null } } },
+            { "cameraNear", new GLUniform { { "value", null } } },
+            { "cameraFar", new GLUniform { { "value", null } } }
+        };
 
-            Uniforms = new GLUniforms{
-
-                { "tDepth", new GLUniform{{ "value", null } } },
-                { "cameraNear", new GLUniform{{ "value", null } } },
-                { "cameraFar", new GLUniform{{ "value", null } } }
-                };
-
-            VertexShader = @"
+        VertexShader = @"
 			varying vec2 vUv; 
 
              void main() {
@@ -198,7 +197,7 @@ namespace THREE
 
                 ";
 
-            FragmentShader = @"
+        FragmentShader = @"
 		uniform sampler2D tDepth; 
 
 		uniform float cameraNear;
@@ -232,23 +231,25 @@ namespace THREE
 		}
 
 		";
-        }
-
-        public SSAODepthShader(SerializationInfo info, StreamingContext context) : base(info, context) { }
     }
 
-	[Serializable]
-    public class SSAOBlurShader : ShaderMaterial
+    public SSAODepthShader(SerializationInfo info, StreamingContext context) : base(info, context)
     {
-        public SSAOBlurShader()
+    }
+}
+
+[Serializable]
+public class SSAOBlurShader : ShaderMaterial
+{
+    public SSAOBlurShader()
+    {
+        Uniforms = new GLUniforms
         {
+            { "tDiffuse", new GLUniform { { "value", null } } },
+            { "resolution", new GLUniform { { "value", new Vector2() } } }
+        };
 
-            Uniforms = new GLUniforms{
-                { "tDiffuse", new GLUniform{{ "value", null } } },
-                { "resolution", new GLUniform{{ "value", new Vector2() } } }
-                };
-
-            VertexShader = @"
+        VertexShader = @"
 				varying vec2 vUv; 
 
 				 void main() {
@@ -260,7 +261,7 @@ namespace THREE
 
                 ";
 
-            FragmentShader = @"
+        FragmentShader = @"
 		uniform sampler2D tDiffuse; 
 
 		uniform vec2 resolution;
@@ -287,10 +288,9 @@ namespace THREE
 
 		}
 ";
-
-        }
-
-        public SSAOBlurShader(SerializationInfo info, StreamingContext context) : base(info, context) { }
     }
 
+    public SSAOBlurShader(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
+    }
 }

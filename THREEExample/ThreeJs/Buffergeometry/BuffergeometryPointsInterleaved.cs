@@ -1,76 +1,72 @@
 ﻿using THREE;
 using Color = THREE.Color;
-namespace THREEExample.Three.Buffergeometry
+
+namespace THREEExample.Three.Buffergeometry;
+
+[Example("buffergeometry_point_interleaved", ExampleCategory.ThreeJs, "Buffergeometry")]
+public class BuffergeometryPointsInterleaved : BuffergeometryPointExample
 {
-    [Example("buffergeometry_point_interleaved", ExampleCategory.ThreeJs, "Buffergeometry")]
-    public class BuffergeometryPointsInterleaved : BuffergeometryPointExample
+    public override void CreateObject()
     {
-        public BuffergeometryPointsInterleaved() : base() { }
+        var particles = 500000;
 
-		public override void CreateObject()
-		{
-			var particles = 500000;
+        var geometry = new BufferGeometry();
 
-			var geometry = new BufferGeometry();
+        // create a generic buffer of binary data (a single particle has 16 bytes of data)
 
-			// create a generic buffer of binary data (a single particle has 16 bytes of data)
+        var arrayBuffer = new float[particles * 16];
 
-			var arrayBuffer = new float[particles * 16];
+        // the following typed arrays share the same buffer
 
-			// the following typed arrays share the same buffer
+        var interleavedFloat32Buffer = new float[arrayBuffer.Length];
+        var interleavedUint8Buffer = new float[arrayBuffer.Length * 4];
 
-			var interleavedFloat32Buffer = new float[arrayBuffer.Length];
-			var interleavedUint8Buffer = new float[arrayBuffer.Length*4];
+        //
 
-			//
+        var color = new Color();
 
-			var color = new Color();
+        var n = 1000;
+        var n2 = n / 2; // particles spread in the cube
 
-			var n = 1000;
-			var n2 = n / 2; // particles spread in the cube
+        for (var i = 0; i < interleavedFloat32Buffer.Length; i += 4)
+        {
+            // position (first 12 bytes)
 
-			for (var i = 0; i < interleavedFloat32Buffer.Length; i += 4)
-			{
+            var x = MathUtils.NextFloat() * n - n2;
+            var y = MathUtils.NextFloat() * n - n2;
+            var z = MathUtils.NextFloat() * n - n2;
 
-				// position (first 12 bytes)
+            interleavedFloat32Buffer[i + 0] = x;
+            interleavedFloat32Buffer[i + 1] = y;
+            interleavedFloat32Buffer[i + 2] = z;
 
-				var x = MathUtils.NextFloat() * n - n2;
-				var y = MathUtils.NextFloat() * n - n2;
-				var z = MathUtils.NextFloat() * n - n2;
+            // color (last 4 bytes)
 
-				interleavedFloat32Buffer[i + 0] = x;
-				interleavedFloat32Buffer[i + 1] = y;
-				interleavedFloat32Buffer[i + 2] = z;
+            var vx = x / n + 0.5f;
+            var vy = y / n + 0.5f;
+            var vz = z / n + 0.5f;
 
-				// color (last 4 bytes)
+            color.SetRGB(vx, vy, vz);
 
-				var vx = (x / n) + 0.5f;
-				var vy = (y / n) + 0.5f;
-				var vz = (z / n) + 0.5f;
+            var j = (i + 3) * 4;
+            if (j >= interleavedUint8Buffer.Length) continue;
+            interleavedUint8Buffer[j + 0] = color.R;
+            interleavedUint8Buffer[j + 1] = color.G;
+            interleavedUint8Buffer[j + 2] = color.B;
+            interleavedUint8Buffer[j + 3] = 0; // not needed
+        }
 
-				color.SetRGB(vx, vy, vz);
+        var interleavedBuffer32 = new InterleavedBuffer<float>(interleavedFloat32Buffer, 4);
+        var interleavedBuffer8 = new InterleavedBuffer<float>(interleavedUint8Buffer, 16);
 
-				var j = (i + 3) * 4;
-				if (j >= interleavedUint8Buffer.Length) continue;
-				interleavedUint8Buffer[j + 0] = (color.R);
-				interleavedUint8Buffer[j + 1] = (color.G);
-				interleavedUint8Buffer[j + 2] = (color.B);
-				interleavedUint8Buffer[j + 3] = 0; // not needed
+        geometry.SetAttribute("position", new InterleavedBufferAttribute<float>(interleavedBuffer32, 3, 0));
+        geometry.SetAttribute("color", new InterleavedBufferAttribute<float>(interleavedBuffer8, 3, 12));
 
-			}
+        //
 
-			var interleavedBuffer32 = new InterleavedBuffer<float>(interleavedFloat32Buffer, 4);
-			var interleavedBuffer8 = new InterleavedBuffer<float>(interleavedUint8Buffer, 16);
+        var material = new PointsMaterial { Size = 15, VertexColors = true };
 
-			geometry.SetAttribute("position", new InterleavedBufferAttribute<float>(interleavedBuffer32, 3, 0, false));
-			geometry.SetAttribute("color", new InterleavedBufferAttribute<float>(interleavedBuffer8, 3, 12, false));
-
-			//
-
-			var material = new PointsMaterial() { Size = 15, VertexColors = true };
-
-			points = new Points(geometry, material);
-			scene.Add(points);
-		}
+        points = new Points(geometry, material);
+        scene.Add(points);
     }
 }

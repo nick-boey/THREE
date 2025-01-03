@@ -1,83 +1,82 @@
 ﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class SpotLight : Light
 {
-    [Serializable]
-    public class SpotLight : Light
+    public SpotLight()
     {
-        public new float Power
-        {
-            get
-            {
-                return (float)(this.Intensity * System.Math.PI);
-            }
-            set
-            {
-                this.Intensity = (float)(value / System.Math.PI);
-            }
-        }
+        Position.Copy(DefaultUp);
+        UpdateMatrix();
 
-        public SpotLight() : base() 
-        {
-            this.Position.Copy(Object3D.DefaultUp);
-            this.UpdateMatrix();
+        Target = new Object3D();
 
-            this.Target = new Object3D();
+        Distance = 0;
 
-            this.Distance =  0;
+        Angle = (float)(Math.PI / 3);
 
-            this.Angle = (float)(System.Math.PI / 3);
+        Penumbra = 0;
 
-            this.Penumbra =  0;
+        Decay = 1;
 
-            this.Decay = 1;
+        Shadow = new SpotLightShadow();
 
-            this.Shadow = new SpotLightShadow();
+        type = "SpotLight";
+    }
 
-            this.type = "SpotLight";
-        }
-        public SpotLight(Color color, float? intensity = null, float? distance = null, float? angle = null, float? penumbra = null, float? decay = null)
-            : base(color, intensity)
-        {
-            this.Position.Copy(Object3D.DefaultUp);
-            this.UpdateMatrix();
+    public SpotLight(Color color, float? intensity = null, float? distance = null, float? angle = null,
+        float? penumbra = null, float? decay = null)
+        : base(color, intensity)
+    {
+        Position.Copy(DefaultUp);
+        UpdateMatrix();
 
-            this.Target = new Object3D();
+        Target = new Object3D();
 
-            this.Distance = distance != null ? (float)distance : 0;
+        Distance = distance != null ? (float)distance : 0;
 
-            this.Angle = angle != null ? (float)angle : (float)(System.Math.PI / 3);
+        Angle = angle != null ? (float)angle : (float)(Math.PI / 3);
 
-            this.Penumbra = penumbra != null ? (float)penumbra : 0;
+        Penumbra = penumbra != null ? (float)penumbra : 0;
 
-            this.Decay = decay != null ? (float)decay : 1;
+        Decay = decay != null ? (float)decay : 1;
 
-            this.Shadow = new SpotLightShadow();
+        Shadow = new SpotLightShadow();
 
-            this.type = "SpotLight";
-        }
-        public SpotLight(int color, float? intensity = null, float? distance = null, float? angle = null, float? penumbra = null, float? decay = null) :
-          this(Color.Hex(color), intensity, distance, angle, penumbra, decay)
-        { }
+        type = "SpotLight";
+    }
 
-        public SpotLight(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public SpotLight(int color, float? intensity = null, float? distance = null, float? angle = null,
+        float? penumbra = null, float? decay = null) :
+        this(Color.Hex(color), intensity, distance, angle, penumbra, decay)
+    {
+    }
 
-        protected SpotLight(SpotLight other) : base(other)
-        {
-            this.Distance = other.Distance;
+    public SpotLight(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
+    }
 
-            this.Angle = other.Angle;
+    protected SpotLight(SpotLight other) : base(other)
+    {
+        Distance = other.Distance;
 
-            this.Penumbra = other.Penumbra;
+        Angle = other.Angle;
 
-            this.Decay = other.Decay;
+        Penumbra = other.Penumbra;
 
-            this.Target = other.Target;
+        Decay = other.Decay;
 
-            this.Shadow = (SpotLightShadow)other.Shadow.Clone();
+        Target = other.Target;
 
-            this.type = "SpotLight";
-        }
+        Shadow = (SpotLightShadow)other.Shadow.Clone();
 
+        type = "SpotLight";
+    }
+
+    public new float Power
+    {
+        get => (float)(Intensity * Math.PI);
+        set => Intensity = (float)(value / Math.PI);
     }
 }

@@ -1,46 +1,45 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public abstract class BasicObject : Hashtable, IDisposable
 {
-    [Serializable]
-    public abstract class BasicObject : Hashtable, IDisposable
+    private bool disposed;
+
+    public BasicObject()
     {
-        public event EventHandler<EventArgs> Disposed;
-        public BasicObject()
-        {
+    }
 
-        }
-        public BasicObject(SerializationInfo info, StreamingContext context) : base(info, context) { }
-        ~BasicObject()
-        {
-            this.Dispose(false);
-        }
-        public virtual void Dispose()
-        {
-            Dispose(disposed);
-        }
-        protected virtual void RaiseDisposed()
-        {
-            var handler = this.Disposed;
-            if (handler != null)
-                handler(this, new EventArgs());
-        }
-        private bool disposed;
-        protected virtual void Dispose(bool disposing)
-        {
-            if (this.disposed) return;
-            try
-            {
-                this.RaiseDisposed();
-                this.disposed = true;
-            }
-            finally
-            {
+    public BasicObject(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
+    }
 
-            }
-            this.disposed = true;
-        }
+    public virtual void Dispose()
+    {
+        Dispose(disposed);
+    }
+
+    public event EventHandler<EventArgs> Disposed;
+
+    ~BasicObject()
+    {
+        Dispose(false);
+    }
+
+    protected virtual void RaiseDisposed()
+    {
+        var handler = Disposed;
+        if (handler != null)
+            handler(this, new EventArgs());
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposed) return;
+        RaiseDisposed();
+        disposed = true;
+        disposed = true;
     }
 }

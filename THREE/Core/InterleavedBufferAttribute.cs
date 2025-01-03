@@ -1,147 +1,117 @@
-﻿
-using System.Runtime.Serialization;
+﻿namespace THREE;
 
-namespace THREE
+[Serializable]
+public class InterleavedBufferAttribute<T> : BufferAttribute<T>
 {
-    [Serializable]
-    public class InterleavedBufferAttribute<T> : BufferAttribute<T>
+    public InterleavedBufferAttribute()
     {
-        public int Offset { get; set; } = 0;
-        
+    }
 
-        public int Stride { get; set; }
-       
-        public InterleavedBuffer<T> Data { get; set; }        
 
-        public new T[] Array
+    public InterleavedBufferAttribute(InterleavedBuffer<T> interleavedBuffer, int itemSize, int offset,
+        bool normalized = false) : this()
+    {
+        Data = interleavedBuffer;
+        ItemSize = itemSize;
+        Offset = offset;
+        Normalized = normalized;
+    }
+
+    public int Offset { get; set; }
+
+
+    public int Stride { get; set; }
+
+    public InterleavedBuffer<T> Data { get; set; }
+
+    public new T[] Array => Data.Array;
+
+    public new int count => Data.count;
+
+    public new InterleavedBufferAttribute<T> SetY(int index, T y)
+    {
+        Data.Array[index * Data.Stride + Offset + 1] = y;
+        return this;
+    }
+
+    public new InterleavedBufferAttribute<T> SetZ(int index, T z)
+    {
+        Data.Array[index * Data.Stride + Offset + 2] = z;
+
+        return this;
+    }
+
+    public new InterleavedBufferAttribute<T> SetW(int index, T w)
+    {
+        Data.Array[index * Data.Stride + Offset + 3] = w;
+
+        return this;
+    }
+
+    public new T GetX(int index)
+    {
+        return Data.Array[index * Data.Stride + Offset];
+    }
+
+    public new T GetY(int index)
+    {
+        return Data.Array[index * Data.Stride + Offset + 1];
+    }
+
+    public new T GetZ(int index)
+    {
+        return Data.Array[index * Data.Stride + Offset + 2];
+    }
+
+    public new T GetW(int index)
+    {
+        return Data.Array[index * Data.Stride + Offset + 3];
+    }
+
+    public new InterleavedBufferAttribute<T> SetXY(int index, T x, T y)
+    {
+        index = index * Data.Stride + Offset;
+        Data.Array[index + 0] = x;
+        Data.Array[index + 1] = y;
+
+        return this;
+    }
+
+    public new InterleavedBufferAttribute<T> SetXYZ(int index, T x, T y, T z)
+    {
+        index = index * Data.Stride + Offset;
+        Data.Array[index + 0] = x;
+        Data.Array[index + 1] = y;
+        Data.Array[index + 2] = z;
+
+        return this;
+    }
+
+    public new InterleavedBufferAttribute<T> SetXYZW(int index, T x, T y, T z, T w)
+    {
+        index = index * Data.Stride + Offset;
+        Data.Array[index + 0] = x;
+        Data.Array[index + 1] = y;
+        Data.Array[index + 2] = z;
+        Data.Array[index + 3] = w;
+
+        return this;
+    }
+
+    public InterleavedBufferAttribute<T> ApplyMatrix4(Matrix4 m)
+    {
+        var _vector = new Vector3();
+        for (int i = 0, l = Data.count; i < l; i++)
         {
-            get
-            {
-                return this.Data.Array;
-            }
+            _vector.X = (float)(object)GetX(i);
+            _vector.Y = (float)(object)GetY(i);
+            _vector.Z = (float)(object)GetZ(i);
 
+            _vector.ApplyMatrix4(m);
+
+            SetXYZ(i, (T)(object)_vector.X, (T)(object)_vector.Y, (T)(object)_vector.Z);
         }
 
-        public new int count
-        {
-            get
-            {
-                return Data.count;
-            }
-        }
-
-        public InterleavedBufferAttribute() : base()
-        {
-           
-        }
-       
-
-        public InterleavedBufferAttribute(InterleavedBuffer<T> interleavedBuffer, int itemSize, int offset, bool normalized=false) : this()
-        {
-            this.Data = interleavedBuffer;
-            this.ItemSize = itemSize;
-            this.Offset = offset;
-            this.Normalized = normalized == true;
-        }
-
-        public new InterleavedBufferAttribute<T> SetY(int index, T y)
-        {
-            this.Data.Array[index * this.Data.Stride + this.Offset + 1] = y;
-            return this;
-        }
-        public new InterleavedBufferAttribute<T> SetZ(int index, T z)
-        {
-            this.Data.Array[index * this.Data.Stride + this.Offset + 2] = z;
-
-            return this;
-
-        }
-        public new InterleavedBufferAttribute<T> SetW(int index, T w)
-        {
-
-            this.Data.Array[index * this.Data.Stride + this.Offset + 3] = w;
-
-            return this;
-
-        }
-
-        public new T GetX(int index)
-        {
-
-            return this.Data.Array[index * this.Data.Stride + this.Offset];
-
-        }
-
-        public new T GetY(int index)
-        {
-
-            return this.Data.Array[index * this.Data.Stride + this.Offset + 1];
-
-        }
-
-        public new T GetZ(int index)
-        {
-
-            return this.Data.Array[index * this.Data.Stride + this.Offset + 2];
-
-        }
-
-        public new T GetW(int index)
-        {
-
-            return this.Data.Array[index * this.Data.Stride + this.Offset + 3];
-
-        }
-
-        public new InterleavedBufferAttribute<T> SetXY(int index, T x, T y)
-        {
-            index = index * this.Data.Stride + this.Offset;
-            this.Data.Array[index + 0] = x;
-            this.Data.Array[index + 1] = y;
-
-            return this;
-
-        }
-        public new InterleavedBufferAttribute<T> SetXYZ(int index, T x, T y, T z)
-        {
-            index = index * this.Data.Stride + this.Offset;
-            this.Data.Array[index + 0] = x;
-            this.Data.Array[index + 1] = y;
-            this.Data.Array[index + 2] = z;
-
-            return this;
-
-        }
-
-        public new InterleavedBufferAttribute<T> SetXYZW(int index, T x, T y, T z, T w)
-        {
-            index = index * this.Data.Stride + this.Offset;
-            this.Data.Array[index + 0] = x;
-            this.Data.Array[index + 1] = y;
-            this.Data.Array[index + 2] = z;
-            this.Data.Array[index + 3] = w;
-
-            return this;
-
-        }
-        public InterleavedBufferAttribute<T> ApplyMatrix4(Matrix4 m)
-        {
-            Vector3 _vector = new Vector3();
-            for (int i = 0, l = this.Data.count; i < l; i++)
-            {
-
-                _vector.X = (float)(object)this.GetX(i);
-                _vector.Y = (float)(object)this.GetY(i);
-                _vector.Z = (float)(object)this.GetZ(i);
-
-                _vector.ApplyMatrix4(m);
-
-                this.SetXYZ(i, (T)(object)_vector.X, (T)(object)_vector.Y, (T)(object)_vector.Z);
-
-            }
-
-            return this;
-
-        }
+        return this;
     }
 }

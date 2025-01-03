@@ -1,17 +1,17 @@
-﻿using System.Collections.Generic;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class Group : Object3D
 {
-    [Serializable]
-    public class Group : Object3D
-    {
-        public List<string> MaterialLibraries;
+    public List<string> MaterialLibraries;
 
-        public Group()
-            : base()
-        {
-        }
-        public Group(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public Group()
+    {
+    }
+
+    public Group(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

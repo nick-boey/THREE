@@ -1,20 +1,19 @@
-﻿
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class DotScreenShader : ShaderMaterial
 {
-    [Serializable]
-    public class DotScreenShader : ShaderMaterial
+    public DotScreenShader()
     {
-        public DotScreenShader()
-        {
-            Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
-            Uniforms.Add("tSize", new GLUniform { { "value", new Vector2(256, 256) } });
-            Uniforms.Add("center", new GLUniform { { "value", new Vector2(0.5f, 0.5f) } });
-            Uniforms.Add("angle", new GLUniform { { "value", 1.57f } });
-            Uniforms.Add("scale", new GLUniform { { "value", 1.0f } });
+        Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
+        Uniforms.Add("tSize", new GLUniform { { "value", new Vector2(256, 256) } });
+        Uniforms.Add("center", new GLUniform { { "value", new Vector2(0.5f, 0.5f) } });
+        Uniforms.Add("angle", new GLUniform { { "value", 1.57f } });
+        Uniforms.Add("scale", new GLUniform { { "value", 1.0f } });
 
-            VertexShader = @"
+        VertexShader = @"
 varying vec2 vUv; 
 
 void main() {
@@ -27,9 +26,9 @@ void main() {
 
 
 "
-;
+            ;
 
-            FragmentShader = @"
+        FragmentShader = @"
 uniform vec2 center;
 uniform float angle;
 uniform float scale;
@@ -61,9 +60,10 @@ void main() {
 }
 
 "
-;
-        }
+            ;
+    }
 
-        public DotScreenShader(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public DotScreenShader(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

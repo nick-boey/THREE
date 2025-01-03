@@ -1,16 +1,16 @@
 ﻿using System.Runtime.Serialization;
 
-namespace THREE
-{
-	[Serializable]
-    public class HorizontalBlurShader : ShaderMaterial
-    {
-        public HorizontalBlurShader() : base()
-        {
-            Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
-            Uniforms.Add("h", new GLUniform { { "value", 1.0f / 512.0f } });
+namespace THREE;
 
-            VertexShader = @"
+[Serializable]
+public class HorizontalBlurShader : ShaderMaterial
+{
+    public HorizontalBlurShader()
+    {
+        Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
+        Uniforms.Add("h", new GLUniform { { "value", 1.0f / 512.0f } });
+
+        VertexShader = @"
                 varying vec2 vUv; 
 
 
@@ -25,7 +25,7 @@ namespace THREE
             "
             ;
 
-            FragmentShader = @"
+        FragmentShader = @"
 			uniform sampler2D tDiffuse; 
 			uniform float h;
 
@@ -49,8 +49,9 @@ namespace THREE
 
 			}
 		";
-        }
+    }
 
-        public HorizontalBlurShader(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public HorizontalBlurShader(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

@@ -1,33 +1,32 @@
-﻿
-using SkiaSharp;
-using System.Drawing;
+﻿using SkiaSharp;
 
+namespace THREE;
 
-namespace THREE
+[Serializable]
+public class DataTexture : Texture
 {
-    [Serializable]
-    public class DataTexture : Texture
+    public byte[] byteData;
+    public float[] floatData;
+    public int[] intData;
+
+    public DataTexture()
     {
-        public byte[] byteData;
-        public float[] floatData;
-        public int[] intData;
+    }
 
-        public DataTexture() : base() { }
-        public DataTexture(SKBitmap image, int width, int height, int format, int type, int? mapping = null, int? wrapS = null, int? wrapT = null, int? magFilter = null, int? minFilter = null, int? anisotropy = null, int? encoding = null)
-            : base(image, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy, encoding)
-        {
+    public DataTexture(SKBitmap image, int width, int height, int format, int type, int? mapping = null,
+        int? wrapS = null, int? wrapT = null, int? magFilter = null, int? minFilter = null, int? anisotropy = null,
+        int? encoding = null)
+        : base(image, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy, encoding)
+    {
+        MagFilter = magFilter != null ? (int)magFilter : Constants.NearestFilter;
+        MinFilter = minFilter != null ? (int)minFilter : Constants.NearestFilter;
 
-            this.MagFilter = magFilter != null ? (int)magFilter : Constants.NearestFilter;
-            this.MinFilter = minFilter != null ? (int)minFilter : Constants.NearestFilter;
+        GenerateMipmaps = false;
+        flipY = false;
+        UnpackAlignment = 1;
 
-            this.GenerateMipmaps = false;
-            this.flipY = false;
-            this.UnpackAlignment = 1;
-
-            this.ImageSize.Width = width;
-            this.ImageSize.Height = height;
-            this.NeedsUpdate = true;
-        }
-
+        ImageSize.Width = width;
+        ImageSize.Height = height;
+        NeedsUpdate = true;
     }
 }

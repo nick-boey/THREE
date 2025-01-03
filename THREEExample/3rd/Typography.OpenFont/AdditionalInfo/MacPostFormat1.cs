@@ -1,74 +1,27 @@
 ﻿//Apache2, 2017-present, WinterDev
 
 
+using System;
+using System.Globalization;
 using System.IO;
-namespace Typography.OpenFont
+
+namespace Typography.OpenFont;
+
+internal static class MacPostFormat1
 {
-    static class MacPostFormat1
-    {
+    //'post' Format 1
+    //The order in which glyphs are placed in a font is at the convenience of the font developer To use format 1,
+    //a font must contain exactly the 258 glyphs in the standard Macintosh ordering.
+    //For such fonts, the glyph names are taken from the system.
+    //As a result, this format does not require a special subtable.
+    //The names for these 258 glyphs are, in order:
 
+    //this is a copy from 
+    //from https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6post.html
 
-        static string[] s_stdMacGlyphNames;
-
-        public static string[] GetStdMacGlyphNames()
-        {
-            if (s_stdMacGlyphNames == null)
-            {
-                s_stdMacGlyphNames = new string[260];
-                using (StringReader strReader = new StringReader(orgGlyphNames))
-                {
-                    string[] seps = new string[] { " " };
-
-                    string line = strReader.ReadLine();
-
-                    while (line != null)
-                    {
-                        line = line.Trim();
-                        if (line != "")
-                        {
-
-                            string[] key_value = line.Split(seps, System.StringSplitOptions.RemoveEmptyEntries);
-                            if (key_value.Length != 2)
-                            {
-                                throw new System.NotSupportedException();
-                            }
-                            if (int.TryParse(key_value[0], System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out int index))
-                            {
-#if DEBUG
-                                if (index < 0 || index > 258)
-                                {
-
-                                }
-#endif
-                                s_stdMacGlyphNames[index] = key_value[1].Trim();
-                            }
-                            else
-                            {
-                                throw new System.NotSupportedException();
-                            }
-
-                        }
-                        line = strReader.ReadLine();
-                    }
-                }
-            }
-            return s_stdMacGlyphNames;
-        }
-
-
-        //'post' Format 1
-        //The order in which glyphs are placed in a font is at the convenience of the font developer To use format 1,
-        //a font must contain exactly the 258 glyphs in the standard Macintosh ordering.
-        //For such fonts, the glyph names are taken from the system.
-        //As a result, this format does not require a special subtable.
-        //The names for these 258 glyphs are, in order:
-
-        //this is a copy from 
-        //from https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6post.html
-
-        //Glyph ID    Name 
-        const string orgGlyphNames =
-@"
+    //Glyph ID    Name 
+    private const string orgGlyphNames =
+        @"
 0 	.notdef
 1 	.null
 2 	nonmarkingreturn
@@ -328,6 +281,46 @@ namespace Typography.OpenFont
 256 	ccaron
 257 	dcroat";
 
-    }
+    private static string[] s_stdMacGlyphNames;
 
+    public static string[] GetStdMacGlyphNames()
+    {
+        if (s_stdMacGlyphNames == null)
+        {
+            s_stdMacGlyphNames = new string[260];
+            using (var strReader = new StringReader(orgGlyphNames))
+            {
+                var seps = new[] { " " };
+
+                var line = strReader.ReadLine();
+
+                while (line != null)
+                {
+                    line = line.Trim();
+                    if (line != "")
+                    {
+                        var key_value = line.Split(seps, StringSplitOptions.RemoveEmptyEntries);
+                        if (key_value.Length != 2) throw new NotSupportedException();
+                        if (int.TryParse(key_value[0], NumberStyles.None, CultureInfo.InvariantCulture, out var index))
+                        {
+#if DEBUG
+                            if (index < 0 || index > 258)
+                            {
+                            }
+#endif
+                            s_stdMacGlyphNames[index] = key_value[1].Trim();
+                        }
+                        else
+                        {
+                            throw new NotSupportedException();
+                        }
+                    }
+
+                    line = strReader.ReadLine();
+                }
+            }
+        }
+
+        return s_stdMacGlyphNames;
+    }
 }

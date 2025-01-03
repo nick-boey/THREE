@@ -1,16 +1,16 @@
 ﻿using System.Runtime.Serialization;
 
-namespace THREE
-{
-	[Serializable]
-    public class FXAAShader : ShaderMaterial
-    {
-        public FXAAShader() : base()
-        {
-            Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
-            Uniforms.Add("resolution", new GLUniform { { "value", new Vector2(1 / 1024.0f, 1 / 512.0f) } });
+namespace THREE;
 
-            VertexShader = @"
+[Serializable]
+public class FXAAShader : ShaderMaterial
+{
+    public FXAAShader()
+    {
+        Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
+        Uniforms.Add("resolution", new GLUniform { { "value", new Vector2(1 / 1024.0f, 1 / 512.0f) } });
+
+        VertexShader = @"
                 varying vec2 vUv; 
 
 
@@ -23,9 +23,9 @@ namespace THREE
 
 
             "
-           ;
+            ;
 
-            FragmentShader = @"
+        FragmentShader = @"
 		precision highp float; 
 		
 		uniform sampler2D tDiffuse;
@@ -1107,8 +1107,9 @@ namespace THREE
 		}
 
 ";
-        }
+    }
 
-        public FXAAShader(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public FXAAShader(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

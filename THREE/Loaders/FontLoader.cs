@@ -1,16 +1,10 @@
-﻿namespace THREE
+﻿namespace THREE;
+
+[Serializable]
+public class FontLoader
 {
-    [Serializable]
-    public class FontLoader
+    public static Font Load(string jsonFile)
     {
-        public FontLoader()
-        {
-
-        }
-        public static Font Load(string jsonFile)
-        {
-            return new Font(jsonFile);
-
-        }
+        return new Font(jsonFile);
     }
 }

@@ -1,17 +1,17 @@
 ﻿using System.Runtime.Serialization;
 
-namespace THREE
-{
-	[Serializable]
-    public class HueSaturationShader : ShaderMaterial
-    {
-        public HueSaturationShader() : base()
-        {
-            Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
-            Uniforms.Add("hue", new GLUniform { { "value", 0.0f } });
-            Uniforms.Add("saturation", new GLUniform { { "value", 0.0f } });
+namespace THREE;
 
-            VertexShader = @"
+[Serializable]
+public class HueSaturationShader : ShaderMaterial
+{
+    public HueSaturationShader()
+    {
+        Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
+        Uniforms.Add("hue", new GLUniform { { "value", 0.0f } });
+        Uniforms.Add("saturation", new GLUniform { { "value", 0.0f } });
+
+        VertexShader = @"
                 varying vec2 vUv; 
 
 
@@ -26,7 +26,7 @@ namespace THREE
             "
             ;
 
-            FragmentShader = @"
+        FragmentShader = @"
 			uniform sampler2D tDiffuse; 
 			uniform float hue;
 			uniform float saturation;
@@ -60,8 +60,9 @@ namespace THREE
 
 
 			";
-        }
+    }
 
-        public HueSaturationShader(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public HueSaturationShader(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

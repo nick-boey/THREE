@@ -1,44 +1,43 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 
+namespace THREE;
 
-namespace THREE
+[Serializable]
+public class OctahedronGeometry : Geometry
 {
-    [Serializable]
-    public class OctahedronGeometry : Geometry
+    public Hashtable parameters;
+
+    public OctahedronGeometry(float? radius = null, float? detail = null)
     {
-        public Hashtable parameters;
-        public OctahedronGeometry(float? radius = null, float? detail = null) : base()
+        parameters = new Hashtable
         {
-            parameters = new Hashtable()
-            {
-                {"radius",radius },
-                {"detail",detail }
-            };
+            { "radius", radius },
+            { "detail", detail }
+        };
 
-            this.FromBufferGeometry(new OctahedronBufferGeometry(radius, detail));
-            this.MergeVertices();
-        }
+        FromBufferGeometry(new OctahedronBufferGeometry(radius, detail));
+        MergeVertices();
     }
+}
 
-    [Serializable]
-    public class OctahedronBufferGeometry : PolyhedronBufferGeometry
+[Serializable]
+public class OctahedronBufferGeometry : PolyhedronBufferGeometry
+{
+    private static List<float> vertices = new()
     {
-        static List<float> vertices = new List<float>()
-            {
-                1, 0, 0, -1, 0, 0,  0, 1, 0,
-                0, -1, 0, 0, 0, 1,  0, 0, - 1
-            };
+        1, 0, 0, -1, 0, 0, 0, 1, 0,
+        0, -1, 0, 0, 0, 1, 0, 0, -1
+    };
 
-        static List<int> indices = new List<int>()
-            {
-                0, 2, 4,    0, 4, 3,    0, 3, 5,
-                0, 5, 2,    1, 2, 5,    1, 5, 3,
-                1, 3, 4,    1, 4, 2
-            };
-        public OctahedronBufferGeometry(float? radius = null, float? detail = null) : base(vertices, indices, radius, detail)
-        {
-        }
+    private static List<int> indices = new()
+    {
+        0, 2, 4, 0, 4, 3, 0, 3, 5,
+        0, 5, 2, 1, 2, 5, 1, 5, 3,
+        1, 3, 4, 1, 4, 2
+    };
+
+    public OctahedronBufferGeometry(float? radius = null, float? detail = null) : base(vertices, indices, radius,
+        detail)
+    {
     }
-
 }

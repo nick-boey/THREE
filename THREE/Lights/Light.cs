@@ -1,75 +1,78 @@
 ﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class Light : Object3D
 {
-    [Serializable]
-    public class Light : Object3D
+    public float Angle;
+    public Color Color;
+
+    public float Decay;
+
+    public float Distance;
+
+    public float Exponent;
+
+    public Color GroundColor;
+
+    public int Height;
+
+    public float Intensity;
+
+    public float Penumbra;
+
+    public SphericalHarmonics3 sh;
+
+    public LightShadow Shadow;
+
+    public Object3D Target;
+
+    //RectAreaLight
+
+    public int Width;
+
+    public Light()
     {
-        public Color Color;
+        IsLight = true;
+    }
 
-        public Color GroundColor;
+    public Light(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
+    }
 
-        public float Intensity;
+    public Light(Color color, float? intensity = null)
+    {
+        type = "Light";
 
-        public float Distance;
+        Color = color;
 
-        public float Angle;
+        Intensity = intensity != null ? intensity.Value : 1;
 
-        public float Exponent;
+        ReceiveShadow = false;
 
-        public float Decay;
+        IsLight = true;
+    }
 
-        public float Power { get; set; }
+    public Light(int color, float? intensity = null) : this(Color.Hex(color), intensity)
+    {
+    }
 
-        public float Penumbra;
+    protected Light(Light other) : base(other)
+    {
+        type = "Light";
 
-        public Object3D Target;
+        Color = other.Color;
 
-        public LightShadow Shadow;
+        Intensity = other.Intensity;
 
-        public SphericalHarmonics3 sh;
+        IsLight = true;
+    }
 
-        //RectAreaLight
+    public float Power { get; set; }
 
-        public int Width;
-
-        public int Height;
-
-        public Light() : base()
-        {
-            this.IsLight = true;
-        }
-        public Light(SerializationInfo info, StreamingContext context) : base(info, context) { }
-
-        public Light(Color color, float? intensity = null) : base()
-        {
-            this.type = "Light";
-
-            this.Color = color;
-
-            this.Intensity = intensity != null ? intensity.Value : 1;
-
-            this.ReceiveShadow = false;
-
-            this.IsLight = true;
-
-        }
-        public Light(int color, float? intensity = null) : this(Color.Hex(color), intensity) { }
-
-        protected Light(Light other) : base(other)
-        {
-            this.type = "Light";
-
-            this.Color = other.Color;
-
-            this.Intensity = other.Intensity;
-
-            this.IsLight = true;
-        }
-        public Light Copy(Light source)
-        {
-            return new Light(source);
-
-        }
+    public Light Copy(Light source)
+    {
+        return new Light(source);
     }
 }

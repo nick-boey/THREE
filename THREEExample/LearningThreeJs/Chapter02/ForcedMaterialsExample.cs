@@ -1,13 +1,12 @@
 ﻿using THREE;
 
-namespace THREEExample.Learning.Chapter02
+namespace THREEExample.Learning.Chapter02;
+
+[Example("03-ForcedMaterials", ExampleCategory.LearnThreeJS, "Chapter02")]
+public class ForcedMaterialsExample : BasicSceneExample
 {
-    [Example("03-ForcedMaterials", ExampleCategory.LearnThreeJS, "Chapter02")]
-    public class ForcedMaterialsExample : BasicSceneExample
+    public ForcedMaterialsExample()
     {
-        public ForcedMaterialsExample() : base()
-        {
-            scene.OverrideMaterial = new MeshLambertMaterial() { Color = new THREE.Color().SetHex(0xffffff) };
-        }
+        scene.OverrideMaterial = new MeshLambertMaterial { Color = new Color().SetHex(0xffffff) };
     }
 }

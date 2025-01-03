@@ -1,21 +1,20 @@
-﻿
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class FilmShader : ShaderMaterial
 {
-    [Serializable]
-    public class FilmShader : ShaderMaterial
+    public FilmShader()
     {
-        public FilmShader()
-        {
-            Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
-            Uniforms.Add("time", new GLUniform { { "value", 0.0f } });
-            Uniforms.Add("nIntensity", new GLUniform { { "value", 0.5f } });
-            Uniforms.Add("sIntensity", new GLUniform { { "value", 0.05f } });
-            Uniforms.Add("sCount", new GLUniform { { "value", 4096 } });
-            Uniforms.Add("grayscale", new GLUniform { { "value", 1 } });
+        Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
+        Uniforms.Add("time", new GLUniform { { "value", 0.0f } });
+        Uniforms.Add("nIntensity", new GLUniform { { "value", 0.5f } });
+        Uniforms.Add("sIntensity", new GLUniform { { "value", 0.05f } });
+        Uniforms.Add("sCount", new GLUniform { { "value", 4096 } });
+        Uniforms.Add("grayscale", new GLUniform { { "value", 1 } });
 
-            VertexShader = @"
+        VertexShader = @"
 varying vec2 vUv; 
 
 void main() {
@@ -28,9 +27,9 @@ void main() {
 
 
 "
-;
+            ;
 
-            FragmentShader = @"
+        FragmentShader = @"
 #include <common>
 
 // control parameter
@@ -82,11 +81,10 @@ void main() {
 
 }
 "
-;
+            ;
+    }
 
-
-        }
-
-        public FilmShader(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public FilmShader(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

@@ -1,18 +1,26 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 using THREE;
 
-namespace THREEExample.Three.CustomAttributes
+namespace THREEExample.Three.CustomAttributes;
+
+[Example("Lines", ExampleCategory.ThreeJs, "custom attributes")]
+internal class CustomAttributesLines : Example
 {
-    [Example("Lines",ExampleCategory.ThreeJs,"custom attributes")]
-    internal class CustomAttributesLines : Example
-    {
-        string vertexShader = @"
+    private readonly string fragmentShader = @"
+			uniform vec3 color;
+			uniform float opacity;
+
+			varying vec3 vColor;
+
+			void main() {
+
+				gl_FragColor = vec4( vColor * color, opacity );
+
+			}
+";
+
+    private readonly string vertexShader = @"
 			uniform float amplitude;
 
 			attribute vec3 displacement;
@@ -30,117 +38,105 @@ namespace THREEExample.Three.CustomAttributes
 
 			}
 ";
-        string fragmentShader = @"
-			uniform vec3 color;
-			uniform float opacity;
 
-			varying vec3 vColor;
+    private Line line;
+    private GLUniforms uniforms;
 
-			void main() {
+    public CustomAttributesLines()
+    {
+        scene.Background = Color.Hex(0x050505);
+    }
 
-				gl_FragColor = vec4( vColor * color, opacity );
+    public override void InitCamera()
+    {
+        camera = new PerspectiveCamera(30, glControl.AspectRatio, 1, 10000);
+        camera.Position.Z = 400;
+    }
 
-			}
-";
-		Line line;
-		GLUniforms uniforms;
-        public CustomAttributesLines() :base()
-		{
-			scene.Background = THREE.Color.Hex(0x050505);
-		}
-		public override void InitCamera()
-		{
-			camera = new THREE.PerspectiveCamera(30, glControl.AspectRatio, 1, 10000);
-			camera.Position.Z = 400;
+    public override void Init()
+    {
+        base.Init();
+        BuildScene();
+    }
+
+    public void BuildScene()
+    {
+        uniforms = new GLUniforms
+        {
+            { "amplitude", new GLUniform { { "value", 5.0f } } },
+            { "opacity", new GLUniform { { "value", 0.3f } } },
+            { "color", new GLUniform { { "value", Color.Hex(0xffffff) } } }
+        };
+        var shaderMaterial = new ShaderMaterial
+        {
+            Uniforms = uniforms,
+            VertexShader = vertexShader,
+            FragmentShader = fragmentShader,
+            Blending = Constants.AdditiveBlending,
+            DepthTest = false,
+            Transparent = true
+        };
+
+        var font = FontLoader.Load("../../../../assets/fonts/helvetiker_bold.typeface.json");
+
+        var parameter = new Hashtable
+        {
+            { "font", font },
+
+            { "size", 50 },
+            { "height", 15 },
+            { "curveSegments", 10 },
+
+            { "bevelThickness", 5 },
+            { "bevelSize", 1.5f },
+            { "bevelEnabled", true },
+            { "bevelSegments", 10 }
+        };
+        var geometry = new TextBufferGeometry("three.js", parameter);
+        geometry.Center();
+        var count = (geometry.Attributes["position"] as BufferAttribute<float>).count;
+
+        var displacement = new BufferAttribute<float>(new float[count * 3], 3);
+        geometry.SetAttribute("displacement", displacement);
+
+        var customColor = new BufferAttribute<float>(new float[count * 3], 3);
+        geometry.SetAttribute("customColor", customColor);
+
+        var color = new Color(0xffffff);
+
+        for (var i = 0; i < customColor.count; i++)
+        {
+            color.SetHSL(1.0f * i / customColor.count, 0.5f, 0.5f);
+            color.ToArray(customColor.Array, i * customColor.ItemSize);
         }
-		public override void Init()
-		{
-			base.Init();
-			BuildScene();
-		}
-		public void BuildScene()
-		{
-			uniforms = new GLUniforms
-			{
-				{ "amplitude", new GLUniform { { "value", 5.0f } } },
-				{ "opacity", new GLUniform { { "value", 0.3f } } },
-				{ "color", new GLUniform { { "value", THREE.Color.Hex(0xffffff) } } }
-			};
-			var shaderMaterial = new THREE.ShaderMaterial()
-			{
 
-				Uniforms = uniforms,
-				VertexShader = vertexShader,
-				FragmentShader = fragmentShader,
-				Blending = Constants.AdditiveBlending,
-				DepthTest = false,
-				Transparent = true
-			};
+        line = new Line(geometry, shaderMaterial);
+        line.Rotation.X = 0.2f;
+        scene.Add(line);
+    }
 
-			var font = THREE.FontLoader.Load("../../../../assets/fonts/helvetiker_bold.typeface.json");
+    public override void Render()
+    {
+        var time = (float)stopWatch.Elapsed.TotalMilliseconds * 0.001f;
 
-			var parameter = new Hashtable
-			{
-				{"font", font },
+        line.Rotation.Y = 0.25f * time;
 
-					{"size", 50 },
-					{"height", 15 },
-					{"curveSegments", 10 },
+        (uniforms["amplitude"] as GLUniform)["value"] = (float)Math.Sin(0.5 * time);
+        var color = (Color)(uniforms["color"] as GLUniform)["value"];
+        color.OffsetHSL(0.0005f, 0, 0);
+        (uniforms["color"] as GLUniform)["value"] = color;
 
-					{"bevelThickness", 5 },
-					{"bevelSize", 1.5f },
-					{"bevelEnabled", true },
-					{"bevelSegments", 10 }
-			};
-			var geometry = new TextBufferGeometry("three.js", parameter);
-			geometry.Center();
-            var count = (geometry.Attributes["position"] as BufferAttribute<float>).count;
+        var attributes = (line.Geometry as TextBufferGeometry).Attributes;
+        var array = (attributes["displacement"] as BufferAttribute<float>).Array;
 
-            var displacement = new BufferAttribute<float>(new float[count * 3], 3);
-            geometry.SetAttribute("displacement", displacement);
-
-            var customColor = new BufferAttribute<float>(new float[count * 3], 3);
-            geometry.SetAttribute("customColor", customColor);
-
-            var color = new THREE.Color(0xffffff);
-
-            for (var i = 0;i< customColor.count; i++)
-            {
-
-                color.SetHSL(1.0f*i / customColor.count, 0.5f, 0.5f);
-                color.ToArray(customColor.Array, i * customColor.ItemSize);
-
-            }
-
-            line = new THREE.Line(geometry, shaderMaterial);
-            line.Rotation.X = 0.2f;
-            scene.Add(line);
+        for (var i = 0; i < array.Length; i += 3)
+        {
+            array[i] += 0.3f * (0.5f - MathUtils.NextFloat());
+            array[i + 1] += 0.3f * (0.5f - MathUtils.NextFloat());
+            array[i + 2] += 0.3f * (0.5f - MathUtils.NextFloat());
         }
-		public override void Render()
-		{
-            float time = (float)stopWatch.Elapsed.TotalMilliseconds * 0.001f;
 
-            line.Rotation.Y = 0.25f * time;
-
-			(uniforms["amplitude"] as GLUniform)["value"] = (float)Math.Sin(0.5 * time);
-			THREE.Color color = (THREE.Color)(uniforms["color"] as GLUniform)["value"];
-			color.OffsetHSL(0.0005f, 0, 0);
-			(uniforms["color"] as GLUniform)["value"] = color;
-
-            var attributes = (line.Geometry as TextBufferGeometry).Attributes;
-            var array = (attributes["displacement"] as BufferAttribute<float>).Array;
-
-            for (var i = 0;i< array.Length;  i += 3)
-            {
-
-                array[i] += 0.3f * (0.5f - MathUtils.NextFloat());
-                array[i + 1] += 0.3f * (0.5f - MathUtils.NextFloat());
-                array[i + 2] += 0.3f * (0.5f- MathUtils.NextFloat());
-
-            }
-
-			(attributes["displacement"] as BufferAttribute<float>).NeedsUpdate = true;
-            base.Render();
-		}
-	}
+        (attributes["displacement"] as BufferAttribute<float>).NeedsUpdate = true;
+        base.Render();
+    }
 }

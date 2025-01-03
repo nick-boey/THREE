@@ -1,464 +1,449 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.Runtime.InteropServices;
-using THREE.Renderers.Shaders;
-using static THREE.ConvexHull;
+﻿using System.Collections;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class SSAOPass : Pass, IDisposable
 {
-    [Serializable]
-    public class SSAOPass : Pass, IDisposable
+    public enum OUTPUT
     {
-        Scene scene;
-        Camera camera;
-        int width;
-        int height;
-        float kernelRadius;
-        int kernelSize;
-        List<Vector3> kernel;
-        DataTexture noiseTexture;
-        int output;
-        float minDistance;
-        float maxDistance;
-        GLRenderTarget beautyRenderTarget;
-        GLRenderTarget normalRenderTarget;
-        GLRenderTarget ssaoRenderTarget;
-        GLRenderTarget blurRenderTarget;
-        ShaderMaterial ssaoMaterial;
-        MeshNormalMaterial normalMaterial;
-        ShaderMaterial blurMaterial;
-        ShaderMaterial depthRenderMaterial;
-        ShaderMaterial copyMaterial;
-        Color originalClearColor;
-        Dictionary<Object3D,bool> _visibilityCache = new Dictionary<Object3D,bool>();
-        public enum OUTPUT
+        Default = 0,
+        SSAO = 1,
+        Blur = 2,
+        Beauty = 3,
+        Depth = 4,
+        Normal = 5
+    }
+
+    private Dictionary<Object3D, bool> _visibilityCache = new();
+    private GLRenderTarget beautyRenderTarget;
+    private ShaderMaterial blurMaterial;
+    private GLRenderTarget blurRenderTarget;
+    private Camera camera;
+    private ShaderMaterial copyMaterial;
+    private ShaderMaterial depthRenderMaterial;
+    private bool disposed;
+    private int height;
+    private List<Vector3> kernel;
+    private float kernelRadius;
+    private int kernelSize;
+    private float maxDistance;
+    private float minDistance;
+    private DataTexture noiseTexture;
+    private MeshNormalMaterial normalMaterial;
+    private GLRenderTarget normalRenderTarget;
+    private Color originalClearColor;
+    private int output;
+    private Scene scene;
+    private ShaderMaterial ssaoMaterial;
+    private GLRenderTarget ssaoRenderTarget;
+    private int width;
+
+    public SSAOPass(Scene scene, Camera camera, int? width = null, int? height = null)
+    {
+        this.width = width != null ? width.Value : 512;
+        this.height = height != null ? height.Value : 512;
+
+        Clear = true;
+
+        this.camera = camera;
+        this.scene = scene;
+
+        kernelRadius = 8;
+        kernelSize = 32;
+        kernel = new List<Vector3>();
+        noiseTexture = null;
+        output = 0;
+
+        minDistance = 0.005f;
+        maxDistance = 0.1f;
+
+        GenerateSampleKernel();
+        GenerateRandomKernelRotations();
+
+        // beauty render target with depth buffer
+
+        var depthTexture = new DepthTexture(0, 0, 0);
+        depthTexture.Type = Constants.UnsignedShortType;
+        depthTexture.MinFilter = Constants.NearestFilter;
+        depthTexture.MaxFilter = Constants.NearestFilter;
+
+        beautyRenderTarget = new GLRenderTarget(this.width, this.height, new Hashtable
         {
-            Default = 0,
-            SSAO = 1,
-            Blur = 2,
-            Beauty = 3,
-            Depth = 4,
-            Normal = 5
-        };
+            { "minFilter", Constants.LinearFilter },
+            { "magFilter", Constants.LinearFilter },
+            { "format", Constants.RGBAFormat },
+            { "depthTexture", depthTexture },
+            { "depthBuffer", true }
+        });
 
-        public SSAOPass(Scene scene, Camera camera, int? width = null, int? height = null) : base()
+        // normal render target
+
+        normalRenderTarget = new GLRenderTarget(this.width, this.height, new Hashtable
         {
-            this.width = (width != null) ? width.Value : 512;
-            this.height = (height != null) ? height.Value : 512;
+            { "minFilter", Constants.NearestFilter },
+            { "magFilter", Constants.NearestFilter },
+            { "format", Constants.RGBAFormat }
+        });
 
-            this.Clear = true;
+        // ssao render target
 
-            this.camera = camera;
-            this.scene = scene;
+        ssaoRenderTarget = new GLRenderTarget(this.width, this.height, new Hashtable
+        {
+            { "minFilter", Constants.LinearFilter },
+            { "magFilter", Constants.LinearFilter },
+            { "format", Constants.RGBAFormat }
+        });
 
-            this.kernelRadius = 8;
-            this.kernelSize = 32;
-            this.kernel = new List<Vector3>();
-            this.noiseTexture = null;
-            this.output = 0;
+        blurRenderTarget = (GLRenderTarget)ssaoRenderTarget.Clone();
 
-            this.minDistance = 0.005f;
-            this.maxDistance = 0.1f;
+        var ssaoShader = new SSAOShader();
+        ssaoMaterial = new ShaderMaterial(new Hashtable
+        {
+            { "defines", ssaoShader.Defines },
+            { "uniforms", UniformsUtils.CloneUniforms(ssaoShader.Uniforms) },
+            { "vertexShader", ssaoShader.VertexShader },
+            { "fragmentShader", ssaoShader.FragmentShader },
+            { "blending", Constants.NoBlending }
+        });
 
-            GenerateSampleKernel();
-            GenerateRandomKernelRotations();
+        (ssaoMaterial.Uniforms["tDiffuse"] as GLUniform)["value"] = beautyRenderTarget.Texture;
+        (ssaoMaterial.Uniforms["tNormal"] as GLUniform)["value"] = normalRenderTarget.Texture;
+        (ssaoMaterial.Uniforms["tDepth"] as GLUniform)["value"] = beautyRenderTarget.depthTexture;
+        (ssaoMaterial.Uniforms["tNoise"] as GLUniform)["value"] = noiseTexture;
+        (ssaoMaterial.Uniforms["kernel"] as GLUniform)["value"] = kernel;
+        (ssaoMaterial.Uniforms["cameraNear"] as GLUniform)["value"] = this.camera.Near;
+        (ssaoMaterial.Uniforms["cameraFar"] as GLUniform)["value"] = this.camera.Far;
+        ((ssaoMaterial.Uniforms["resolution"] as GLUniform)["value"] as Vector2).Set(this.width, this.height);
+        ((ssaoMaterial.Uniforms["cameraProjectionMatrix"] as GLUniform)["value"] as Matrix4).Copy(this.camera
+            .ProjectionMatrix);
+        ((ssaoMaterial.Uniforms["cameraInverseProjectionMatrix"] as GLUniform)["value"] as Matrix4).GetInverse(
+            this.camera.ProjectionMatrixInverse);
 
-            // beauty render target with depth buffer
+        // normal material
 
-            var depthTexture = new DepthTexture(0, 0, 0);
-            depthTexture.Type = Constants.UnsignedShortType;
-            depthTexture.MinFilter = Constants.NearestFilter;
-            depthTexture.MaxFilter = Constants.NearestFilter;
+        normalMaterial = new MeshNormalMaterial();
+        normalMaterial.Blending = Constants.NoBlending;
 
-            this.beautyRenderTarget = new GLRenderTarget(this.width, this.height, new Hashtable(){
-                { "minFilter", Constants.LinearFilter },
-                { "magFilter", Constants.LinearFilter },
-                { "format", Constants.RGBAFormat },
-                { "depthTexture", depthTexture },
-                { "depthBuffer", true }
-            });
+        // blur material
+        var ssaoBlurShader = new SSAOBlurShader();
+        blurMaterial = new ShaderMaterial(new Hashtable
+        {
+            { "defines", ssaoBlurShader.Defines },
+            { "uniforms", UniformsUtils.CloneUniforms(ssaoBlurShader.Uniforms) },
+            { "vertexShader", ssaoBlurShader.VertexShader },
+            { "fragmentShader", ssaoBlurShader.FragmentShader }
+        });
 
-            // normal render target
+        (blurMaterial.Uniforms["tDiffuse"] as GLUniform)["value"] = ssaoRenderTarget.Texture;
+        ((blurMaterial.Uniforms["resolution"] as GLUniform)["value"] as Vector2).Set(this.width, this.height);
 
-            this.normalRenderTarget = new GLRenderTarget(this.width, this.height, new Hashtable(){
-                { "minFilter",  Constants.NearestFilter },
-                { "magFilter",  Constants.NearestFilter },
-                { "format",  Constants.RGBAFormat}
-            });
+        // material for rendering the depth
+        var ssaoDepthShader = new SSAODepthShader();
+        depthRenderMaterial = new ShaderMaterial(new Hashtable
+        {
+            { "defines", ssaoDepthShader.Defines },
+            { "uniforms", UniformsUtils.CloneUniforms(ssaoDepthShader.Uniforms) },
+            { "vertexShader", ssaoDepthShader.VertexShader },
+            { "fragmentShader", ssaoDepthShader.FragmentShader },
+            { "blending", Constants.NoBlending }
+        });
+        (depthRenderMaterial.Uniforms["tDepth"] as GLUniform)["value"] = beautyRenderTarget.depthTexture;
+        (depthRenderMaterial.Uniforms["cameraNear"] as GLUniform)["value"] = this.camera.Near;
+        (depthRenderMaterial.Uniforms["cameraFar"] as GLUniform)["value"] = this.camera.Far;
 
-            // ssao render target
+        // material for rendering the content of a render target
+        var copyShader = new CopyShader();
+        copyMaterial = new ShaderMaterial(new Hashtable
+        {
+            { "uniforms", UniformsUtils.CloneUniforms(copyShader.Uniforms) },
+            { "vertexShader", copyShader.VertexShader },
+            { "fragmentShader", copyShader.FragmentShader },
+            { "transparent", true },
+            { "depthTest", false },
+            { "depthWrite", false },
+            { "blendSrc", Constants.DstColorFactor },
+            { "blendDst", Constants.ZeroFactor },
+            { "blendEquation", Constants.AddEquation },
+            { "blendSrcAlpha", Constants.DstAlphaFactor },
+            { "blendDstAlpha", Constants.ZeroFactor },
+            { "blendEquationAlpha", Constants.AddEquation }
+        });
 
-            this.ssaoRenderTarget = new GLRenderTarget(this.width, this.height, new Hashtable(){
-                { "minFilter",  Constants.LinearFilter},
-                { "magFilter",  Constants.LinearFilter},
-                { "format",  Constants.RGBAFormat}
-            });
+        fullScreenQuad = new FullScreenQuad();
 
-            this.blurRenderTarget = (GLRenderTarget)this.ssaoRenderTarget.Clone();
+        originalClearColor = new Color();
+    }
 
-            SSAOShader ssaoShader = new SSAOShader();
-            this.ssaoMaterial = new ShaderMaterial(new Hashtable(){
-                    { "defines", ssaoShader.Defines },
-                    { "uniforms", UniformsUtils.CloneUniforms(ssaoShader.Uniforms ) },
-                    { "vertexShader", ssaoShader.VertexShader },
-                    { "fragmentShader", ssaoShader.FragmentShader },
-                    { "blending", Constants.NoBlending }
-                });
+    public virtual void Dispose()
+    {
+        Dispose(disposed);
+    }
 
-            (this.ssaoMaterial.Uniforms["tDiffuse"] as GLUniform)["value"] = this.beautyRenderTarget.Texture;
-            (this.ssaoMaterial.Uniforms["tNormal"] as GLUniform)["value"] = this.normalRenderTarget.Texture;
-            (this.ssaoMaterial.Uniforms["tDepth"] as GLUniform)["value"] = this.beautyRenderTarget.depthTexture;
-            (this.ssaoMaterial.Uniforms["tNoise"] as GLUniform)["value"] = this.noiseTexture;
-            (this.ssaoMaterial.Uniforms["kernel"] as GLUniform)["value"] = this.kernel;
-            (this.ssaoMaterial.Uniforms["cameraNear"] as GLUniform)["value"] = this.camera.Near;
-            (this.ssaoMaterial.Uniforms["cameraFar"] as GLUniform)["value"] = this.camera.Far;
-            ((this.ssaoMaterial.Uniforms["resolution"] as GLUniform)["value"] as Vector2).Set(this.width, this.height);
-            ((this.ssaoMaterial.Uniforms["cameraProjectionMatrix"] as GLUniform)["value"] as Matrix4).Copy(this.camera.ProjectionMatrix);
-            ((this.ssaoMaterial.Uniforms["cameraInverseProjectionMatrix"] as GLUniform)["value"] as Matrix4).GetInverse(this.camera.ProjectionMatrixInverse);
 
-            // normal material
+    private void GenerateRandomKernelRotations()
+    {
+        var width = 4;
+        var height = 4;
 
-            this.normalMaterial = new MeshNormalMaterial();
-            this.normalMaterial.Blending = Constants.NoBlending;
 
-            // blur material
-            SSAOBlurShader ssaoBlurShader = new SSAOBlurShader();
-            this.blurMaterial = new ShaderMaterial(new Hashtable(){
-                { "defines", ssaoBlurShader.Defines },
-                { "uniforms", UniformsUtils.CloneUniforms(ssaoBlurShader.Uniforms ) },
-                { "vertexShader", ssaoBlurShader.VertexShader },
-                { "fragmentShader", ssaoBlurShader.FragmentShader }
-                });
+        var simplex = new SimplexNoise();
 
-            (this.blurMaterial.Uniforms["tDiffuse"] as GLUniform)["value"] = this.ssaoRenderTarget.Texture;
-            ((this.blurMaterial.Uniforms["resolution"] as GLUniform)["value"] as Vector2).Set(this.width, this.height);
+        var size = width * height;
+        var data = new float[size * 4];
 
-            // material for rendering the depth
-            SSAODepthShader ssaoDepthShader = new SSAODepthShader();
-            this.depthRenderMaterial = new ShaderMaterial(new Hashtable(){
-                    { "defines", ssaoDepthShader.Defines },
-                    { "uniforms", UniformsUtils.CloneUniforms(ssaoDepthShader.Uniforms ) },
-                    { "vertexShader", ssaoDepthShader.VertexShader },
-                    { "fragmentShader", ssaoDepthShader.FragmentShader },
-                    { "blending", Constants.NoBlending }
-                });
-            (this.depthRenderMaterial.Uniforms["tDepth"] as GLUniform)["value"] = this.beautyRenderTarget.depthTexture;
-            (this.depthRenderMaterial.Uniforms["cameraNear"] as GLUniform)["value"] = this.camera.Near;
-            (this.depthRenderMaterial.Uniforms["cameraFar"] as GLUniform)["value"] = this.camera.Far;
+        for (var i = 0; i < size; i++)
+        {
+            var stride = i * 4;
 
-            // material for rendering the content of a render target
-            CopyShader copyShader = new CopyShader();
-            this.copyMaterial = new ShaderMaterial(new Hashtable(){
-                { "uniforms", UniformsUtils.CloneUniforms(copyShader.Uniforms ) },
-                { "vertexShader", copyShader.VertexShader },
-                { "fragmentShader", copyShader.FragmentShader },
-                { "transparent", true },
-                { "depthTest", false },
-                { "depthWrite", false },
-                { "blendSrc", Constants.DstColorFactor },
-                { "blendDst", Constants.ZeroFactor },
-                { "blendEquation", Constants.AddEquation },
-                { "blendSrcAlpha", Constants.DstAlphaFactor },
-                { "blendDstAlpha", Constants.ZeroFactor },
-                { "blendEquationAlpha", Constants.AddEquation }
-            });
+            var x = (float)(MathUtils.random.NextDouble() * 2) - 1;
+            var y = (float)(MathUtils.random.NextDouble() * 2) - 1;
+            var z = 0;
 
-            this.fullScreenQuad = new FullScreenQuad(null);
+            var noise = simplex.Noise3d(x, y, z);
 
-            this.originalClearColor = new Color();
+            data[stride] = noise;
+            data[stride + 1] = noise;
+            data[stride + 2] = noise;
+            data[stride + 3] = 1;
         }
+        //Bitmap bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+        //BitmapData bitmapData = bitmap.LockBits(new Rectangle(0, 0, width, height), System.Drawing.Imaging.ImageLockMode.WriteOnly, bitmap.PixelFormat);
+        //IntPtr iptr = bitmapData.Scan0;
 
+        //Marshal.Copy(iptr, data, 0, data.Length);
 
-        private void GenerateRandomKernelRotations()
+        //bitmap.UnlockBits(bitmapData);
+        var bitmap = data.ToByteArray().ToSKBitMap(width, height);
+        noiseTexture = new DataTexture(bitmap, width, height, Constants.RGBAFormat, Constants.FloatType);
+        noiseTexture.WrapS = Constants.RepeatWrapping;
+        noiseTexture.WrapT = Constants.RepeatWrapping;
+    }
+
+    private void GenerateSampleKernel()
+    {
+        for (var i = 0; i < kernelSize; i++)
         {
-            int width = 4;
-            int height = 4;
+            var sample = new Vector3();
+            sample.X = (float)(MathUtils.random.NextDouble() * 2) - 1;
+            sample.Y = (float)(MathUtils.random.NextDouble() * 2) - 1;
+            sample.Z = (float)MathUtils.random.NextDouble();
 
+            sample.Normalize();
 
-            var simplex = new SimplexNoise();
+            float scale = i / kernelSize;
+            scale = MathUtils.Lerp(0.1f, 1, scale * scale);
+            sample.MultiplyScalar(scale);
 
-            var size = width * height;
-            float[] data = new float[size * 4];
-
-            for (var i = 0; i < size; i++)
-            {
-
-                var stride = i * 4;
-
-                float x = (float)(MathUtils.random.NextDouble() * 2) - 1;
-                float y = (float)(MathUtils.random.NextDouble() * 2) - 1;
-                var z = 0;
-
-                float noise = simplex.Noise3d(x, y, z);
-
-                data[stride] = noise;
-                data[stride + 1] = noise;
-                data[stride + 2] = noise;
-                data[stride + 3] = 1;
-
-            }
-            //Bitmap bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
-            //BitmapData bitmapData = bitmap.LockBits(new Rectangle(0, 0, width, height), System.Drawing.Imaging.ImageLockMode.WriteOnly, bitmap.PixelFormat);
-            //IntPtr iptr = bitmapData.Scan0;
-
-            //Marshal.Copy(iptr, data, 0, data.Length);
-
-            //bitmap.UnlockBits(bitmapData);
-            var bitmap = data.ToByteArray().ToSKBitMap(width,height);
-            this.noiseTexture = new DataTexture(bitmap, width, height, Constants.RGBAFormat, Constants.FloatType);
-            this.noiseTexture.WrapS = Constants.RepeatWrapping;
-            this.noiseTexture.WrapT = Constants.RepeatWrapping;
+            kernel.Add(sample);
         }
+    }
 
-        private void GenerateSampleKernel()
+    public override void Render(GLRenderer renderer, GLRenderTarget writeBuffer, GLRenderTarget readBuffer,
+        float? deltaTime = null, bool? maskActive = null)
+    {
+        // render beauty and depth
+
+        renderer.SetRenderTarget(beautyRenderTarget);
+        renderer.Clear();
+        renderer.Render(scene, camera);
+
+        // render normals
+        OverrideVisibility();
+        RenderOverride(renderer, normalMaterial, normalRenderTarget, Color.Hex(0x7777ff), 1.0f);
+        RestoreVisibility();
+        // render SSAO
+
+        (ssaoMaterial.Uniforms["kernelRadius"] as GLUniform)["value"] = kernelRadius;
+        (ssaoMaterial.Uniforms["minDistance"] as GLUniform)["value"] = minDistance;
+        (ssaoMaterial.Uniforms["maxDistance"] as GLUniform)["value"] = maxDistance;
+        RenderPass(renderer, ssaoMaterial, ssaoRenderTarget);
+
+        // render blur
+
+        RenderPass(renderer, blurMaterial, blurRenderTarget);
+
+        // output result to screen
+
+        switch (output)
         {
+            case (int)OUTPUT.SSAO:
 
-            for (var i = 0; i < kernelSize; i++)
-            {
+                (copyMaterial.Uniforms["tDiffuse"] as GLUniform)["value"] = ssaoRenderTarget.Texture;
+                copyMaterial.Blending = Constants.NoBlending;
+                RenderPass(renderer, copyMaterial, RenderToScreen ? null : writeBuffer);
 
-                var sample = new Vector3();
-                sample.X = (float)(MathUtils.random.NextDouble() * 2) - 1;
-                sample.Y = (float)(MathUtils.random.NextDouble() * 2) - 1;
-                sample.Z = (float)(MathUtils.random.NextDouble());
+                break;
 
-                sample.Normalize();
+            case (int)OUTPUT.Blur:
 
-                float scale = i / kernelSize;
-                scale = MathUtils.Lerp(0.1f, 1, scale * scale);
-                sample.MultiplyScalar(scale);
+                (copyMaterial.Uniforms["tDiffuse"] as GLUniform)["value"] = blurRenderTarget.Texture;
+                copyMaterial.Blending = Constants.NoBlending;
+                RenderPass(renderer, copyMaterial, RenderToScreen ? null : writeBuffer);
 
-                kernel.Add(sample);
+                break;
 
-            }
+            case (int)OUTPUT.Beauty:
+
+                (copyMaterial.Uniforms["tDiffuse"] as GLUniform)["value"] = beautyRenderTarget.Texture;
+                copyMaterial.Blending = Constants.NoBlending;
+                RenderPass(renderer, copyMaterial, RenderToScreen ? null : writeBuffer);
+
+                break;
+
+            case (int)OUTPUT.Depth:
+
+                RenderPass(renderer, depthRenderMaterial, RenderToScreen ? null : writeBuffer);
+
+                break;
+
+            case (int)OUTPUT.Normal:
+
+                (copyMaterial.Uniforms["tDiffuse"] as GLUniform)["value"] = normalRenderTarget.Texture;
+                copyMaterial.Blending = Constants.NoBlending;
+                RenderPass(renderer, copyMaterial, RenderToScreen ? null : writeBuffer);
+
+                break;
+
+            case (int)OUTPUT.Default:
+
+                (copyMaterial.Uniforms["tDiffuse"] as GLUniform)["value"] = beautyRenderTarget.Texture;
+                copyMaterial.Blending = Constants.NoBlending;
+                RenderPass(renderer, copyMaterial, RenderToScreen ? null : writeBuffer);
+
+                (copyMaterial.Uniforms["tDiffuse"] as GLUniform)["value"] = blurRenderTarget.Texture;
+                copyMaterial.Blending = Constants.CustomBlending;
+                RenderPass(renderer, copyMaterial, RenderToScreen ? null : writeBuffer);
+
+                break;
         }
+    }
 
-        public override void Render(GLRenderer renderer, GLRenderTarget writeBuffer, GLRenderTarget readBuffer, float? deltaTime = null, bool? maskActive = null)
+    private void RestoreVisibility()
+    {
+        scene.Traverse(object3d => { object3d.Visible = _visibilityCache[object3d]; });
+    }
+
+    private void OverrideVisibility()
+    {
+        scene.Traverse(object3d =>
         {
-            // render beauty and depth
+            _visibilityCache[object3d] = object3d.Visible;
 
-            renderer.SetRenderTarget(this.beautyRenderTarget);
+            if (object3d is Points || object3d is Line) object3d.Visible = false;
+        });
+    }
+
+    public override void SetSize(float width, float height)
+    {
+        this.width = (int)width;
+        this.height = (int)height;
+
+        beautyRenderTarget.SetSize((int)width, (int)height);
+        ssaoRenderTarget.SetSize((int)width, (int)height);
+        normalRenderTarget.SetSize((int)width, (int)height);
+        blurRenderTarget.SetSize((int)width, (int)height);
+
+        ((ssaoMaterial.Uniforms["resolution"] as GLUniform)["value"] as Vector2).Set(width, height);
+        ((ssaoMaterial.Uniforms["cameraProjectionMatrix"] as GLUniform)["value"] as Matrix4).Copy(
+            camera.ProjectionMatrix);
+        ((ssaoMaterial.Uniforms["cameraInverseProjectionMatrix"] as GLUniform)["value"] as Matrix4).GetInverse(
+            camera.ProjectionMatrixInverse);
+
+        ((blurMaterial.Uniforms["resolution"] as GLUniform)["value"] as Vector2).Set(width, height);
+    }
+
+    private void RenderPass(GLRenderer renderer, Material passMaterial, GLRenderTarget renderTarget,
+        Color? clearColor = null, float? clearAlpha = 0.0f)
+    {
+        // save original state
+        originalClearColor.Copy(renderer.GetClearColor());
+        var originalClearAlpha = renderer.GetClearAlpha();
+        var originalAutoClear = renderer.AutoClear;
+
+        renderer.SetRenderTarget(renderTarget);
+
+        // setup pass state
+        renderer.AutoClear = false;
+        if (clearColor != null && clearColor != null)
+        {
+            renderer.SetClearColor(clearColor.Value);
+            renderer.SetClearAlpha(clearAlpha.Value);
             renderer.Clear();
-            renderer.Render(this.scene, this.camera);
-
-            // render normals
-            this.OverrideVisibility();
-            this.RenderOverride(renderer, this.normalMaterial, this.normalRenderTarget, Color.Hex(0x7777ff), 1.0f);
-            this.RestoreVisibility();
-            // render SSAO
-
-            (this.ssaoMaterial.Uniforms["kernelRadius"] as GLUniform)["value"] = this.kernelRadius;
-            (this.ssaoMaterial.Uniforms["minDistance"] as GLUniform)["value"] = this.minDistance;
-            (this.ssaoMaterial.Uniforms["maxDistance"] as GLUniform)["value"] = this.maxDistance;
-            this.RenderPass(renderer, this.ssaoMaterial, this.ssaoRenderTarget);
-
-            // render blur
-
-            this.RenderPass(renderer, this.blurMaterial, this.blurRenderTarget);
-
-            // output result to screen
-
-            switch (this.output)
-            {
-
-                case (int)OUTPUT.SSAO:
-
-                    (this.copyMaterial.Uniforms["tDiffuse"] as GLUniform)["value"] = this.ssaoRenderTarget.Texture;
-                    this.copyMaterial.Blending = Constants.NoBlending;
-                    this.RenderPass(renderer, this.copyMaterial, this.RenderToScreen ? null : writeBuffer);
-
-                    break;
-
-                case (int)OUTPUT.Blur:
-
-                    (this.copyMaterial.Uniforms["tDiffuse"] as GLUniform)["value"] = this.blurRenderTarget.Texture;
-                    this.copyMaterial.Blending = Constants.NoBlending;
-                    this.RenderPass(renderer, this.copyMaterial, this.RenderToScreen ? null : writeBuffer);
-
-                    break;
-
-                case (int)OUTPUT.Beauty:
-
-                    (this.copyMaterial.Uniforms["tDiffuse"] as GLUniform)["value"] = this.beautyRenderTarget.Texture;
-                    this.copyMaterial.Blending = Constants.NoBlending;
-                    this.RenderPass(renderer, this.copyMaterial, this.RenderToScreen ? null : writeBuffer);
-
-                    break;
-
-                case (int)OUTPUT.Depth:
-
-                    this.RenderPass(renderer, this.depthRenderMaterial, this.RenderToScreen ? null : writeBuffer);
-
-                    break;
-
-                case (int)OUTPUT.Normal:
-
-                    (this.copyMaterial.Uniforms["tDiffuse"] as GLUniform)["value"] = this.normalRenderTarget.Texture;
-                    this.copyMaterial.Blending = Constants.NoBlending;
-                    this.RenderPass(renderer, this.copyMaterial, this.RenderToScreen ? null : writeBuffer);
-
-                    break;
-
-                case (int)OUTPUT.Default:
-
-                    (this.copyMaterial.Uniforms["tDiffuse"] as GLUniform)["value"] = this.beautyRenderTarget.Texture;
-                    this.copyMaterial.Blending = Constants.NoBlending;
-                    this.RenderPass(renderer, this.copyMaterial, this.RenderToScreen ? null : writeBuffer);
-
-                    (this.copyMaterial.Uniforms["tDiffuse"] as GLUniform)["value"] = this.blurRenderTarget.Texture;
-                    this.copyMaterial.Blending = Constants.CustomBlending;
-                    this.RenderPass(renderer, this.copyMaterial, this.RenderToScreen ? null : writeBuffer);
-
-                    break;
-
-
-
-            }
         }
 
-        private void RestoreVisibility()
+        fullScreenQuad.material = passMaterial;
+        fullScreenQuad.Render(renderer);
+
+        // restore original state
+        renderer.AutoClear = originalAutoClear;
+        renderer.SetClearColor(originalClearColor);
+        renderer.SetClearAlpha(originalClearAlpha);
+    }
+
+    private void RenderOverride(GLRenderer renderer, Material overrideMaterial, GLRenderTarget renderTarget,
+        Color? clearColor = null, float? clearAlpha = 0.0f)
+    {
+        originalClearColor.Copy(renderer.GetClearColor());
+        var originalClearAlpha = renderer.GetClearAlpha();
+        var originalAutoClear = renderer.AutoClear;
+
+        if (clearAlpha == null) clearAlpha = 0.0f;
+
+        renderer.SetRenderTarget(renderTarget);
+        renderer.AutoClear = false;
+
+        if (clearColor != null && clearAlpha != null)
         {
-            scene.Traverse((object3d) => {
-
-                 object3d.Visible = _visibilityCache[object3d];
-
-            });
+            renderer.SetClearColor(clearColor.Value);
+            renderer.SetClearAlpha(clearAlpha.Value);
+            renderer.Clear();
         }
 
-        private void OverrideVisibility()
-        {
-            scene.Traverse((object3d)=> {
+        scene.OverrideMaterial = overrideMaterial;
+        renderer.Render(scene, camera);
+        scene.OverrideMaterial = null;
 
-                _visibilityCache[object3d] = object3d.Visible;
+        // restore original state
 
-                if (object3d is Points || object3d is Line) object3d.Visible = false;
+        renderer.AutoClear = originalAutoClear;
+        renderer.SetClearColor(originalClearColor);
+        renderer.SetClearAlpha(originalClearAlpha);
+    }
 
-            } );
-        }
+    public event EventHandler<EventArgs> Disposed;
 
-        public override void SetSize(float width, float height)
-        {
-            this.width = (int)width;
-            this.height = (int)height;
+    protected virtual void RaiseDisposed()
+    {
+        var handler = Disposed;
+        if (handler != null)
+            handler(this, new EventArgs());
+    }
 
-            this.beautyRenderTarget.SetSize((int)width, (int)height);
-            this.ssaoRenderTarget.SetSize((int)width, (int)height);
-            this.normalRenderTarget.SetSize((int)width, (int)height);
-            this.blurRenderTarget.SetSize((int)width, (int)height);
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposed) return;
+        // dispose render targets
 
-            ((this.ssaoMaterial.Uniforms["resolution"] as GLUniform)["value"] as Vector2).Set(width, height);
-            ((this.ssaoMaterial.Uniforms["cameraProjectionMatrix"] as GLUniform)["value"] as Matrix4).Copy(this.camera.ProjectionMatrix);
-            ((this.ssaoMaterial.Uniforms["cameraInverseProjectionMatrix"] as GLUniform)["value"] as Matrix4).GetInverse(this.camera.ProjectionMatrixInverse);
+        beautyRenderTarget.Dispose();
+        normalRenderTarget.Dispose();
 
-            ((this.blurMaterial.Uniforms["resolution"] as GLUniform)["value"] as Vector2).Set(width, height);
+        ssaoRenderTarget.Dispose();
+        blurRenderTarget.Dispose();
 
-        }
+        // dispose materials
 
-        private void RenderPass(GLRenderer renderer, Material passMaterial, GLRenderTarget renderTarget, Color? clearColor = null, float? clearAlpha = 0.0f)
-        {
-            // save original state
-            this.originalClearColor.Copy(renderer.GetClearColor());
-            var originalClearAlpha = renderer.GetClearAlpha();
-            var originalAutoClear = renderer.AutoClear;
+        normalMaterial.Dispose();
+        blurMaterial.Dispose();
+        copyMaterial.Dispose();
+        depthRenderMaterial.Dispose();
 
-            renderer.SetRenderTarget(renderTarget);
+        // dipsose full screen quad
 
-            // setup pass state
-            renderer.AutoClear = false;
-            if ((clearColor != null) && (clearColor != null))
-            {
+        fullScreenQuad.Dispose();
 
-                renderer.SetClearColor(clearColor.Value);
-                renderer.SetClearAlpha(clearAlpha.Value);
-                renderer.Clear();
-
-            }
-
-            this.fullScreenQuad.material = passMaterial;
-            this.fullScreenQuad.Render(renderer);
-
-            // restore original state
-            renderer.AutoClear = originalAutoClear;
-            renderer.SetClearColor(this.originalClearColor);
-            renderer.SetClearAlpha(originalClearAlpha);
-        }
-
-        private void RenderOverride(GLRenderer renderer, Material overrideMaterial, GLRenderTarget renderTarget, Color? clearColor = null, float? clearAlpha = 0.0f)
-        {
-            this.originalClearColor.Copy(renderer.GetClearColor());
-            var originalClearAlpha = renderer.GetClearAlpha();
-            var originalAutoClear = renderer.AutoClear;
-
-            if (clearAlpha == null) clearAlpha = 0.0f;
-
-            renderer.SetRenderTarget(renderTarget);
-            renderer.AutoClear = false;
-
-            if ((clearColor != null) && (clearAlpha != null))
-            {
-
-                renderer.SetClearColor(clearColor.Value);
-                renderer.SetClearAlpha(clearAlpha.Value);
-                renderer.Clear();
-
-            }
-
-            this.scene.OverrideMaterial = overrideMaterial;
-            renderer.Render(this.scene, this.camera);
-            this.scene.OverrideMaterial = null;
-
-            // restore original state
-
-            renderer.AutoClear = originalAutoClear;
-            renderer.SetClearColor(this.originalClearColor);
-            renderer.SetClearAlpha(originalClearAlpha);
-        }
-        public event EventHandler<EventArgs> Disposed;
-        public virtual void Dispose()
-        {
-            Dispose(disposed);
-        }
-        protected virtual void RaiseDisposed()
-        {
-            var handler = this.Disposed;
-            if (handler != null)
-                handler(this, new EventArgs());
-        }
-        private bool disposed;
-        protected virtual void Dispose(bool disposing)
-        {
-            if (this.disposed) return;
-            try
-            {
-                // dispose render targets
-
-                this.beautyRenderTarget.Dispose();
-                this.normalRenderTarget.Dispose();
-
-                this.ssaoRenderTarget.Dispose();
-                this.blurRenderTarget.Dispose();
-
-                // dispose materials
-
-                this.normalMaterial.Dispose();
-                this.blurMaterial.Dispose();
-                this.copyMaterial.Dispose();
-                this.depthRenderMaterial.Dispose();
-
-                // dipsose full screen quad
-
-                this.fullScreenQuad.Dispose();
-
-                this.RaiseDisposed();
-                this.disposed = true;
-            }
-            finally
-            {
-
-            }
-            this.disposed = true;
-        }
+        RaiseDisposed();
+        disposed = true;
+        disposed = true;
     }
 }

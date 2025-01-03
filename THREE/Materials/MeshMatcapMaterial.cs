@@ -1,18 +1,18 @@
 ﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class MeshMatcapMaterial : Material
 {
-    [Serializable]
-    public class MeshMatcapMaterial : Material
+    public Texture Matcap;
+
+    public MeshMatcapMaterial()
     {
-        public Texture Matcap;
+        type = "MeshMatcapMaterial";
+    }
 
-        public MeshMatcapMaterial()
-            : base()
-        {
-            this.type = "MeshMatcapMaterial";
-        }
-
-        public MeshMatcapMaterial(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public MeshMatcapMaterial(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

@@ -1,18 +1,18 @@
 ﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class RGBShiftShader : ShaderMaterial
 {
-    [Serializable]
-    public class RGBShiftShader : ShaderMaterial
+    public RGBShiftShader()
     {
-        public RGBShiftShader() : base()
-        {
-            Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
-            Uniforms.Add("amount", new GLUniform { { "value", 0.005f } });
-            Uniforms.Add("angle", new GLUniform { { "value", 0.0f } });
+        Uniforms.Add("tDiffuse", new GLUniform { { "value", null } });
+        Uniforms.Add("amount", new GLUniform { { "value", 0.005f } });
+        Uniforms.Add("angle", new GLUniform { { "value", 0.0f } });
 
 
-            VertexShader = @"
+        VertexShader = @"
                 varying vec2 vUv; 
 
 
@@ -27,7 +27,7 @@ namespace THREE
             "
             ;
 
-            FragmentShader = @"
+        FragmentShader = @"
 				uniform sampler2D tDiffuse; 
 				uniform float amount;
 				uniform float angle;
@@ -45,8 +45,9 @@ namespace THREE
 				}
 
 			";
-        }
+    }
 
-        public RGBShiftShader(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public RGBShiftShader(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

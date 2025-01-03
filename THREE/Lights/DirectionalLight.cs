@@ -1,35 +1,41 @@
-﻿using System;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
-namespace THREE
+namespace THREE;
+
+[Serializable]
+public class DirectionalLight : Light, ICloneable
 {
-    [Serializable]
-    public class DirectionalLight : Light, ICloneable
+    public DirectionalLight(Color color, float? intensity = null) : base(color, intensity)
     {
+        Position.Copy(DefaultUp);
 
-        public DirectionalLight(Color color, float? intensity = null) : base(color, intensity)
-        {
-            this.Position.Copy(Object3D.DefaultUp);
+        UpdateMatrix();
 
-            this.UpdateMatrix();
+        Target = new Object3D();
 
-            this.Target = new Object3D();
+        Shadow = new DirectionalLightShadow();
 
-            this.Shadow = new DirectionalLightShadow();
+        type = "DirectionalLight";
+    }
 
-            this.type = "DirectionalLight";
-        }
-        public DirectionalLight() : this(new Color(), null) { }
-        public DirectionalLight(int color, float? intensity = null) : this(Color.Hex(color), intensity) { }
-        protected DirectionalLight(DirectionalLight other) : base(other)
-        {
-            this.Target = other.Target;
+    public DirectionalLight() : this(new Color())
+    {
+    }
 
-            this.type = "DirectionalLight";
+    public DirectionalLight(int color, float? intensity = null) : this(Color.Hex(color), intensity)
+    {
+    }
 
-            this.Shadow = (LightShadow)other.Shadow.Clone();
-        }
-        public DirectionalLight(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    protected DirectionalLight(DirectionalLight other) : base(other)
+    {
+        Target = other.Target;
 
+        type = "DirectionalLight";
+
+        Shadow = (LightShadow)other.Shadow.Clone();
+    }
+
+    public DirectionalLight(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }
