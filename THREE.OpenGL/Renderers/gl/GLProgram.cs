@@ -478,7 +478,7 @@ public class GLProgram : DisposableObject, IGLProgram
 
         GL.LinkProgram(program);
 
-        if ((bool)renderer.debug["checkShaderErrors"])
+        if ((bool)renderer.Debug["checkShaderErrors"])
         {
             var programLog = GL.GetProgramInfoLog(program);
             var vertexLog = GL.GetShaderInfoLog(glVertexShader.ShaderId);

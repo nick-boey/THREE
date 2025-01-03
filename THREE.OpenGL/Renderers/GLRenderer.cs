@@ -14,82 +14,84 @@ public class GLRenderer : DisposableObject, IGLRenderer
     private GLRenderState _currentRenderState;
     private GLCapabilitiesParameters _parameters;
 
+    private GLRenderStates _renderStates;
     private Stack<GLRenderList> _renderListStack = new();
-
     private Stack<GLRenderState> _renderStateStack = new();
 
-    private GLAttributes attributes;
+    private GLUtils _utils;
+    private GLAttributes _attributes;
+    private GLBackground _background;
+    private GLBufferRenderer _bufferRenderer;
 
-    private GLBackground background;
-
-    public GLBindingStates bindingStates;
-
-    private GLBufferRenderer bufferRenderer;
-
+    public GLBindingStates BindingStates;
     public GLCapabilities Capabilities;
 
     // User defined clipping
     public List<Plane> ClippingPlanes = new();
     public IGraphicsContext Context;
 
-    private GLCubeMap cubeMaps;
+    private GLCubeMap _cubeMaps;
 
-    public Hashtable debug = new();
+    public Hashtable Debug = new();
 
-    private Scene emptyScene;
-
+    private Scene _emptyScene;
     public GLExtensions Extensions;
 
     // Physically based shading
     public float GammaFactor = 2.0f; // for backwards compatibility
 
-    private GLGeometries geometries;
+    private GLGeometries _geometries;
 
-    private GLIndexedBufferRenderer indexedBufferRenderer;
+    private GLIndexedBufferRenderer _indexedBufferRenderer;
     public GLInfo Info;
     public bool LocalClippingEnabled = false;
 
-    private GLMaterials materials;
-    public int MaxMorphNormals = 4;
+    private GLMaterials _materials;
 
     // Morphs
+    private GLMorphtargets _morphtargets;
+    public int MaxMorphNormals = 4;
     public int MaxMorphTargets = 8;
 
-    private GLMorphtargets morphtargets;
-
     public GLMultiview Multiview;
-
-    private GLObjects objects;
+    private GLObjects _objects;
 
     public int OutputEncoding = Constants.LinearEncoding;
     public bool PhysicallyCorrectLights = false;
 
-    private bool premultipliedAlpha = true;
+    private const bool PremultipliedAlpha = true;
 
-    private GLPrograms programCache;
+    private GLPrograms _programCache;
+    private GLRenderLists _renderLists;
 
     public GLProperties Properties;
 
-    private GLRenderLists renderLists;
-
-    private GLRenderStates renderStates;
-
     public ShaderLib ShaderLib = Global.ShaderLib;
-
     public GLShadowMap ShadowMap;
 
     // Scene graph
     public bool SortObjects = true;
     public GLState State;
 
-    private GLTextures textures;
+    private GLTextures _textures;
 
     // Tone mapping
     public int ToneMapping = Constants.LinearToneMapping;
     public float ToneMappingExposure = 1.0f;
     public float ToneMappingWhitePoint = 1.0f;
 
-    private GLUtils utils;
+    public GLRenderer()
+    {
+    }
+
+    public GLRenderer(IGraphicsContext context, int width, int height)
+    {
+        Context = context;
+        _viewport = new Vector4(0, 0, width, height);
+        Width = width;
+        Height = height;
+        Init();
+    }
 
     public bool ShadowMapEnabled
     {
@@ -109,21 +111,7 @@ public class GLRenderer : DisposableObject, IGLRenderer
         set => ShadowMap.Type = value;
     }
 
-    public GLRenderer()
-    {
-    }
-
-    public GLRenderer(IGraphicsContext context, int width, int height) : base()
-    {
-        Context = context;
-        _viewport = new Vector4(0, 0, width, height);
-        Width = width;
-        Height = height;
-        Init();
-    }
-
     public bool IsGL2 { get; set; }
-
     public bool AutoClear { get; set; } = true;
     public bool AutoClearColor { get; set; } = true;
     public bool AutoClearDepth { get; set; } = true;
@@ -139,9 +127,9 @@ public class GLRenderer : DisposableObject, IGLRenderer
         Clear(false, true, false);
     }
 
-    public Vector2 GetSize(Vector2 target = null)
+    public Vector2 GetSize(Vector2? target = null)
     {
-        if (target == null) target = new Vector2();
+        target ??= new Vector2();
 
         target.Set(Width, Height);
 
@@ -156,7 +144,6 @@ public class GLRenderer : DisposableObject, IGLRenderer
         if (depth == null || depth == true) bits |= (int)ClearBufferMask.DepthBufferBit;
         if (stencil == null || stencil == true) bits |= (int)ClearBufferMask.StencilBufferBit;
 
-
         var mask = (ClearBufferMask)Enum.ToObject(typeof(ClearBufferMask), bits);
 
         if (Context.IsCurrent)
@@ -165,22 +152,22 @@ public class GLRenderer : DisposableObject, IGLRenderer
 
     public Color GetClearColor()
     {
-        return background.ClearColor;
+        return _background.ClearColor;
     }
 
     public float GetClearAlpha()
     {
-        return background.ClearAlpha;
+        return _background.ClearAlpha;
     }
 
     public void SetClearAlpha(float alpha)
     {
-        background.SetClearAlpha(alpha);
+        _background.SetClearAlpha(alpha);
     }
 
     public void SetClearColor(Color color, float alpha = 1)
     {
-        background.SetClearColor(color, alpha);
+        _background.SetClearColor(color, alpha);
     }
 
     public GLRenderTarget GetRenderTarget()
@@ -188,7 +175,7 @@ public class GLRenderer : DisposableObject, IGLRenderer
         return _currentRenderTarget;
     }
 
-    public void SetRenderTarget(GLRenderTarget renderTarget, int? activeCubeFace = null,
+    public void SetRenderTarget(GLRenderTarget? renderTarget, int? activeCubeFace = null,
         int? activeMipmapLevel = null)
     {
         _currentRenderTarget = renderTarget;
@@ -200,29 +187,36 @@ public class GLRenderer : DisposableObject, IGLRenderer
             _currentActiveMipmapLevel = activeMipmapLevel.Value;
 
         if (renderTarget != null && Properties.Get(renderTarget)["glFramebuffer"] == null)
-            textures.SetupRenderTarget(renderTarget);
+            _textures.SetupRenderTarget(renderTarget);
 
         var framebuffer = _framebuffer;
         var isCube = false;
 
         if (renderTarget != null)
         {
-            if (renderTarget is GLCubeRenderTarget)
+            switch (renderTarget)
             {
-                var glFramebuffer = (int[])Properties.Get(renderTarget)["glFramebuffer"];
+                case GLCubeRenderTarget:
+                {
+                    var glFramebuffer = (int[])Properties.Get(renderTarget)["glFramebuffer"];
 
-                framebuffer = glFramebuffer[activeCubeFace != null ? activeCubeFace.Value : 0];
-                isCube = true;
-            }
-            else if (renderTarget is GLMultisampleRenderTarget)
-            {
-                var glFramebuffer = (int)Properties.Get(renderTarget)["glMultisampledFramebuffer"];
-                framebuffer = glFramebuffer;
-            }
-            else
-            {
-                var glFramebuffer = (int)Properties.Get(renderTarget)["glFramebuffer"];
-                framebuffer = glFramebuffer;
+                    if (glFramebuffer != null)
+                        framebuffer = glFramebuffer[activeCubeFace ?? 0];
+                    isCube = true;
+                    break;
+                }
+                case GLMultisampleRenderTarget:
+                {
+                    var glFramebuffer = (int)Properties.Get(renderTarget)["glMultisampledFramebuffer"]!;
+                    framebuffer = glFramebuffer;
+                    break;
+                }
+                default:
+                {
+                    var glFramebuffer = (int)Properties.Get(renderTarget)["glFramebuffer"]!;
+                    framebuffer = glFramebuffer;
+                    break;
+                }
             }
 
             _currentViewport.Copy(renderTarget.Viewport);
@@ -250,67 +244,76 @@ public class GLRenderer : DisposableObject, IGLRenderer
         {
             var textureProperties = Properties.Get(renderTarget.Texture);
             GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
-                TextureTarget2d.TextureCubeMapPositiveX + (activeCubeFace != null ? activeCubeFace.Value : 0),
-                (int)textureProperties["glTexture"], activeMipmapLevel != null ? activeMipmapLevel.Value : 0);
+                TextureTarget2d.TextureCubeMapPositiveX + (activeCubeFace ?? 0),
+                (int)textureProperties["glTexture"], activeMipmapLevel ?? 0);
         }
     }
 
-    public void ReadRenderTargetPixels(GLRenderTarget renderTarget, float x, float y, int width, int height,
+    public void ReadRenderTargetPixels(GLRenderTarget? renderTarget, float x, float y, int width, int height,
         byte[] buffer, int? activeCubeFaceIndex)
     {
-        if (renderTarget == null)
-            //console.error('THREE.WebGLRenderer.readRenderTargetPixels: renderTarget is null THREE.WebGLRenderTarget.');
-            return;
+        if (renderTarget == null) return;
 
-        //var glFramebuffer = (int[])(properties.Get(renderTarget) as Hashtable)["glFramebuffer"];
         int framebuffer;
-        if (renderTarget is GLCubeRenderTarget)
-            framebuffer =
-                ((int[])Properties.Get(renderTarget)["glFramebuffer"])[
-                    activeCubeFaceIndex != null ? activeCubeFaceIndex.Value : 0];
-        else if (renderTarget is GLMultisampleRenderTarget)
-            framebuffer = (int)Properties.Get(renderTarget)["glMultisampledFramebuffer"];
-        else
-            framebuffer = (int)Properties.Get(renderTarget)["glFramebuffer"];
 
-        if (framebuffer != 0)
+        switch (renderTarget)
         {
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebuffer);
+            case GLCubeRenderTarget:
+                framebuffer =
+                    ((int[])Properties.Get(renderTarget)["glFramebuffer"])[
+                        activeCubeFaceIndex != null ? activeCubeFaceIndex.Value : 0];
+                break;
+            case GLMultisampleRenderTarget:
+                framebuffer = (int)Properties.Get(renderTarget)["glMultisampledFramebuffer"];
+                break;
+            default:
+                framebuffer = (int)Properties.Get(renderTarget)["glFramebuffer"];
+                break;
+        }
 
-            try
+        if (framebuffer == 0) return;
+
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebuffer);
+
+        try
+        {
+            var texture = renderTarget.Texture;
+            var textureFormat = texture.Format;
+            var textureType = texture.Type;
+
+            if (textureFormat != Constants.RGBAFormat)
+                //console.error('THREE.WebGLRenderer.readRenderTargetPixels: renderTarget is not in RGBA or implementation defined format.');
+                return;
+
+            // the following if statement ensures valid read requests (no out-of-bounds pixels, see Three.js Issue #8604)
+            if (x >= 0 && x <= renderTarget.Width - width &&
+                y >= 0 && y <= renderTarget.Height - height)
+                GL.ReadPixels((int)x, (int)y, width, height, _utils.Convert(textureFormat),
+                    _utils.Convert(textureType), buffer);
+        }
+        finally
+        {
+            // Restore framebuffer of current render target if necessary
+            if (_currentRenderTarget != null)
             {
-                var texture = renderTarget.Texture;
-                var textureFormat = texture.Format;
-                var textureType = texture.Type;
-
-                if (textureFormat != Constants.RGBAFormat)
-                    //console.error('THREE.WebGLRenderer.readRenderTargetPixels: renderTarget is not in RGBA or implementation defined format.');
-                    return;
-
-                // the following if statement ensures valid read requests (no out-of-bounds pixels, see Three.js Issue #8604)
-                if (x >= 0 && x <= renderTarget.Width - width &&
-                    y >= 0 && y <= renderTarget.Height - height)
-                    GL.ReadPixels((int)x, (int)y, width, height, utils.Convert(textureFormat),
-                        utils.Convert(textureType), buffer);
-            }
-            finally
-            {
-                // restore framebuffer of current render target if necessary=
-                if (_currentRenderTarget != null)
+                switch (renderTarget)
                 {
-                    if (renderTarget is GLCubeRenderTarget)
+                    case GLCubeRenderTarget:
                         framebuffer =
                             ((int[])Properties.Get(_currentRenderTarget)["glFramebuffer"])[
                                 activeCubeFaceIndex != null ? activeCubeFaceIndex.Value : 0];
-                    else if (renderTarget is GLMultisampleRenderTarget)
+                        break;
+                    case GLMultisampleRenderTarget:
                         framebuffer =
                             (int)Properties.Get(_currentRenderTarget)["glMultisampledFramebuffer"];
-                    else
+                        break;
+                    default:
                         framebuffer = (int)Properties.Get(_currentRenderTarget)["glFramebuffer"];
+                        break;
                 }
-
-                GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebuffer);
             }
+
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebuffer);
         }
     }
 
@@ -321,9 +324,9 @@ public class GLRenderer : DisposableObject, IGLRenderer
         var levelScale = (float)Math.Pow(2, -level.Value);
         var width = (float)Math.Floor(texture.Image.Width * levelScale);
         var height = (float)Math.Floor(texture.Image.Height * levelScale);
-        var glFormat = utils.Convert(texture.Format);
+        var glFormat = _utils.Convert(texture.Format);
 
-        textures.SetTexture2D(texture, 0);
+        _textures.SetTexture2D(texture, 0);
 
         GL.CopyTexImage2D(TextureTarget2d.Texture2D, level.Value, (TextureCopyComponentCount)glFormat,
             (int)position.X, (int)position.Y, (int)width, (int)height, 0);
@@ -364,9 +367,10 @@ public class GLRenderer : DisposableObject, IGLRenderer
         State.Viewport(_currentViewport);
     }
 
-    public void SetScissorTest(bool value)
+
+    public Vector4 GetScissor(Vector4 target)
     {
-        State.SetScissorTest(value);
+        return target.Copy(_scissor);
     }
 
     public void SetScissor(int x, int y, int width, int height)
@@ -375,9 +379,9 @@ public class GLRenderer : DisposableObject, IGLRenderer
         State.Scissor(_currentScissor.Copy(_scissor));
     }
 
-    public Vector4 GetScissor(Vector4 target)
+    public void SetScissorTest(bool value)
     {
-        return target.Copy(_scissor);
+        State.SetScissorTest(value);
     }
 
     private void InitGLContext()
@@ -400,8 +404,8 @@ public class GLRenderer : DisposableObject, IGLRenderer
         }
 
         //Extensions.Get("OES_texture_float_linear");
-        utils = new GLUtils(Extensions, Capabilities);
-        State = new GLState(Extensions, utils, Capabilities);
+        _utils = new GLUtils(Extensions, Capabilities);
+        State = new GLState(Extensions, _utils, Capabilities);
         _currentScissor = (_scissor * _pixelRatio).Floor();
         _currentViewport = (_viewport * _pixelRatio).Floor();
 
@@ -412,39 +416,39 @@ public class GLRenderer : DisposableObject, IGLRenderer
 
         Properties = new GLProperties();
 
-        textures = new GLTextures(Context, Extensions, State, Properties, Capabilities, utils, Info);
+        _textures = new GLTextures(Context, Extensions, State, Properties, Capabilities, _utils, Info);
 
-        attributes = new GLAttributes();
+        _attributes = new GLAttributes();
 
-        geometries = new GLGeometries(this, attributes, Info);
+        _geometries = new GLGeometries(this, _attributes, Info);
 
-        objects = new GLObjects(geometries, attributes, Info);
+        _objects = new GLObjects(_geometries, _attributes, Info);
 
-        morphtargets = new GLMorphtargets();
+        _morphtargets = new GLMorphtargets();
 
-        cubeMaps = new GLCubeMap(this);
+        _cubeMaps = new GLCubeMap(this);
 
-        bindingStates = new GLBindingStates(Context, Extensions, attributes, Capabilities);
+        BindingStates = new GLBindingStates(Context, Extensions, _attributes, Capabilities);
 
-        programCache = new GLPrograms(this, cubeMaps, Extensions, Capabilities, bindingStates, _clipping);
+        _programCache = new GLPrograms(this, _cubeMaps, Extensions, Capabilities, BindingStates, _clipping);
 
-        renderLists = new GLRenderLists(Properties);
+        _renderLists = new GLRenderLists(Properties);
 
-        renderStates = new GLRenderStates(Extensions, Capabilities);
+        _renderStates = new GLRenderStates(Extensions, Capabilities);
 
-        background = new GLBackground(this, cubeMaps, State, objects, premultipliedAlpha);
+        _background = new GLBackground(this, _cubeMaps, State, _objects, PremultipliedAlpha);
 
-        bufferRenderer = new GLBufferRenderer(this, Extensions, Info, Capabilities);
+        _bufferRenderer = new GLBufferRenderer(this, Extensions, Info, Capabilities);
 
-        indexedBufferRenderer = new GLIndexedBufferRenderer(this, Extensions, Info, Capabilities);
-
-
-        Info.programs = programCache.Programs;
-
-        emptyScene = new Scene();
+        _indexedBufferRenderer = new GLIndexedBufferRenderer(this, Extensions, Info, Capabilities);
 
 
-        materials = new GLMaterials(Properties);
+        Info.programs = _programCache.Programs;
+
+        _emptyScene = new Scene();
+
+
+        _materials = new GLMaterials(Properties);
     }
 
     private int GetTargetPixelRatio()
@@ -458,7 +462,7 @@ public class GLRenderer : DisposableObject, IGLRenderer
 
     public GLRenderLists GetRenderLists()
     {
-        return renderLists;
+        return _renderLists;
     }
 
     public GLRenderList GetRenderList()
@@ -483,7 +487,7 @@ public class GLRenderer : DisposableObject, IGLRenderer
 
     private GLProgram GetProgram(Material material, Object3D scene, Object3D object3D)
     {
-        if (scene is not Scene) scene = emptyScene;
+        if (scene is not Scene) scene = _emptyScene;
 
         var materialProperties = Properties.Get(material);
 
@@ -492,9 +496,9 @@ public class GLRenderer : DisposableObject, IGLRenderer
 
         var lightsStateVersion = (int)lights.state["version"];
 
-        var parameters = programCache.GetParameters(material, lights, shadowsArray, scene, object3D);
+        var parameters = _programCache.GetParameters(material, lights, shadowsArray, scene, object3D);
 
-        var programCacheKey = programCache.getProgramCacheKey(parameters).Replace("False", "false")
+        var programCacheKey = _programCache.getProgramCacheKey(parameters).Replace("False", "false")
             .Replace("True", "true");
 
         var programs = (Hashtable)materialProperties["programs"];
@@ -502,7 +506,7 @@ public class GLRenderer : DisposableObject, IGLRenderer
             ? scene is Scene ? (scene as Scene).Environment : null
             : null;
         materialProperties["fog"] = scene is Scene ? (scene as Scene).Fog : null;
-        materialProperties["envMap"] = cubeMaps.Get(material.EnvMap != null
+        materialProperties["envMap"] = _cubeMaps.Get(material.EnvMap != null
             ? material.EnvMap
             : materialProperties["environment"] as Texture);
 
@@ -527,10 +531,10 @@ public class GLRenderer : DisposableObject, IGLRenderer
         }
         else
         {
-            parameters["uniforms"] = programCache.GetUniforms(material);
+            parameters["uniforms"] = _programCache.GetUniforms(material);
             if (material.OnBuild != null) material.OnBuild(parameters, this);
             if (material.OnBeforeCompile != null) material.OnBeforeCompile(parameters, this);
-            program = programCache.AcquireProgram(parameters, programCacheKey);
+            program = _programCache.AcquireProgram(parameters, programCacheKey);
             programs[programCacheKey] = program;
             materialProperties["uniforms"] = parameters["uniforms"];
         }
@@ -594,7 +598,7 @@ public class GLRenderer : DisposableObject, IGLRenderer
     {
         //if(scene.isScene!=true) scene = emptyScene;
 
-        textures.ResetTextureUnits();
+        _textures.ResetTextureUnits();
 
         var fog = scene is Scene ? (scene as Scene).Fog : null;
 
@@ -602,7 +606,7 @@ public class GLRenderer : DisposableObject, IGLRenderer
             ? scene is Scene ? (scene as Scene).Environment : null
             : null;
         var encoding = _currentRenderTarget == null ? OutputEncoding : _currentRenderTarget.Texture.Encoding;
-        var envMap = cubeMaps.Get(material.EnvMap != null ? material.EnvMap : environment);
+        var envMap = _cubeMaps.Get(material.EnvMap != null ? material.EnvMap : environment);
         var geometry = object3D.Geometry;
         var isBufferGeometry = geometry is BufferGeometry;
         var containsColor = isBufferGeometry && (geometry as BufferGeometry).Attributes.ContainsKey("color");
@@ -813,7 +817,7 @@ public class GLRenderer : DisposableObject, IGLRenderer
                 {
                     if (skeleton.BoneTexture != null) skeleton.ComputeBoneTexture();
 
-                    p_uniforms.SetValue("boneTexture", skeleton.BoneTexture, textures);
+                    p_uniforms.SetValue("boneTexture", skeleton.BoneTexture, _textures);
                     p_uniforms.SetValue("boneTextureSize", skeleton.BoneTextureSize);
                 }
                 else
@@ -848,9 +852,9 @@ public class GLRenderer : DisposableObject, IGLRenderer
 
             // refresh uniforms common to several materials
 
-            if (fog != null && material.Fog) materials.RefreshFogUniforms(m_uniforms, fog);
+            if (fog != null && material.Fog) _materials.RefreshFogUniforms(m_uniforms, fog);
 
-            materials.RefreshMaterialUniforms(m_uniforms, material, _pixelRatio, Height,
+            _materials.RefreshMaterialUniforms(m_uniforms, material, _pixelRatio, Height,
                 _transmissionRenderTarget);
 
             if (ShaderLib.UniformsLib.ContainsKey("ltc_1"))
@@ -860,12 +864,12 @@ public class GLRenderer : DisposableObject, IGLRenderer
 
             //if (material is MeshLambertMaterial)
             //    Debug.WriteLine(material.type);
-            GLUniformsLoader.Upload((List<GLUniform>)materialProperties["uniformsList"], m_uniforms, textures);
+            GLUniformsLoader.Upload((List<GLUniform>)materialProperties["uniformsList"], m_uniforms, _textures);
         }
 
         if (material is ShaderMaterial && (material as ShaderMaterial).UniformsNeedUpdate)
         {
-            GLUniformsLoader.Upload((List<GLUniform>)materialProperties["uniformsList"], m_uniforms, textures);
+            GLUniformsLoader.Upload((List<GLUniform>)materialProperties["uniformsList"], m_uniforms, _textures);
             (material as ShaderMaterial).UniformsNeedUpdate = false;
         }
 
@@ -1051,29 +1055,21 @@ public class GLRenderer : DisposableObject, IGLRenderer
 
     #endregion
 
-    #region Private Renderring
+    #region Private functions
 
     #region Buffer deallocation
 
     private void DeallocateMaterial(Material material)
     {
-        //if (!this.Context.IsDisposed && this.Context.IsCurrent)
-        //{
-
         ReleaseMaterialProgramReference(material);
 
         Properties.Remove(material);
-
-        //}
     }
 
     private void ReleaseMaterialProgramReference(Material material)
     {
         var programInfo = Properties.Get(material)["program"];
-
-        //material.Program = null;
-
-        if (programInfo != null) programCache.ReleaseProgram((GLProgram)programInfo);
+        if (programInfo != null) _programCache.ReleaseProgram((GLProgram)programInfo);
     }
 
     #endregion
@@ -1150,10 +1146,10 @@ public class GLRenderer : DisposableObject, IGLRenderer
         */
     }
 
-    public void RenderBufferDirect(Camera camera, Object3D scene, Geometry geometry, Material material,
+    public void RenderBufferDirect(Camera camera, Object3D? scene, Geometry geometry, Material material,
         Object3D object3D, DrawRange? group)
     {
-        if (scene == null) scene = emptyScene;
+        if (scene == null) scene = _emptyScene;
 
         var frontFaceCW = object3D is Mesh && object3D.MatrixWorld.Determinant() < 0;
 
@@ -1161,12 +1157,12 @@ public class GLRenderer : DisposableObject, IGLRenderer
 
         State.SetMaterial(material, frontFaceCW);
 
-        var index = (geometry as BufferGeometry).Index;
+        var index = (geometry as BufferGeometry)?.Index;
         BufferAttribute<float> position = null;
-        if ((geometry as BufferGeometry).Attributes.ContainsKey("position"))
+        if (((BufferGeometry)geometry).Attributes.ContainsKey("position"))
         {
             var bufferGeom = geometry as BufferGeometry;
-            position = (BufferAttribute<float>)bufferGeom.Attributes["position"];
+            if (bufferGeom != null) position = (BufferAttribute<float>)bufferGeom.Attributes["position"];
         }
 
         //
@@ -1181,24 +1177,24 @@ public class GLRenderer : DisposableObject, IGLRenderer
 
         if (material.Wireframe)
         {
-            index = geometries.GetWireframeAttribute<int>(geometry);
+            index = _geometries.GetWireframeAttribute<int>(geometry);
             rangeFactor = 2;
         }
 
         if (material.MorphTargets || material.MorphNormals)
-            morphtargets.Update(object3D, geometry as BufferGeometry, material, program);
+            _morphtargets.Update(object3D, geometry as BufferGeometry, material, program);
 
-        bindingStates.Setup(object3D, material, program, geometry, index);
+        BindingStates.Setup(object3D, material, program, geometry, index);
 
         BufferType attribute = null;
-        var renderer = bufferRenderer;
+        var renderer = _bufferRenderer;
 
         if (index != null)
         {
-            attribute = attributes.Get<int>(index);
+            attribute = _attributes.Get<int>(index);
 
-            renderer = indexedBufferRenderer;
-            (renderer as GLIndexedBufferRenderer).SetIndex(attribute);
+            renderer = _indexedBufferRenderer;
+            (renderer as GLIndexedBufferRenderer)?.SetIndex(attribute);
         }
         //if (updateBuffers)
         //{
@@ -1254,7 +1250,8 @@ public class GLRenderer : DisposableObject, IGLRenderer
             if (material is LineBasicMaterial)
                 lineWidth = (material as LineBasicMaterial).LineWidth;
             else
-                lineWidth = 1f; // Not using Line*Material
+                // Default to 1.0 line width if LineMaterial not specified
+                lineWidth = 1f;
 
             State.SetLineWidth(lineWidth * GetTargetPixelRatio());
 
@@ -1310,7 +1307,7 @@ public class GLRenderer : DisposableObject, IGLRenderer
             throw new Exception(
                 "THREE.Renderers.RenderSceneList : camera is not an instance of THREE.Cameras.Camera");
 
-        bindingStates.ResetDefaultState();
+        BindingStates.ResetDefaultState();
         _currentMaterialId = -1;
         _currentCamera = null;
 
@@ -1336,7 +1333,7 @@ public class GLRenderer : DisposableObject, IGLRenderer
             scene.OnBeforeRender(this, scene, camera, null, null, null,
                 renderTarget != null ? renderTarget : _currentRenderTarget);
 
-        _currentRenderState = renderStates.Get(scene, _renderStateStack.Count);
+        _currentRenderState = _renderStates.Get(scene, _renderStateStack.Count);
         _currentRenderState.Init();
         _renderStateStack.Push(_currentRenderState);
 
@@ -1347,7 +1344,7 @@ public class GLRenderer : DisposableObject, IGLRenderer
         _localClippingEnabled = LocalClippingEnabled;
         _clippingEnabled = _clipping.Init(ClippingPlanes, _localClippingEnabled, camera);
 
-        _currentRenderList = renderLists.Get(scene, _renderListStack.Count);
+        _currentRenderList = _renderLists.Get(scene, _renderListStack.Count);
         _currentRenderList.Init();
         _renderListStack.Push(_currentRenderList);
 
@@ -1376,7 +1373,7 @@ public class GLRenderer : DisposableObject, IGLRenderer
 
         //this.AutoClear = scene.ClearBeforeRender;
 
-        background.Render(_currentRenderList, scene, camera, forceClear);
+        _background.Render(_currentRenderList, scene, camera, forceClear);
 
         // render scene
 
@@ -1395,11 +1392,11 @@ public class GLRenderer : DisposableObject, IGLRenderer
         {
             // Generate mipmap if we're using any kind of mipmap filtering
 
-            textures.UpdateRenderTargetMipmap(_currentRenderTarget);
+            _textures.UpdateRenderTargetMipmap(_currentRenderTarget);
 
             // resolve multisample renderbuffers to a single-sample texture if necessary
 
-            textures.UpdateMultisampleRenderTarget(_currentRenderTarget);
+            _textures.UpdateMultisampleRenderTarget(_currentRenderTarget);
         }
 
         // Ensure depth buffer writing is enabled so it can be cleared on next render
@@ -1412,7 +1409,7 @@ public class GLRenderer : DisposableObject, IGLRenderer
 
         //bindingStates.ResetDefaultState();
         State.currentProgram = -1;
-        bindingStates.Reset();
+        BindingStates.Reset();
 
         _currentMaterialId = -1;
         _currentCamera = null;
@@ -1462,7 +1459,7 @@ public class GLRenderer : DisposableObject, IGLRenderer
                     if (sortObjects)
                         _vector3.SetFromMatrixPosition(object3D.MatrixWorld).ApplyMatrix4(_projScreenMatrix);
 
-                    var geometry = objects.Update(object3D);
+                    var geometry = _objects.Update(object3D);
                     var material = object3D.Material;
 
                     if (material.Visible)
@@ -1490,7 +1487,7 @@ public class GLRenderer : DisposableObject, IGLRenderer
                     if (sortObjects)
                         _vector3.SetFromMatrixPosition(object3D.MatrixWorld).ApplyMatrix4(_projScreenMatrix);
 
-                    var geometry = objects.Update(object3D);
+                    var geometry = _objects.Update(object3D);
                     var material = object3D.Material;
                     if (object3D.Materials.Count > 1)
                     {
@@ -1540,7 +1537,7 @@ public class GLRenderer : DisposableObject, IGLRenderer
 
         RenderObjects(opaqueObjects, scene, camera);
 
-        textures.UpdateRenderTargetMipmap(_transmissionRenderTarget);
+        _textures.UpdateRenderTargetMipmap(_transmissionRenderTarget);
 
         SetRenderTarget(currentRenderTarget);
 
@@ -1628,25 +1625,20 @@ public class GLRenderer : DisposableObject, IGLRenderer
 
     #endregion
 
-    #region public Render function
+    #region Public functions
 
     public virtual void Init()
     {
-        debug.Add("checkShaderErrors", true);
+        Debug.Add("checkShaderErrors", true);
 
         InitGLContext();
-
-        //VR omitted
-
         Multiview = new GLMultiview(this);
-
-        ShadowMap = new GLShadowMap(this, objects, Capabilities.maxTextureSize);
+        ShadowMap = new GLShadowMap(this, _objects, Capabilities.maxTextureSize);
     }
 
     public Vector4 GetCurrentViewport(Vector4 target)
     {
         target.Copy(_currentViewport);
-
         return target;
     }
 
@@ -1658,11 +1650,6 @@ public class GLRenderer : DisposableObject, IGLRenderer
 
     public virtual void Resize(int width, int height)
     {
-        //foreach (string key in sceneList.Keys)
-        //{
-        //    RenderInfo info = sceneList[key];
-        //    info.Camera.MatrixWorldNeedsUpdate = true;
-        //}
         Width = width;
         Height = height;
 
