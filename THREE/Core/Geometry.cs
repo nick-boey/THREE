@@ -219,13 +219,31 @@ public class Geometry : ICloneable, IDisposable
         }
 
         var positions = ((BufferAttribute<float>)attribute).Array;
-        var normals = ((BufferAttribute<float>)attributes["normal"])?.Array;
-        var colors = ((BufferAttribute<float>)attributes["color"])?.Array;
-        ;
-        var uvs = ((BufferAttribute<float>)attributes["uv"])?.Array;
-        ;
-        var uvs2 = ((BufferAttribute<float>)attributes["uv2"])?.Array;
-        ;
+
+        float[]? normals = null;
+        float[]? colors = null;
+        float[]? uvs = null;
+        float[]? uvs2 = null;
+
+        if (attributes.TryGetValue("normal", out attribute))
+        {
+            normals = ((BufferAttribute<float>)attribute).Array;
+        }
+
+        if (attributes.TryGetValue("color", out attribute))
+        {
+            colors = ((BufferAttribute<float>)attribute).Array;
+        }
+
+        if (attributes.TryGetValue("uv", out attribute))
+        {
+            uvs = ((BufferAttribute<float>)attribute).Array;
+        }
+
+        if (attributes.TryGetValue("uv2", out attribute))
+        {
+            uvs2 = ((BufferAttribute<float>)attribute).Array;
+        }
 
         if (uvs2 is { Length: > 0 })
         {

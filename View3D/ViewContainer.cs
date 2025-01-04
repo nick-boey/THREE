@@ -13,6 +13,9 @@ namespace View3D;
 [Serializable]
 public abstract class ViewContainer : ControlsContainer
 {
+    private Raycaster _raycaster = new();
+    private Vector2 _mouse = new(1, 1);
+
     /// <summary>
     /// GLControl that the View is currently bound to
     /// </summary>
@@ -29,9 +32,43 @@ public abstract class ViewContainer : ControlsContainer
     /// </summary>
     public Scene Scene = new();
 
+    public List<Element> SceneElements = new();
+
     ~ViewContainer()
     {
         Dispose(false);
+    }
+
+    /// <summary>
+    /// Adds an element to the Scene and SceneElements
+    /// </summary>
+    /// <param name="element">Element to be added</param>
+    public void AddElement(Element element)
+    {
+        // Only allow unique elements to be added
+        if (SceneElements.Contains(element)) return;
+
+        SceneElements.Add(element);
+
+        Scene.Add(element);
+    }
+
+    /// <summary>
+    /// Ensures that all SceneElements are added to the Scene
+    /// </summary>
+    /// <param name="clearScene">true if all objects not in SceneElements are to be removed from the Scene</param>
+    private void UpdateScene(bool clearScene = false)
+    {
+        if (clearScene)
+        {
+            // Remove objects that are not included in SceneElements
+            var unusedObjects = Scene.Children.Where(object3D => !SceneElements.Contains(object3D)).ToList();
+        }
+
+        foreach (var element in SceneElements)
+        {
+            Scene.Add(element);
+        }
     }
 
     public virtual void Load(GLWpfControl control)
@@ -57,6 +94,7 @@ public abstract class ViewContainer : ControlsContainer
         InitializeCamera();
         InitializeControls();
         InitializeLighting();
+        MouseMove += OnMouseMove;
     }
 
     public virtual void InitializeRenderer()
@@ -112,13 +150,47 @@ public abstract class ViewContainer : ControlsContainer
         base.OnResize(clientSize);
     }
 
+    private void OnMouseMove(object? sender, MouseEventArgs e)
+    {
+        _mouse.X = e.X * 1.0f / ClientRectangle.Width * 2 - 1.0f;
+        _mouse.Y = -e.Y * 1.0f / ClientRectangle.Height * 2 + 1.0f;
+    }
+
     /// <summary>
     /// Renders the Scene to the GLWpfControl
     /// </summary>
     public virtual void Render()
     {
         CameraControls?.Update();
+
+        UpdateIntersections();
+
         Renderer?.Render(Scene, Camera);
+    }
+
+    /// <summary>
+    /// Check whether the mouse is hovering over any objects in the Scene
+    /// </summary>
+    private void UpdateIntersections()
+    {
+        _raycaster.SetFromCamera(_mouse, Camera);
+
+        var intersects = _raycaster.IntersectObjects(Scene.Children, true);
+
+        foreach (var element in SceneElements.OfType<SelectableElement>())
+        {
+            element.Unhover();
+        }
+
+        if (intersects.Count <= 0) return;
+
+        foreach (var intersect in intersects)
+        {
+            if (intersect.Object3D is SelectableElement element)
+            {
+                element.ActiveHover();
+            }
+        }
     }
 
     public virtual void Unload()

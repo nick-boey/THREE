@@ -319,18 +319,14 @@ public class Object3D : BasicObject, ICloneable
             return this;
         }
 
-        if (object3D is Object3D)
-        {
-            if (object3D.Parent != null) object3D.Parent.Remove(object3D);
+        // Only allow one instance of the child in this object
+        if (Children.Contains(object3D)) return this;
 
-            object3D.Parent = this;
+        // The Object3D can only be added to one scene at a time
+        object3D.Parent?.Remove(object3D);
+        object3D.Parent = this;
 
-            Children.Add(object3D);
-        }
-        else
-        {
-            Trace.TraceError("THREE.Core.Object3D.Add: {0} is not an instance of THREE.Core.Object3D.", object3D);
-        }
+        Children.Add(object3D);
 
         return this;
     }
@@ -543,7 +539,7 @@ public class Object3D : BasicObject, ICloneable
 
     public Guid Uuid = Guid.NewGuid();
 
-    public Object3D Parent;
+    public Object3D? Parent;
 
     public bool IsCamera = false;
 

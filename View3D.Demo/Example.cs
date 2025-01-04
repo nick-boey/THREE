@@ -11,21 +11,10 @@ public class Example : ViewContainer
     public override void Load(GLWpfControl glControl)
     {
         base.Load(glControl);
-
         Scene.Background = Color.Hex(0x000000);
 
         var axes = new AxesHelper(20);
-
         Scene.Add(axes);
-
-        var planeGeometry = new PlaneGeometry(60, 20);
-        var planeMaterial = new MeshBasicMaterial { Color = Color.Hex(0xcccccc) };
-        var plane = new Mesh(planeGeometry, planeMaterial);
-
-        plane.Rotation.X = (float)(-0.5 * Math.PI);
-        plane.Position.Set(15, 0, 0);
-
-        Scene.Add(plane);
 
         // create a directional light
         var light = new DirectionalLight();
@@ -33,30 +22,31 @@ public class Example : ViewContainer
         light.Position = new Vector3(30, 30, 30);
         Scene.Add(light);
 
+        var baseMaterial = new MeshBasicMaterial() { Color = Color.Hex(0xff0000) };
+        var hoverMaterial = new MeshBasicMaterial() { Color = Color.Hex(0x00ff00) };
+        var selectedMaterial = new MeshBasicMaterial() { Color = Color.Hex(0x0000ff) };
+
+        var planeGeometry = new PlaneGeometry(60, 20);
+        var planeMaterial = new MeshBasicMaterial { Color = Color.Hex(0xcccccc) };
+        var planeElement = new SelectableElement(planeGeometry, planeMaterial);
+        planeElement.Rotation.X = (float)(-0.5 * Math.PI);
+        planeElement.Position.Set(15, 0, 0);
+        AddElement(planeElement);
 
         // create a cube
         var cubeGeometry = new BoxGeometry(4, 4, 4);
-
-        var cubeMaterial = new OutlineMaterial { Color = Color.Hex(0xff0000) };
-        var cube = new Mesh(cubeGeometry, cubeMaterial);
-
-        // position the cube
-        cube.Position.Set(-4, 3, 0);
-
-        // add the cube to the scene
-
-        Scene.Add(cube);
+        var cubeElement =
+            new SelectableElement(cubeGeometry, baseMaterial, hoverMaterial, hoverMaterial, selectedMaterial);
+        cubeElement.Position.Set(-4, 3, 0);
+        AddElement(cubeElement);
 
         // create a sphere
         var sphereGeometry = new SphereGeometry(4, 20, 20);
         var sphereMaterial = new MeshBasicMaterial { Color = Color.Hex(0x7777ff) };
-        var sphere = new Mesh(sphereGeometry, sphereMaterial);
-
-        // position the sphere
-        sphere.Position.Set(20, 4, 2);
-
-        // add the sphere to the scene
-        Scene.Add(sphere);
+        var sphereElement =
+            new SelectableElement(sphereGeometry, baseMaterial, hoverMaterial, hoverMaterial, selectedMaterial);
+        sphereElement.Position.Set(20, 4, 2);
+        AddElement(sphereElement);
     }
 
     public override void OnResize(ResizeEventArgs clientSize)

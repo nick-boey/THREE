@@ -8,7 +8,7 @@ namespace THREEExample.ThreeJs.Instancing;
 [Example("Instancing Raycast", ExampleCategory.ThreeJs, "Instancing")]
 public class InstancingRaycast : Example
 {
-    private const int Amount = 10;
+    public const int Amount = 10;
     private readonly Color _color = new(1, 1, 1);
     private readonly int _count;
     private readonly Vector2 _mouse = new(1, 1);
