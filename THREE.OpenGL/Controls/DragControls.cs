@@ -93,7 +93,7 @@ public class DragControls : IDisposable
 
         if (_intersections.Count > 0)
         {
-            _selected = TransformGroup ? objects[0] : _intersections[0].object3D;
+            _selected = TransformGroup ? objects[0] : _intersections[0].Object3D;
 
             _plane.SetFromNormalAndCoplanarPoint(camera.GetWorldDirection(_plane.Normal),
                 _worldPosition.SetFromMatrixPosition(_selected.MatrixWorld));
@@ -132,7 +132,7 @@ public class DragControls : IDisposable
 
         if (_intersections.Count > 0)
         {
-            var object3d = _intersections[0].object3D;
+            var object3d = _intersections[0].Object3D;
 
             _plane.SetFromNormalAndCoplanarPoint(camera.GetWorldDirection(_plane.Normal),
                 _worldPosition.SetFromMatrixPosition(object3d.MatrixWorld));

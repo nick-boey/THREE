@@ -3,21 +3,17 @@
 [Serializable]
 public class BoxGeometry : Geometry
 {
-    public float Depth;
-
-    public int DepthSegments;
-
-    public float Height;
-
-    public int HeightSegments;
-    public float Width;
-
-    public int WidthSegments;
+    public float Depth { get; set; }
+    public int DepthSegments { get; set; }
+    public float Height { get; set; }
+    public int HeightSegments { get; set; }
+    public float Width { get; set; }
+    public int WidthSegments { get; set; }
 
     public BoxGeometry(float width = 1, float height = 1, float depth = 1, int widthSegments = 1,
         int heightSegments = 1, int depthSegments = 1)
     {
-        type = "BoxGeometry";
+        Type = "BoxGeometry";
 
         Width = width;
 

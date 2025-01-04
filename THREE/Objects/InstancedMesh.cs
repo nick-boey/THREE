@@ -92,8 +92,8 @@ public class InstancedMesh : Mesh
             for (int i = 0, l = _instanceIntersects.Count; i < l; i++)
             {
                 var intersect = _instanceIntersects[i];
-                intersect.instanceId = instanceId;
-                intersect.object3D = this;
+                intersect.InstanceId = instanceId;
+                intersect.Object3D = this;
                 intersects.Add(intersect);
             }
 

@@ -47,7 +47,7 @@ public class ConvexHull
 
             if (geometry != null)
             {
-                if (geometry.type == "Geometry")
+                if (geometry.Type == "Geometry")
                 {
                     var vertices = geometry.Vertices;
 
@@ -59,7 +59,7 @@ public class ConvexHull
                         points.Add(point);
                     }
                 }
-                else if (geometry.type == "BufferGeometry")
+                else if (geometry.Type == "BufferGeometry")
                 {
                     var attribute = (geometry as BufferGeometry).Attributes["position"] as BufferAttribute<float>;
 

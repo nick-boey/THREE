@@ -23,91 +23,66 @@ public class Geometry : ICloneable, IDisposable
 {
     protected static int GeometryIdCount;
 
-    public BufferGeometry __bufferGeometry;
-
-    public DirectGeometry __directGeometry;
+    public BufferGeometry BufferGeometry;
+    public DirectGeometry DirectGeometry;
 
     private bool _disposed;
-
     private Object3D _obj = new();
-
     private Vector3 _offset = Vector3.Zero();
 
-    public Box3 BoundingBox;
-
-    public Sphere BoundingSphere;
-
-    public List<Color> Colors = new(); // one-to-one vertex colors, used in Points and Line
-
-    public bool ColorsNeedUpdate;
-
-    public bool ElementsNeedUpdate;
-
-    public List<Face3> Faces = new();
-
-    public List<List<List<Vector2>>> FaceVertexUvs = new();
-
-    public List<DrawRange> Groups = new();
-
-    public bool GroupsNeedUpdate;
-
     public int Id;
-
-    public List<float> LineDistances = new();
-
-    public bool LineDistancesNeedUpdate;
-
-    public Hashtable MorphNormals = new();
-
-    public Hashtable MorphTargets = new();
-
-    public string Name;
-
-    public float[] normalArray;
-
-    public List<Vector3> Normals = new();
-
-    public bool NormalsNeedUpdate;
-
-    public List<Vector4> SkinIndices = new();
-
-    public List<Vector4> SkinWeights = new();
-
-    public string type;
-
+    public string Name = "";
+    public string Type = "Geometry";
     public Guid Uuid = Guid.NewGuid();
 
-    public List<Vector2> Uvs = new();
+    public Box3? BoundingBox;
+    public Sphere? BoundingSphere;
 
+    // One-to-one vertex colors, used in Points and Line
+    public List<Color> Colors = new();
+
+    // Update flags
+    public bool ColorsNeedUpdate;
+    public bool ElementsNeedUpdate;
+    public bool UvsNeedUpdate;
+    public bool NormalsNeedUpdate;
+    public bool GroupsNeedUpdate;
+    public bool LineDistancesNeedUpdate;
+    public bool VerticesNeedUpdate;
+
+    // Faces
+    public List<Face3> Faces = new();
+    public List<List<List<Vector2>>> FaceVertexUvs = new();
+
+    // Groups
+    public List<DrawRange> Groups = new();
+
+    // Line distances
+    public List<float> LineDistances = new();
+
+    // Morphs
+    public Hashtable MorphNormals = new();
+    public Hashtable MorphTargets = new();
+
+    // Normals
+    public float[] NormalArray;
+    public List<Vector3> Normals = new();
+
+    // Skin
+    public List<Vector4> SkinIndices = new();
+    public List<Vector4> SkinWeights = new();
+
+    // UVs
+    public List<Vector2> Uvs = new();
     public List<Vector2> Uvs2 = new();
 
-    public bool UvsNeedUpdate;
-
+    // Vertices
     public List<Vector3> Vertices = new();
-
-    // update flags
-    public bool VerticesNeedUpdate;
 
     public Geometry()
     {
         Id = GeometryIdCount;
         GeometryIdCount += 1;
-
-        Name = "";
-
-        type = "Geometry";
-
-        //List<Vector2> uvsList2 = new List<Vector2>();
-
-        //List<List<Vector2>> uvsList1 = new List<List<Vector2>>();
-
-        //uvsList1.Add(uvsList2);
-
-
-        //this.FaceVertexUvs.Add(uvsList1);
-
-
-        IsBufferGeometry = false;
     }
 
     protected Geometry(Geometry source) : this()
@@ -115,7 +90,7 @@ public class Geometry : ICloneable, IDisposable
         Copy(source);
     }
 
-    public bool IsBufferGeometry { get; set; }
+    public bool IsBufferGeometry { get; set; } = false;
 
     public object Clone()
     {
@@ -143,6 +118,7 @@ public class Geometry : ICloneable, IDisposable
         if (source.BoundingSphere != null)
             BoundingSphere = (Sphere)source.BoundingSphere.Clone();
 
+        // Update flags
         ElementsNeedUpdate = source.ElementsNeedUpdate;
         VerticesNeedUpdate = source.VerticesNeedUpdate;
         UvsNeedUpdate = source.UvsNeedUpdate;
@@ -158,18 +134,16 @@ public class Geometry : ICloneable, IDisposable
     {
         var normalMatrix = new Matrix3().GetNormalMatrix(matrix);
 
-        for (var i = 0; i < Vertices.Count; i++)
+        foreach (var vertex in Vertices)
         {
-            var vertex = Vertices[i];
             vertex.ApplyMatrix4(matrix);
         }
 
-        for (var i = 0; i < Faces.Count; i++)
+        foreach (var face in Faces)
         {
-            var face = Faces[i];
             face.Normal.ApplyMatrix3(normalMatrix).Normalize();
-            for (var j = 0; j < face.VertexNormals.Count; j++)
-                face.VertexNormals[j].ApplyMatrix3(normalMatrix).Normalize();
+            foreach (var vertexNormal in face.VertexNormals)
+                vertexNormal.ApplyMatrix3(normalMatrix).Normalize();
         }
 
         if (BoundingBox != null) ComputeBoundingBox();
@@ -181,17 +155,31 @@ public class Geometry : ICloneable, IDisposable
         return this;
     }
 
-    // angle : Degree
+    /// <summary>
+    /// Rotate the geometry about the x-axis
+    /// </summary>
+    /// <param name="angle">Angle in degrees</param>
+    /// <returns>Rotated geometry</returns>
     public virtual Geometry RotateX(float angle)
     {
         return ApplyMatrix4(Matrix4.Identity().MakeRotationX(angle));
     }
 
+    /// <summary>
+    /// Rotate the geometry about the y-axis
+    /// </summary>
+    /// <param name="angle">Angle in degrees</param>
+    /// <returns>Rotated geometry</returns>
     public virtual Geometry RotateY(float angle)
     {
         return ApplyMatrix4(Matrix4.Identity().MakeRotationY(angle));
     }
 
+    /// <summary>
+    /// Rotate the geometry about the z-axis
+    /// </summary>
+    /// <param name="angle">Angle in degrees</param>
+    /// <returns>Rotated geometry</returns>
     public virtual Geometry RotateZ(float angle)
     {
         return ApplyMatrix4(Matrix4.Identity().MakeRotationZ(angle));
@@ -201,7 +189,6 @@ public class Geometry : ICloneable, IDisposable
     {
         return ApplyMatrix4(Matrix4.Identity().MakeTranslation(x, y, z));
     }
-
 
     public virtual Geometry Scale(float x, float y, float z)
     {
@@ -222,47 +209,35 @@ public class Geometry : ICloneable, IDisposable
 
     public Geometry FromBufferGeometry(BufferGeometry geometry)
     {
-        var indices = geometry.Index != null ? geometry.Index.Array : null;
+        var indices = geometry.Index?.Array;
         var attributes = geometry.Attributes;
 
-        if (!attributes.ContainsKey("position"))
+        if (!attributes.TryGetValue("position", out var attribute))
         {
             Trace.TraceError("THREE.Core.Geometry.FromBufferGeometry():Position attribute required for conversion.");
             return this;
         }
 
-        var positions = ((BufferAttribute<float>)attributes["position"]).Array;
-        float[] normals = null; // as BufferAttribute<float>)["array"] as float[];
-        float[] colors = null; // as BufferAttribute<float>)["array"] as float[];
-        float[] uvs = null; // as BufferAttribute<float>)["array"] as float[];
-        float[] uvs2 = null; //as BufferAttribute<float>)["array"] as float[];
+        var positions = ((BufferAttribute<float>)attribute).Array;
+        var normals = ((BufferAttribute<float>)attributes["normal"])?.Array;
+        var colors = ((BufferAttribute<float>)attributes["color"])?.Array;
+        ;
+        var uvs = ((BufferAttribute<float>)attributes["uv"])?.Array;
+        ;
+        var uvs2 = ((BufferAttribute<float>)attributes["uv2"])?.Array;
+        ;
 
-
-        if (attributes.ContainsKey("normal"))
-            normals = ((BufferAttribute<float>)attributes["normal"]).Array;
-
-        if (attributes.ContainsKey("color"))
-            colors = ((BufferAttribute<float>)attributes["color"]).Array;
-
-        if (attributes.ContainsKey("uv"))
-            uvs = ((BufferAttribute<float>)attributes["uv"]).Array;
-
-        if (attributes.ContainsKey("uv2"))
-            uvs2 = ((BufferAttribute<float>)attributes["uv2"]).Array;
-
-        if (uvs2 != null && uvs2.Length > 0)
+        if (uvs2 is { Length: > 0 })
         {
             List<Vector2> uvsList2 = new();
-            List<List<Vector2>> uvsList1 = new();
-            uvsList1.Add(uvsList2);
-
+            List<List<Vector2>> uvsList1 = new() { uvsList2 };
             FaceVertexUvs.Add(uvsList1);
         }
 
         for (var i = 0; i < positions.Length; i += 3)
         {
             Vertices.Add(new Vector3().FromArray(positions, i));
-            if (colors != null && colors.Length > 0)
+            if (colors is { Length: > 0 })
                 Colors.Add(Color.ColorName(ColorKeywords.white).FromArray(colors, i));
         }
 
@@ -270,15 +245,13 @@ public class Geometry : ICloneable, IDisposable
 
         if (groups.Count > 0)
         {
-            for (var i = 0; i < groups.Count; i++)
+            foreach (var group in groups)
             {
-                var group = groups[i];
-
                 var start = (int)group.Start;
                 var count = (int)group.Count;
 
                 for (int j = start, j1 = start + count; j < j1; j += 3)
-                    if (indices != null && indices.Length > 0)
+                    if (indices is { Length: > 0 })
                         AddFace(indices[j], indices[j + 1], indices[j + 2], group.MaterialIndex, normals, uvs, uvs2);
                     else
                         AddFace(j, j + 1, j + 2, group.MaterialIndex, normals, uvs, uvs2);
@@ -286,7 +259,7 @@ public class Geometry : ICloneable, IDisposable
         }
         else
         {
-            if (indices != null && indices.Length > 0)
+            if (indices is { Length: > 0 })
                 for (var i = 0; i < indices.Length; i += 3)
                     AddFace(indices[i], indices[i + 1], indices[i + 2], 0, normals, uvs, uvs2);
             else
@@ -299,14 +272,16 @@ public class Geometry : ICloneable, IDisposable
         if (geometry.BoundingBox != null) BoundingBox = (Box3)geometry.BoundingBox.Clone();
 
         if (geometry.BoundingSphere != null) BoundingSphere = (Sphere)geometry.BoundingSphere.Clone();
+
         return this;
     }
 
     public virtual Geometry Center()
     {
         ComputeBoundingBox();
-        BoundingBox.GetCenter(_offset).Negate();
-        Translate(_offset.X, _offset.Y, _offset.Z);
+
+        var translationOffset = BoundingBox!.GetCenter(_offset).Negate();
+        Translate(translationOffset.X, translationOffset.Y, translationOffset.Z);
 
         return this;
     }
@@ -315,8 +290,8 @@ public class Geometry : ICloneable, IDisposable
     {
         ComputeBoundingSphere();
 
-        var center = BoundingSphere.Center;
-        var radius = BoundingSphere.Radius;
+        var center = BoundingSphere!.Center;
+        var radius = BoundingSphere!.Radius;
 
         var s = radius == 0 ? 1 : 1.0f / radius;
         var matrix = new Matrix4(
@@ -330,23 +305,16 @@ public class Geometry : ICloneable, IDisposable
 
     public virtual void ComputeFaceNormals()
     {
-        var cb = new Vector3();
-        var ab = new Vector3();
-        //int vLen = this.Vertices.Count - 1;
         for (int f = 0, f1 = Faces.Count; f < f1; f++)
         {
             var face = Faces[f];
-
-            if (face.Normal == null) face.Normal = new Vector3();
-            //if (face.c > vLen)
-            //    continue;
 
             var vA = Vertices[face.a];
             var vB = Vertices[face.b];
             var vC = Vertices[face.c];
 
-            cb = vC - vB;
-            ab = vA - vB;
+            var cb = vC - vB;
+            var ab = vA - vB;
             cb.Cross(ab);
 
             cb.Normalize();
@@ -355,29 +323,25 @@ public class Geometry : ICloneable, IDisposable
         }
     }
 
-    public virtual void ComputeVertexNormals(bool? areaWeighted = null)
+    public virtual void ComputeVertexNormals(bool? areaWeighted = true)
     {
-        if (areaWeighted == null) areaWeighted = true;
+        areaWeighted ??= true;
 
-
-        //vertices = new Array(this.vertices.length);
-        Vector3[] vertices = new Vector3[Vertices.Count];
+        var vertices = new Vector3[Vertices.Count];
 
         for (var v = 0; v < Vertices.Count; v++) vertices[v] = new Vector3();
 
         if (areaWeighted.Value)
         {
-            // vertex normals weighted by triangle areas
+            // Vertex normals weighted by triangle areas
             // http://www.iquilezles.org/www/articles/normals/normals.htm
 
             Vector3 vA, vB, vC;
             var cb = new Vector3();
             var ab = new Vector3();
 
-            for (var f = 0; f < Faces.Count; f++)
+            foreach (var face in Faces)
             {
-                var face = Faces[f];
-
                 vA = Vertices[face.a];
                 vB = Vertices[face.b];
                 vC = Vertices[face.c];
@@ -395,22 +359,18 @@ public class Geometry : ICloneable, IDisposable
         {
             ComputeFaceNormals();
 
-            for (var f = 0; f < Faces.Count; f++)
+            foreach (var face in Faces)
             {
-                var face = Faces[f];
-
                 vertices[face.a].Add(face.Normal);
                 vertices[face.b].Add(face.Normal);
                 vertices[face.c].Add(face.Normal);
             }
         }
 
-        for (var v = 0; v < Vertices.Count; v++) vertices[v].Normalize();
+        foreach (var vertex in vertices) vertex.Normalize();
 
-        for (var f = 0; f < Faces.Count; f++)
+        foreach (var face in Faces)
         {
-            var face = Faces[f];
-
             var vertexNormals = face.VertexNormals;
 
             if (vertexNormals.Count == 3)
@@ -435,32 +395,27 @@ public class Geometry : ICloneable, IDisposable
     {
         ComputeFaceNormals();
 
-        for (var f = 0; f < Faces.Count; f++)
+        foreach (var face in Faces)
         {
-            var face = Faces[f];
-
             var vertexNormals = face.VertexNormals;
 
-            if (vertexNormals.Count == 3)
+            switch (vertexNormals.Count)
             {
-                vertexNormals[0].Copy(face.Normal);
-                vertexNormals[1].Copy(face.Normal);
-                vertexNormals[2].Copy(face.Normal);
-            }
-            else
-            {
-                if (vertexNormals.Count == 0)
-                {
+                case 3:
+                    vertexNormals[0].Copy(face.Normal);
+                    vertexNormals[1].Copy(face.Normal);
+                    vertexNormals[2].Copy(face.Normal);
+                    break;
+                case 0:
                     vertexNormals.Add(face.Normal.Clone());
                     vertexNormals.Add(face.Normal.Clone());
                     vertexNormals.Add(face.Normal.Clone());
-                }
-                else
-                {
+                    break;
+                default:
                     vertexNormals[0] = (Vector3)face.Normal.Clone();
                     vertexNormals[1] = (Vector3)face.Normal.Clone();
                     vertexNormals[2] = (Vector3)face.Normal.Clone();
-                }
+                    break;
             }
         }
 
@@ -469,23 +424,23 @@ public class Geometry : ICloneable, IDisposable
 
     public virtual void ComputeMorphNormals()
     {
+        throw new NotImplementedException();
     }
 
 
     public virtual void ComputeBoundingBox()
     {
-        if (BoundingBox == null) BoundingBox = new Box3();
-
+        BoundingBox ??= new Box3();
         BoundingBox.SetFromPoints(Vertices);
     }
 
     public virtual void ComputeBoundingSphere()
     {
-        if (BoundingSphere == null) BoundingSphere = new Sphere();
+        BoundingSphere ??= new Sphere();
         BoundingSphere.SetFromPoints(Vertices);
     }
 
-    private void AddFace(int a, int b, int c, int materialIndex, float[] normals, float[] uvs, float[] uvs2)
+    private void AddFace(int a, int b, int c, int materialIndex, float[]? normals, float[]? uvs, float[]? uvs2)
     {
         var vertexColors = new List<Color>();
         if (Colors.Count > 0)
@@ -497,7 +452,7 @@ public class Geometry : ICloneable, IDisposable
 
         var vertexNormals = new List<Vector3>();
 
-        if (normals != null && normals.Length > 0)
+        if (normals is { Length: > 0 })
         {
             vertexNormals.Add(new Vector3().FromArray(normals, a * 3));
             vertexNormals.Add(new Vector3().FromArray(normals, b * 3));
@@ -508,28 +463,30 @@ public class Geometry : ICloneable, IDisposable
 
         Faces.Add(face);
 
-        if (uvs != null && uvs.Length > 0)
+        if (uvs is { Length: > 0 })
         {
-            List<Vector2> list2 = new();
-            list2.Add(new Vector2().FromArray(uvs, a * 2));
-            list2.Add(new Vector2().FromArray(uvs, b * 2));
-            list2.Add(new Vector2().FromArray(uvs, c * 2));
-            List<List<Vector2>> list1 = new();
-            list1.Add(list2);
+            List<Vector2> list2 = new()
+            {
+                new Vector2().FromArray(uvs, a * 2),
+                new Vector2().FromArray(uvs, b * 2),
+                new Vector2().FromArray(uvs, c * 2)
+            };
+            List<List<Vector2>> list1 = new() { list2 };
             if (FaceVertexUvs.Count == 0)
                 FaceVertexUvs.Add(list1);
             else
                 FaceVertexUvs[0].Add(list2);
         }
 
-        if (uvs2 != null && uvs2.Length > 0)
+        if (uvs2 is { Length: > 0 })
         {
-            List<Vector2> list2 = new();
-            list2.Add(new Vector2().FromArray(uvs2, a * 2));
-            list2.Add(new Vector2().FromArray(uvs2, b * 2));
-            list2.Add(new Vector2().FromArray(uvs2, c * 2));
-            List<List<Vector2>> list1 = new();
-            list1.Add(list2);
+            List<Vector2> list2 = new()
+            {
+                new Vector2().FromArray(uvs2, a * 2),
+                new Vector2().FromArray(uvs2, b * 2),
+                new Vector2().FromArray(uvs2, c * 2)
+            };
+            List<List<Vector2>> list1 = new() { list2 };
             if (FaceVertexUvs.Count == 1)
                 FaceVertexUvs.Add(list1);
             else
@@ -541,20 +498,18 @@ public class Geometry : ICloneable, IDisposable
     {
         var normalMatrix = new Matrix3();
         var vertexOffset = Vertices.Count;
-        List<Vector3> vertices1 = Vertices;
-        List<Vector3> vertices2 = geometry.Vertices;
-        List<Face3> faces1 = Faces;
-        List<Face3> faces2 = geometry.Faces;
+        var vertices1 = Vertices;
+        var vertices2 = geometry.Vertices;
+        var faces1 = Faces;
+        var faces2 = geometry.Faces;
         var color1 = Colors;
         var color2 = geometry.Colors;
 
         normalMatrix.GetNormalMatrix(matrix);
 
-        // vertices
-        for (var i = 0; i < vertices2.Count; i++)
+        // Vertices
+        foreach (var vertex in vertices2)
         {
-            var vertex = vertices2[i];
-
             var vertexCopy = vertex;
 
             vertexCopy = vertexCopy.ApplyMatrix4(matrix);
@@ -562,30 +517,26 @@ public class Geometry : ICloneable, IDisposable
             vertices1.Add(vertexCopy);
         }
 
-        // colors
+        // Colors
 
-        for (var i = 0; i < color2.Count; i++) color1.Add(color2[i]);
+        foreach (var t in color2)
+            color1.Add(t);
 
-        // faces
+        // Faces
 
-        for (var i = 0; i < faces2.Count; i++)
+        foreach (var face in faces2)
         {
-            var face = faces2[i];
-            Vector3 normal;
             var faceVertexNormals = face.VertexNormals;
             var faceVertexColors = face.VertexColors;
 
             var faceCopy = new Face3(face.a + vertexOffset, face.b + vertexOffset, face.c + vertexOffset);
             faceCopy.Normal.Copy(face.Normal);
 
-            Color color;
-
-
             faceCopy.Normal.ApplyMatrix3(normalMatrix).Normalize();
 
-            for (var j = 0; j < faceVertexNormals.Count; j++)
+            foreach (var t in faceVertexNormals)
             {
-                normal = (Vector3)faceVertexNormals[j].Clone();
+                var normal = (Vector3)t.Clone();
 
                 normal.ApplyMatrix3(normalMatrix).Normalize();
 
@@ -594,9 +545,8 @@ public class Geometry : ICloneable, IDisposable
 
             faceCopy.Color = face.Color;
 
-            for (var j = 0; j < faceVertexColors.Count; j++)
+            foreach (var color in faceVertexColors)
             {
-                color = faceVertexColors[j];
                 faceCopy.VertexColors.Add(color);
             }
 
@@ -605,17 +555,18 @@ public class Geometry : ICloneable, IDisposable
             faces1.Add(faceCopy);
         }
 
-        //uvs
+        // UVs
 
         for (var i = 0; i < geometry.FaceVertexUvs.Count; i++)
         {
             var faceVertexUvs2 = geometry.FaceVertexUvs[i];
 
-            for (var j = 0; j < faceVertexUvs2.Count; j++)
+            foreach (var uvs2 in faceVertexUvs2)
             {
-                var uvs2 = faceVertexUvs2[j];
                 List<Vector2> uvsCopy = new();
-                for (var k = 0; k < uvs2.Count; k++) uvsCopy.Add((Vector2)uvs2[k].Clone());
+                foreach (var t in uvs2)
+                    uvsCopy.Add((Vector2)t.Clone());
+
                 if (FaceVertexUvs.Count - 1 < i)
                     FaceVertexUvs.Add(new List<List<Vector2>>());
                 FaceVertexUvs[i].Add(uvsCopy);
@@ -634,23 +585,26 @@ public class Geometry : ICloneable, IDisposable
      * Duplicated vertices are removed
      * and faces' vertices are updated.
      */
+    /// <summary>
+    /// Checks for duplicate vertices with hashmap. Duplicate vertices are removed and face vertices are updated.
+    /// </summary>
+    /// <returns>Number of removed duplicate vertices.</returns>
     public virtual int MergeVertices()
     {
         var verticesMap = new Dictionary<string, int>();
         List<Vector3> unique = new();
         var changes = new List<int>();
-        string key;
 
-        var precisionPoints = 4;
+        const int precisionPoints = 4;
         var precision = (float)Math.Pow(10, precisionPoints);
 
         for (var i = 0; i < Vertices.Count; i++)
         {
             var v = Vertices[i];
-            key = Math.Round(v.X * precision) + "_" + Math.Round(v.Y * precision) + "_" + Math.Round(v.Z * precision);
+            var key = Math.Round(v.X * precision) + "_" + Math.Round(v.Y * precision) + "_" +
+                      Math.Round(v.Z * precision);
 
-            var value = 0;
-            if (!verticesMap.TryGetValue(key, out value))
+            if (!verticesMap.TryGetValue(key, out _))
             {
                 verticesMap[key] = i;
                 unique.Add(v);
@@ -664,10 +618,10 @@ public class Geometry : ICloneable, IDisposable
         }
 
 
-        // if faces are completely degenerate after merging vertices, we
+        // If faces are completely degenerate after merging vertices, we
         // have to remove them from the geometry.
         var faceIndicesToRemove = new List<int>();
-        //int cLen = changes.Count - 1;
+
         for (var i = 0; i < Faces.Count; i++)
         {
             var face = Faces[i];
@@ -675,30 +629,18 @@ public class Geometry : ICloneable, IDisposable
 
             face.a = changes[face.a];
             face.b = changes[face.b];
-            //if (face.c > cLen) continue;
             face.c = changes[face.c];
 
             var indices = new[] { face.a, face.b, face.c };
 
-
             for (var n = 0; n < 3; n++)
-                if (indices[n] == indices[(n + 1) % 3])
-                {
-                    faceIndicesToRemove.Add(i);
-                    break;
-                }
+            {
+                if (indices[n] != indices[(n + 1) % 3]) continue;
+
+                faceIndicesToRemove.Add(i);
+                break;
+            }
         }
-
-        //foreach(var idx in faceIndicesToRemove)
-        //{
-
-        //    this.Faces.RemoveAt(idx);
-
-        //    for (int j = 0; j < this.FaceVertexUvs.Count; j++)
-        //    {
-        //        this.FaceVertexUvs[j].RemoveAt(idx);
-        //    }
-        //}
 
         for (var i = faceIndicesToRemove.Count - 1; i >= 0; i--)
         {
@@ -706,10 +648,13 @@ public class Geometry : ICloneable, IDisposable
 
             Faces.RemoveAt(idx);
 
-            for (var j = 0; j < FaceVertexUvs.Count; j++) FaceVertexUvs[j].RemoveAt(idx);
+            foreach (var t in FaceVertexUvs)
+                t.RemoveAt(idx);
         }
 
+        // Calculate the number of removed vertices
         var diff = Vertices.Count - unique.Count;
+
         Vertices = unique;
 
         return diff;
@@ -718,9 +663,8 @@ public class Geometry : ICloneable, IDisposable
     public Geometry SetFromPoints(List<Vector3> points)
     {
         Vertices.Clear();
-        for (var i = 0; i < points.Count; i++)
+        foreach (var point in points)
         {
-            var point = points[i];
             Vertices.Add(new Vector3(point.X, point.Y, point.Z));
         }
 
@@ -729,17 +673,16 @@ public class Geometry : ICloneable, IDisposable
 
     #region IDisposable Members
 
-    public event EventHandler<EventArgs> Disposed;
+    public event EventHandler<EventArgs>? Disposed;
 
     protected virtual void RaiseDisposed()
     {
         var handler = Disposed;
-        if (handler != null) handler(this, new EventArgs());
+        handler?.Invoke(this, EventArgs.Empty);
     }
 
-
     /// <summary>
-    ///     Implement the IDisposable interface
+    /// Implement the IDisposable interface
     /// </summary>
     public virtual void Dispose()
     {
@@ -755,12 +698,10 @@ public class Geometry : ICloneable, IDisposable
     protected virtual void Dispose(bool disposing)
     {
         // Check to see if Dispose has already been called.
-        if (!_disposed)
-        {
-            _disposed = true;
+        if (_disposed) return;
 
-            RaiseDisposed();
-        }
+        _disposed = true;
+        RaiseDisposed();
     }
 
     #endregion

@@ -112,8 +112,8 @@ public class SelectingObjectExample : Example
 
         if (intersects.Count > 0)
         {
-            intersects[0].object3D.Material.Transparent = true;
-            intersects[0].object3D.Material.Opacity = 0.1f;
+            intersects[0].Object3D.Material.Transparent = true;
+            intersects[0].Object3D.Material.Opacity = 0.1f;
         }
     }
 

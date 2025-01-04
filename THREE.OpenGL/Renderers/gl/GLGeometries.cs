@@ -39,8 +39,8 @@ public class GLGeometries
         }
         else if (!geometry.IsBufferGeometry)
         {
-            if (geometry.__bufferGeometry == null) geometry.__bufferGeometry = new BufferGeometry().SetFromObject(obj);
-            bufferGeometry = geometry.__bufferGeometry;
+            if (geometry.BufferGeometry == null) geometry.BufferGeometry = new BufferGeometry().SetFromObject(obj);
+            bufferGeometry = geometry.BufferGeometry;
         }
 
         geometries.Add(geometry, bufferGeometry);

@@ -808,8 +808,8 @@ public class ArcballControls : IDisposable
         var intersect = _raycaster.IntersectObjects(scene.Children, true);
 
         for (var i = 0; i < intersect.Count; i++)
-            if (intersect[i].object3D.Uuid != _gizmos.Uuid && intersect[i].face != null)
-                return intersect[i].point.Clone();
+            if (intersect[i].Object3D.Uuid != _gizmos.Uuid && intersect[i].Face != null)
+                return intersect[i].Point.Clone();
 
         return null;
     }

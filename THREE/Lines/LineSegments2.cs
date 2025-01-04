@@ -229,14 +229,14 @@ public class LineSegments2 : Mesh
 
                 intersects.Add(new Intersection
                 {
-                    point = point,
-                    pointOnLine = pointOnLine,
-                    distance = ray.origin.DistanceTo(point),
-                    object3D = this,
-                    face = null,
-                    faceIndex = i,
-                    uv = null,
-                    uv2 = null
+                    Point = point,
+                    PointOnLine = pointOnLine,
+                    Distance = ray.origin.DistanceTo(point),
+                    Object3D = this,
+                    Face = null,
+                    FaceIndex = i,
+                    Uv = null,
+                    Uv2 = null
                 });
             }
         }

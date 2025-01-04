@@ -96,15 +96,15 @@ public class CinematicCameraExample : Example
 
         if (intersects.Count > 0)
         {
-            var targetDistance = intersects[0].distance;
+            var targetDistance = intersects[0].Distance;
 
             (camera as CinematicCamera).FocusAt(targetDistance); // using Cinematic camera focusAt method
 
-            if (INTERSECTED != intersects[0].object3D)
+            if (INTERSECTED != intersects[0].Object3D)
             {
                 if (INTERSECTED != null) INTERSECTED.Material.Emissive = Color.Hex((int)INTERSECTED["currentHex"]);
 
-                INTERSECTED = intersects[0].object3D;
+                INTERSECTED = intersects[0].Object3D;
                 INTERSECTED["currentHex"] = INTERSECTED.Material.Emissive.Value.GetHex();
                 INTERSECTED.Material.Emissive = Color.Hex(0xff0000);
             }

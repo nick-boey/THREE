@@ -88,7 +88,7 @@ public class InteractiveCubesExample : Example
         var intersects = raycaster.IntersectObjects(scene.Children, true);
         if (intersects.Count > 0)
         {
-            if (!intersects[0].object3D.Equals(INTERSECTED))
+            if (!intersects[0].Object3D.Equals(INTERSECTED))
             {
                 if (INTERSECTED != null && INTERSECTED["currentHex"] != null)
                 {
@@ -96,7 +96,7 @@ public class InteractiveCubesExample : Example
                     INTERSECTED.Material.Emissive = currentHex;
                 }
 
-                INTERSECTED = intersects[0].object3D as Mesh;
+                INTERSECTED = intersects[0].Object3D as Mesh;
                 INTERSECTED["currentHex"] = INTERSECTED.Material.Emissive.Value;
                 INTERSECTED.Material.Emissive = Color.Hex(0xff0000);
             }

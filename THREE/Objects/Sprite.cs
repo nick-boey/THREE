@@ -131,11 +131,11 @@ public class Sprite : Object3D
         if (distance < raycaster.near || distance > raycaster.far) return;
 
         var item = new Intersection();
-        item.distance = distance;
-        item.point = intersectPoint.Clone();
-        item.uv = Triangle.GetUV(intersectPoint, vA, vB, vC, uvA, uvB, uvC, new Vector2());
-        item.face = null;
-        item.object3D = this;
+        item.Distance = distance;
+        item.Point = intersectPoint.Clone();
+        item.Uv = Triangle.GetUV(intersectPoint, vA, vB, vC, uvA, uvB, uvC, new Vector2());
+        item.Face = null;
+        item.Object3D = this;
         intersectionList.Add(item);
     }
 

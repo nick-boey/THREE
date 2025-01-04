@@ -4,7 +4,7 @@ public class LineGeometry : LineSegmentsGeometry
 {
     public LineGeometry()
     {
-        type = "LineGeometry";
+        Type = "LineGeometry";
     }
 
     public new LineGeometry SetPositions(float[] array)

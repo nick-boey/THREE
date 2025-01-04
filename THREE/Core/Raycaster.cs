@@ -5,17 +5,17 @@ namespace THREE;
 [Serializable]
 public class Intersection
 {
-    public float distance;
-    public float distanceToRay;
-    public Face3 face;
-    public int faceIndex;
-    public int index;
-    public int instanceId;
-    public Object3D object3D;
-    public Vector3 point;
-    public Vector3 pointOnLine;
-    public Vector2 uv;
-    public Vector2 uv2;
+    public float Distance;
+    public float DistanceToRay;
+    public Face3 Face;
+    public int FaceIndex;
+    public int Index;
+    public int InstanceId;
+    public Object3D? Object3D;
+    public Vector3 Point;
+    public Vector3 PointOnLine;
+    public Vector2 Uv;
+    public Vector2 Uv2;
 }
 
 [Serializable]
@@ -113,7 +113,7 @@ public class Raycaster
         IntersectObject(object3D, this, intersects, recursive != null ? recursive.Value : false);
         //Sort(delegate (RenderItem a, RenderItem b)
 
-        intersects.Sort(delegate(Intersection a, Intersection b) { return (int)(a.distance - b.distance); });
+        intersects.Sort(delegate(Intersection a, Intersection b) { return (int)(a.Distance - b.Distance); });
 
         return intersects;
     }
@@ -133,7 +133,7 @@ public class Raycaster
         for (var i = 0; i < objects.Count; i++)
             IntersectObject(objects[i], this, intersects, recursive != null ? recursive.Value : false);
 
-        intersects.Sort(delegate(Intersection a, Intersection b) { return (int)(a.distance - b.distance); });
+        intersects.Sort(delegate(Intersection a, Intersection b) { return (int)(a.Distance - b.Distance); });
 
         return intersects;
     }

@@ -44,8 +44,8 @@ public class GeometryTerrainRaycastExample : GeometryTerrainExample
         if (intersects.Count > 0)
         {
             helper.Position.Set(0, 0, 0);
-            helper.LookAt(intersects[0].face.Normal);
-            helper.Position.Copy(intersects[0].point);
+            helper.LookAt(intersects[0].Face.Normal);
+            helper.Position.Copy(intersects[0].Point);
         }
     }
 

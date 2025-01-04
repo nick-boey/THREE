@@ -29,7 +29,7 @@ public class LineSegments : Line
     {
         var geometry = Geometry;
 
-        if (geometry.type.Equals("BufferGeometry"))
+        if (geometry.Type.Equals("BufferGeometry"))
         {
             if ((geometry as BufferGeometry).Index == null)
             {
@@ -54,7 +54,7 @@ public class LineSegments : Line
                     "THREE.Objects.LineSegments.ComputeLineDistance(): Computation only possible with non-indexed BufferGeometry");
             }
         }
-        else if (geometry.type.Equals("Geometry"))
+        else if (geometry.Type.Equals("Geometry"))
         {
             var vertices = geometry.Vertices;
             var lineDistances = new List<float>();

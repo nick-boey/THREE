@@ -21,7 +21,7 @@ public class EdgesGeometry : BufferGeometry
 
     public EdgesGeometry(Geometry geometry, float? thresholdAngle = null)
     {
-        type = "EdgeGeometry";
+        Type = "EdgeGeometry";
 
         parameters.Add("thresholdAngle", thresholdAngle);
 

@@ -10,7 +10,7 @@ public class RingGeometry : Geometry
     public RingGeometry(float? innerRadius = null, float? outerRadius = null, float? thetaSegments = null,
         float? phiSegments = null, float? thetaStart = null, float? thetaLength = null)
     {
-        type = "RingGeometry";
+        Type = "RingGeometry";
 
         parameter = new Hashtable
         {
@@ -36,7 +36,7 @@ public class RingBufferGeometry : BufferGeometry
     public RingBufferGeometry(float? innerRadius = null, float? outerRadius = null, float? thetaSegments = null,
         float? phiSegments = null, float? thetaStart = null, float? thetaLength = null)
     {
-        type = "RingGeometry";
+        Type = "RingGeometry";
 
         parameter = new Hashtable
         {

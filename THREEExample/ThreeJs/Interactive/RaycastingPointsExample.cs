@@ -179,7 +179,7 @@ public class RaycastingPointsExample : Example
 
         if (toggle > 0.02f && intersection != null)
         {
-            spheres[spheresIndex].Position.Copy(intersection.point);
+            spheres[spheresIndex].Position.Copy(intersection.Point);
             spheres[spheresIndex].Scale.Set(1, 1, 1);
             spheresIndex = (spheresIndex + 1) % spheres.Count;
 

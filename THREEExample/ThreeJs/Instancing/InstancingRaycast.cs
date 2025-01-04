@@ -8,22 +8,22 @@ namespace THREEExample.ThreeJs.Instancing;
 [Example("Instancing Raycast", ExampleCategory.ThreeJs, "Instancing")]
 public class InstancingRaycast : Example
 {
-    private readonly int amount = 10;
-    private readonly Color color = new(1, 1, 1);
-    private readonly int count;
-    private readonly Vector2 mouse = new(1, 1);
-    private readonly Raycaster raycaster = new();
-    private InstancedMesh mesh;
+    private const int Amount = 10;
+    private readonly Color _color = new(1, 1, 1);
+    private readonly int _count;
+    private readonly Vector2 _mouse = new(1, 1);
+    private readonly Raycaster _raycaster = new();
+    private InstancedMesh _mesh;
 
     public InstancingRaycast()
     {
-        count = (int)Math.Pow(amount, 3);
+        _count = (int)Math.Pow(Amount, 3);
     }
 
     public override void InitCamera()
     {
         camera = new PerspectiveCamera(60, glControl.AspectRatio, 0.1f, 100);
-        camera.Position.Set(amount, amount, amount);
+        camera.Position.Set(Amount, Amount, Amount);
         camera.LookAt(0, 0, 0);
     }
 
@@ -51,47 +51,47 @@ public class InstancingRaycast : Example
 
         var geometry = new IcosahedronBufferGeometry(0.5f, 3);
         var material = new MeshPhongMaterial();
-        mesh = new InstancedMesh(geometry, material, count);
+        _mesh = new InstancedMesh(geometry, material, _count);
 
         var i = 0;
-        var offset = (amount - 1) / 2;
+        var offset = (Amount - 1) / 2;
 
         var matrix = new Matrix4();
 
-        for (var x = 0; x < amount; x++)
-        for (var y = 0; y < amount; y++)
-        for (var z = 0; z < amount; z++)
+        for (var x = 0; x < Amount; x++)
+        for (var y = 0; y < Amount; y++)
+        for (var z = 0; z < Amount; z++)
         {
             matrix.SetPosition(offset - x, offset - y, offset - z);
 
-            mesh.SetMatrixAt(i, matrix);
-            mesh.SetColorAt(i, color);
+            _mesh.SetMatrixAt(i, matrix);
+            _mesh.SetColorAt(i, _color);
             i++;
         }
 
-        scene.Add(mesh);
-        AddGuiControlsAction = () => { ImGui.SliderInt("count", ref mesh.InstanceCount, 0, count); };
+        scene.Add(_mesh);
+        AddGuiControlsAction = () => { ImGui.SliderInt("count", ref _mesh.InstanceCount, 0, _count); };
         MouseMove += OnMouseMove;
     }
 
     private void OnMouseMove(object sender, MouseEventArgs e)
     {
-        mouse.X = e.X * 1.0f / ClientRectangle.Width * 2 - 1.0f;
-        mouse.Y = -e.Y * 1.0f / ClientRectangle.Height * 2 + 1.0f;
+        _mouse.X = e.X * 1.0f / ClientRectangle.Width * 2 - 1.0f;
+        _mouse.Y = -e.Y * 1.0f / ClientRectangle.Height * 2 + 1.0f;
     }
 
     public override void Render()
     {
-        raycaster.SetFromCamera(mouse, camera);
+        _raycaster.SetFromCamera(_mouse, camera);
 
-        var intersection = raycaster.IntersectObject(mesh);
+        var intersection = _raycaster.IntersectObject(_mesh);
 
         if (intersection.Count > 0)
         {
-            var instanceId = intersection[0].instanceId;
+            var instanceId = intersection[0].InstanceId;
 
-            mesh.SetColorAt(instanceId, new Color().Random());
-            mesh.InstanceColor.NeedsUpdate = true;
+            _mesh.SetColorAt(instanceId, new Color().Random());
+            _mesh.InstanceColor.NeedsUpdate = true;
         }
 
         base.Render();

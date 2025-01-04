@@ -73,7 +73,7 @@ public class ExtrudeGeometry : Geometry
 
     public ExtrudeGeometry(List<Shape> shapes, Hashtable options)
     {
-        type = "ExtrudeGeometry";
+        Type = "ExtrudeGeometry";
 
         parameters = new Hashtable
         {
@@ -142,7 +142,7 @@ public class ExtrudeBufferGeometry : BufferGeometry
 
     public ExtrudeBufferGeometry(List<Shape> shapes, Hashtable options)
     {
-        type = "ExtrudeBufferGeometry";
+        Type = "ExtrudeBufferGeometry";
 
         Init(shapes, options);
     }

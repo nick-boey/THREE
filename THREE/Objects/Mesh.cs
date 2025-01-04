@@ -281,9 +281,9 @@ public class Mesh : Object3D
 
                             if (intersection != null)
                             {
-                                intersection.faceIndex =
+                                intersection.FaceIndex =
                                     (int)Math.Floor((decimal)j / 3); // triangle number in indexed buffer semantics
-                                intersection.face.MaterialIndex = group.MaterialIndex;
+                                intersection.Face.MaterialIndex = group.MaterialIndex;
                                 intersects.Add(intersection);
                             }
                         }
@@ -306,7 +306,7 @@ public class Mesh : Object3D
 
                         if (intersection != null)
                         {
-                            intersection.faceIndex =
+                            intersection.FaceIndex =
                                 (int)Math.Floor((decimal)i / 3); // triangle number in indexed buffer semantics
                             intersects.Add(intersection);
                         }
@@ -339,9 +339,9 @@ public class Mesh : Object3D
 
                             if (intersection != null)
                             {
-                                intersection.faceIndex =
+                                intersection.FaceIndex =
                                     (int)Math.Floor((decimal)j / 3); // triangle number in non-indexed buffer semantics
-                                intersection.face.MaterialIndex = group.MaterialIndex;
+                                intersection.Face.MaterialIndex = group.MaterialIndex;
                                 intersects.Add(intersection);
                             }
                         }
@@ -364,7 +364,7 @@ public class Mesh : Object3D
 
                         if (intersection != null)
                         {
-                            intersection.faceIndex =
+                            intersection.FaceIndex =
                                 (int)Math.Floor((decimal)i / 3); // triangle number in non-indexed buffer semantics
                             intersects.Add(intersection);
                         }
@@ -405,19 +405,19 @@ public class Mesh : Object3D
                         _uvB.Copy(uvs_f[1]);
                         _uvC.Copy(uvs_f[2]);
 
-                        intersection.uv = Triangle.GetUV(_intersectionPoint, fvA, fvB, fvC, _uvA, _uvB, _uvC,
+                        intersection.Uv = Triangle.GetUV(_intersectionPoint, fvA, fvB, fvC, _uvA, _uvB, _uvC,
                             new Vector2());
                     }
 
-                    intersection.face = face;
-                    intersection.faceIndex = f;
+                    intersection.Face = face;
+                    intersection.FaceIndex = f;
                     intersects.Add(intersection);
                 }
             }
         }
     }
 
-    private Intersection checkIntersection(Object3D object3D, Material material, Raycaster raycaster, Ray ray,
+    private Intersection checkIntersection(Object3D? object3D, Material material, Raycaster raycaster, Ray ray,
         Vector3 pA, Vector3 pB, Vector3 pC, Vector3 point)
     {
         Vector3 intersect;
@@ -438,14 +438,14 @@ public class Mesh : Object3D
         if (distance < raycaster.near || distance > raycaster.far) return null;
 
         var result = new Intersection();
-        result.distance = distance;
-        result.point = _intersectionPointWorld.Clone();
-        result.object3D = object3D;
+        result.Distance = distance;
+        result.Point = _intersectionPointWorld.Clone();
+        result.Object3D = object3D;
 
         return result;
     }
 
-    private Intersection checkBufferGeometryIntersection(Object3D object3D, Material material, Raycaster raycaster,
+    private Intersection checkBufferGeometryIntersection(Object3D? object3D, Material material, Raycaster raycaster,
         Ray ray, IBufferAttribute position, List<IBufferAttribute> morphPosition, bool morphTargetsRelative,
         BufferAttribute<float> uv, BufferAttribute<float> uv2, int a, int b, int c)
     {
@@ -511,7 +511,7 @@ public class Mesh : Object3D
                 _uvB.FromBufferAttribute(uv, b);
                 _uvC.FromBufferAttribute(uv, c);
 
-                intersection.uv = Triangle.GetUV(_intersectionPoint, _vA, _vB, _vC, _uvA, _uvB, _uvC, new Vector2());
+                intersection.Uv = Triangle.GetUV(_intersectionPoint, _vA, _vB, _vC, _uvA, _uvB, _uvC, new Vector2());
             }
 
             if (uv2 != null)
@@ -520,13 +520,13 @@ public class Mesh : Object3D
                 _uvB.FromBufferAttribute(uv2, b);
                 _uvC.FromBufferAttribute(uv2, c);
 
-                intersection.uv2 = Triangle.GetUV(_intersectionPoint, _vA, _vB, _vC, _uvA, _uvB, _uvC, new Vector2());
+                intersection.Uv2 = Triangle.GetUV(_intersectionPoint, _vA, _vB, _vC, _uvA, _uvB, _uvC, new Vector2());
             }
 
             var face = new Face3(a, b, c);
             Triangle.GetNormal(_vA, _vB, _vC, face.Normal);
 
-            intersection.face = face;
+            intersection.Face = face;
         }
 
         return intersection;

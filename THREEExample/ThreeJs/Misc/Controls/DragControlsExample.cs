@@ -123,7 +123,7 @@ public class DragControlsExample : ControlsExampleTemplate
 
             if (intersections.Count > 0)
             {
-                var object3d = intersections[0].object3D;
+                var object3d = intersections[0].Object3D;
                 if (group.Children.Contains(object3d))
                 {
                     object3d.Material.Emissive = Color.Hex(0x000000);

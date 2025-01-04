@@ -64,12 +64,12 @@ public class Points : Object3D
 
             intersects.Add(new Intersection
             {
-                distance = distance,
-                distanceToRay = (float)Math.Sqrt(rayPointDistanceSq),
-                point = intersectPoint,
-                index = index,
-                face = null,
-                object3D = object3d
+                Distance = distance,
+                DistanceToRay = (float)Math.Sqrt(rayPointDistanceSq),
+                Point = intersectPoint,
+                Index = index,
+                Face = null,
+                Object3D = object3d
             });
         }
     }

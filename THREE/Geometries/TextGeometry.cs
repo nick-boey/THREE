@@ -9,7 +9,7 @@ public class TextGeometry : Geometry
 
     public TextGeometry(string text, Hashtable parameters)
     {
-        type = "TextGeometry";
+        Type = "TextGeometry";
 
         this.parameters = new Hashtable
         {
@@ -31,7 +31,7 @@ public class TextBufferGeometry : ExtrudeBufferGeometry
 
     public TextBufferGeometry(string text, Hashtable parameters)
     {
-        type = "TextBufferGeometry";
+        Type = "TextBufferGeometry";
 
         this.parameters = new Hashtable
         {

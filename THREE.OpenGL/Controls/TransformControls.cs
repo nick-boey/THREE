@@ -104,7 +104,7 @@ public class TransformControls : Object3D, INotifyPropertyChanged
         var intersect = IntersectObjectWithRay(_gizmo.picker[mode] as Object3D, _raycaster);
 
         if (intersect != null)
-            axis = intersect.object3D.Name;
+            axis = intersect.Object3D.Name;
         //Debug.WriteLine("axis:" + axis);
         else
             axis = null;
@@ -162,7 +162,7 @@ public class TransformControls : Object3D, INotifyPropertyChanged
 
                 object3D.MatrixWorld.Decompose(worldPositionStart, worldQuaternionStart, _worldScaleStart);
 
-                pointStart.Copy(planeIntersect.point).Sub(worldPositionStart);
+                pointStart.Copy(planeIntersect.Point).Sub(worldPositionStart);
             }
 
             dragging = true;
@@ -197,7 +197,7 @@ public class TransformControls : Object3D, INotifyPropertyChanged
 
         if (planeIntersect == null) return;
 
-        pointEnd.Copy(planeIntersect.point).Sub(worldPositionStart);
+        pointEnd.Copy(planeIntersect.Point).Sub(worldPositionStart);
 
         if (mode == "translate")
         {
@@ -379,7 +379,7 @@ public class TransformControls : Object3D, INotifyPropertyChanged
         var allIntersections = raycaster.IntersectObject(object3d, true);
 
         for (var i = 0; i < allIntersections.Count; i++)
-            if (allIntersections[i].object3D.Visible || includeInvisible)
+            if (allIntersections[i].Object3D.Visible || includeInvisible)
                 return allIntersections[i];
 
         return null;

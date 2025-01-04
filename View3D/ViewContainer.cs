@@ -6,16 +6,27 @@ using Rectangle = THREE.Rectangle;
 
 namespace View3D;
 
+/// <summary>
+/// ViewContainer is a base class for a viewer and scene.
+/// It provides a camera, controls and a renderer, and outputs the rendered images to a GLWpfControl.
+/// </summary>
 [Serializable]
 public abstract class ViewContainer : ControlsContainer
 {
+    /// <summary>
+    /// GLControl that the View is currently bound to
+    /// </summary>
+    public GLWpfControl? GLControl;
+
     protected readonly Stopwatch Stopwatch = new();
     public Camera Camera = new PerspectiveCamera();
+    public OrbitControls? CameraControls;
 
-    public OrbitControls Controls;
-
-    public GLWpfControl? GLControl;
     public GLRenderer? Renderer;
+
+    /// <summary>
+    /// The Scene that the view is currently rendering.
+    /// </summary>
     public Scene Scene = new();
 
     ~ViewContainer()
@@ -26,7 +37,6 @@ public abstract class ViewContainer : ControlsContainer
     public virtual void Load(GLWpfControl control)
     {
         GLControl = control;
-
         Renderer = new GLRenderer(control.Context, (int)control.RenderSize.Width,
             (int)control.RenderSize.Height);
 
@@ -74,11 +84,11 @@ public abstract class ViewContainer : ControlsContainer
 
     public virtual void InitializeControls()
     {
-        Controls = new OrbitControls(this, Camera);
-        Controls.RotateSpeed = 1.5f;
-        Controls.ZoomSpeed = 1.5f;
-        Controls.PanSpeed = 1.5f;
-        Controls.Update();
+        CameraControls = new OrbitControls(this, Camera);
+        CameraControls.RotateSpeed = 1.5f;
+        CameraControls.ZoomSpeed = 1.5f;
+        CameraControls.PanSpeed = 1.5f;
+        CameraControls.Update();
     }
 
     public virtual void InitializeLighting()
@@ -102,9 +112,12 @@ public abstract class ViewContainer : ControlsContainer
         base.OnResize(clientSize);
     }
 
+    /// <summary>
+    /// Renders the Scene to the GLWpfControl
+    /// </summary>
     public virtual void Render()
     {
-        Controls?.Update();
+        CameraControls?.Update();
         Renderer?.Render(Scene, Camera);
     }
 

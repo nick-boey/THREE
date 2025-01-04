@@ -10,7 +10,7 @@ public class CircleGeometry : Geometry
     public CircleGeometry(float? radius = null, float? segments = null, float? thetaStart = null,
         float? thetaLength = null)
     {
-        type = "CircleGeometry";
+        Type = "CircleGeometry";
 
         parameters = new Hashtable
         {
@@ -34,7 +34,7 @@ public class CircleBufferGeometry : BufferGeometry
     public CircleBufferGeometry(float? radius = null, float? segments = null, float? thetaStart = null,
         float? thetaLength = null)
     {
-        type = "CircleBufferGeometry";
+        Type = "CircleBufferGeometry";
 
         parameters = new Hashtable
         {

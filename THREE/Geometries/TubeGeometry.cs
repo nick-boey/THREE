@@ -15,7 +15,7 @@ public class TubeGeometry : Geometry
     public TubeGeometry(Curve path, int? tubularSegments = null, float? radius = null, int? radialSegments = null,
         bool? closed = null)
     {
-        type = "TubeGeometry";
+        Type = "TubeGeometry";
 
         parameters = new Hashtable
         {
@@ -79,7 +79,7 @@ public class TubeBufferGeometry : BufferGeometry
     public TubeBufferGeometry(Curve path, int? tubularSegments = null, float? radius = null, int? radialSegments = null,
         bool? closed = null)
     {
-        type = "TubeBufferGeometry";
+        Type = "TubeBufferGeometry";
 
         parameters = new Hashtable
         {

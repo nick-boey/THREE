@@ -19,7 +19,7 @@ public class PlaneGeometry : Geometry
 
     public PlaneGeometry(float width, float height, float widthSegments = 0, float heightSegments = 0)
     {
-        type = "PlaneGeometry";
+        Type = "PlaneGeometry";
 
 
         parameters = new PlaneParameter
@@ -42,7 +42,7 @@ public class PlaneBufferGeometry : BufferGeometry
 
     public PlaneBufferGeometry(float width, float height, float widthSegments = 0, float heightSegments = 0)
     {
-        type = "PlaneBufferGeometry";
+        Type = "PlaneBufferGeometry";
 
         parameters = new PlaneParameter
         {

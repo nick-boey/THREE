@@ -36,7 +36,7 @@ public class BufferGeometry : Geometry
 
     //public IList<DrawRange> Offsets;
 
-    public BufferAttribute<int> Index;
+    public BufferAttribute<int>? Index;
 
     public Hashtable MorphAttributes;
 
@@ -49,7 +49,7 @@ public class BufferGeometry : Geometry
         Id = BufferGeometryIdCount;
         BufferGeometryIdCount += 2;
 
-        type = "BufferGeometry";
+        Type = "BufferGeometry";
 
         Attributes = new Dictionary<object, object>();
 
@@ -411,7 +411,7 @@ public class BufferGeometry : Geometry
 
         if (object3D is Mesh)
         {
-            var direct = geometry.__directGeometry;
+            var direct = geometry.DirectGeometry;
 
             if (geometry.ElementsNeedUpdate)
             {
@@ -514,9 +514,9 @@ public class BufferGeometry : Geometry
 
     public BufferGeometry FromGeometry(Geometry geometry)
     {
-        geometry.__directGeometry = new DirectGeometry().FromGeometry(geometry);
+        geometry.DirectGeometry = new DirectGeometry().FromGeometry(geometry);
 
-        return FromDirectGeometry(geometry.__directGeometry);
+        return FromDirectGeometry(geometry.DirectGeometry);
     }
 
     public BufferGeometry FromDirectGeometry(DirectGeometry geometry)
